@@ -9,6 +9,7 @@ import lombok.*;
 @Getter
 @Setter
 @NoArgsConstructor
+@AllArgsConstructor
 @Table(name = "APP_USER")
 public class User {
 
@@ -36,5 +37,13 @@ public class User {
     @NotNull
     @Enumerated(EnumType.STRING)
     private Role role;
+
+    public User(String name, @NotNull String username, @NotNull String email, @NotNull String password, Role role) {
+        this.name = name;
+        this.username = username;
+        this.email = email;
+        this.password = password;
+        this.role = role;
+    }
 
 }
