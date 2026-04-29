@@ -1,0 +1,40 @@
+version: '3.8'
+name: udd-doc-search
+services:
+  ws-postgres:
+    image: postgres:17
+    container_name: ws-postgres
+    environment:
+      - POSTGRES_USER=${WS_DB_USERNAME}
+      - POSTGRES_PASSWORD=${WS_DB_PASSWORD}
+      - POSTGRES_DB=${WS_DB_NAME}
+    volumes:
+      - ws-postgres-data:/var/lib/postgresql/data
+    ports:
+      - ${WS_DB_PORT}:5432
+    networks:
+      - app-network
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=${PGADMIN_EMAIL}
+      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_PASSWORD}
+    ports:
+      - ${PGADMIN_PORT}:80
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+    depends_on:
+      - ws-postgres
+    networks:
+      - app-network
+    restart: always
+
+volumes:
+  ws-postgres-data:
+  pgadmin-data:
+
+networks:
+  app-network:
+    driver: bridge
