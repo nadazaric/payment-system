@@ -19,3 +19,10 @@ export const AUTH_LABELS = {
     alreadyExists: "Registration failed. Username or email already exists.",
     registrationSuccessful: "Registration successful. You can now log in.",
 };
+
+export const NAVBAR_LABELS = {
+    title: "AutoRent",
+    logoutButton: "Logout",
+    productsOption: "Vehicles",
+    rentalHistory: "Rental History",
+}

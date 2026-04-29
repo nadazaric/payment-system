@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Alert, Box, Button, Card, CardContent, TextField, Typography } from "@mui/material";
 import { login } from "@/api/authApi";
 import { AUTH_LABELS } from "@/const/label";
+import { notifyAuthChange } from "@/hooks/useAuthState";
 
 type LoginFormProps = {
     onRegisterClick: () => void;
@@ -25,12 +26,14 @@ export default function LoginForm({ onRegisterClick }: LoginFormProps) {
 
         try {
             const response = await login({ username, password });
-            
+
             localStorage.setItem("accessToken", response.accessToken);
             localStorage.setItem("user", JSON.stringify({
                 id: response.id,
                 username: response.username,
             }));
+
+            notifyAuthChange();
 
             router.push("/");
         } catch {

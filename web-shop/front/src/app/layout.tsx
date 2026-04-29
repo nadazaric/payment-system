@@ -7,7 +7,7 @@ import "./globals.css";
 import { NotificationProvider } from "@/components/common/NotificationProvider";
 
 export const metadata: Metadata = {
-    title: "Rent a Car",
+    title: "AutoRent",
     description: "SEP Web Shop application",
 };
 

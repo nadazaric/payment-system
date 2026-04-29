@@ -3,14 +3,14 @@
 import { createTheme } from "@mui/material/styles";
 
 const colors = {
-    primary: "#91d219",
-    primaryLight: "#b7e85c",
-    primaryDark: "#5f940c",
-    secondary: "#222222",
-    textPrimary: "#1f1f1f",
-    textSecondary: "#666666",
-    background: "#f5f5f5",
-    paper: "#ffffff",
+    primary: "#0F766E",
+    primaryLight: "#5EEAD4",
+    primaryDark: "#115E59",
+    secondary: "#1F2937",
+    textPrimary: "#111827",
+    textSecondary: "#6B7280",
+    background: "#F8FAFC",
+    paper: "#FFFFFF",
 };
 
 const theme = createTheme({
@@ -37,6 +37,9 @@ const theme = createTheme({
     typography: {
         fontFamily: "Arial, sans-serif",
         h4: {
+            fontWeight: 700,
+        },
+        h5: {
             fontWeight: 700,
         },
         body2: {
