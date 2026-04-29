@@ -4,6 +4,7 @@ import { ThemeProvider } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import theme from "@/theme/theme";
 import "./globals.css";
+import { NotificationProvider } from "@/components/common/NotificationProvider";
 
 export const metadata: Metadata = {
     title: "Rent a Car",
@@ -17,7 +18,9 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
                 <AppRouterCacheProvider>
                     <ThemeProvider theme={theme}>
                         <CssBaseline />
-                        {children}
+                        <NotificationProvider>
+                            {children}
+                        </NotificationProvider>
                     </ThemeProvider>
                 </AppRouterCacheProvider>
             </body>

@@ -6,7 +6,11 @@ import { Alert, Box, Button, Card, CardContent, TextField, Typography } from "@m
 import { login } from "@/api/authApi";
 import { AUTH_LABELS } from "@/const/label";
 
-export default function LoginForm() {
+type LoginFormProps = {
+    onRegisterClick: () => void;
+};
+
+export default function LoginForm({ onRegisterClick }: LoginFormProps) {
     const router = useRouter();
 
     const [username, setUsername] = useState("");
@@ -21,8 +25,13 @@ export default function LoginForm() {
 
         try {
             const response = await login({ username, password });
-            localStorage.setItem("username", response.username);
+            
             localStorage.setItem("accessToken", response.accessToken);
+            localStorage.setItem("user", JSON.stringify({
+                id: response.id,
+                username: response.username,
+            }));
+
             router.push("/");
         } catch {
             setError(AUTH_LABELS.invalidCredentials);
@@ -80,6 +89,15 @@ export default function LoginForm() {
                         disabled={loading} >
                         {loading ? AUTH_LABELS.signingIn : AUTH_LABELS.loginButton}
                     </Button>
+
+                    <Box sx={{ mt: 2, textAlign: "center" }}>
+                        <Typography variant="body2" color="text.secondary">
+                            {AUTH_LABELS.noAccount}{" "}
+                            <Button variant="text" onClick={onRegisterClick} sx={{ p: 0, minWidth: "auto" }}>
+                                {AUTH_LABELS.registerButton}
+                            </Button>
+                        </Typography>
+                    </Box>
                 </Box>
             </CardContent>
         </Card>
