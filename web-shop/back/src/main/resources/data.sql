@@ -36,3 +36,15 @@ VALUES ('BMW X3', 'Spacious SUV with premium comfort, suitable for longer trips 
 
 INSERT INTO VEHICLE(name, description, type, price_per_day, image_path)
 VALUES ('Mercedes-Benz Vito', 'Large van with plenty of space, ideal for group travel or extra luggage.', 'VAN', 95.00, '/images/vehicles/4.jpg');
+
+INSERT INTO reservation(vehicle_id, start_date, end_date)
+VALUES (1, '2026-05-10', '2026-05-15');
+
+INSERT INTO reservation(vehicle_id, start_date, end_date)
+VALUES (1, '2026-06-01', '2026-06-04');
+
+INSERT INTO reservation(vehicle_id, start_date, end_date)
+VALUES (2, '2026-05-20', '2026-05-25');
+
+INSERT INTO reservation(vehicle_id, start_date, end_date)
+VALUES (3, '2026-05-12', '2026-05-18');
