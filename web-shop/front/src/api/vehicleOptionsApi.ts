@@ -1,13 +1,13 @@
 import axiosInstance from "@/api/axiosInstance";
-import { Vehicle } from "@/types/vehicle";
+import { VehicleOptions } from "@/types/vehicleOptions";
 
-export const getVehicles = async (): Promise<Vehicle[]> => {
-    const response = await axiosInstance.get<Vehicle[]>("/vehicles");
+export const getVehicleOptions = async (): Promise<VehicleOptions> => {
+    const response = await axiosInstance.get<VehicleOptions>("/vehicle-options");
+
     return response.data;
 };
 
 export const getVehicleById = async (id: number): Promise<Vehicle> => {
-    console.log(id)
     const response = await axiosInstance.get<Vehicle>(`/vehicles/${id}`);
 
     return response.data;

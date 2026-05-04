@@ -22,4 +22,11 @@ public class VehicleController {
         return new ResponseEntity<>(vehicleService.getAll(), HttpStatus.OK);
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<VehicleDTO> getById(@PathVariable Long id) {
+        return vehicleService.getById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
 }

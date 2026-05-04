@@ -50,7 +50,7 @@ const theme = createTheme({
         },
     },
     shape: {
-        borderRadius: 12,
+        borderRadius: 6,
     },
     spacing: 8,
     components: {
@@ -94,7 +94,7 @@ const theme = createTheme({
             styleOverrides: {
                 root: {
                     width: "100%",
-                    maxWidth: 420,
+                    // maxWidth: 420,
                     boxShadow: "0px 8px 24px rgba(0, 0, 0, 0.12)",
                 },
             },

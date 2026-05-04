@@ -9,8 +9,8 @@ import {
     Chip,
     Typography
 } from "@mui/material";
-
 import { Vehicle } from "@/types/vehicle";
+import { useRouter } from "next/navigation";
 
 type VehicleCardProps = {
     vehicle: Vehicle;
@@ -26,6 +26,7 @@ const IMAGE_BASE_URL = process.env.NEXT_PUBLIC_IMAGE_BASE_URL ?? "";
 
 export default function VehicleCard({ vehicle }: VehicleCardProps) {
     const imageUrl = `${IMAGE_BASE_URL}${vehicle.imagePath}`;
+    const router = useRouter();
 
     return (
         <Card
@@ -134,7 +135,8 @@ export default function VehicleCard({ vehicle }: VehicleCardProps) {
                     </Box>
 
                     <Button
-                        variant="contained">
+                        variant="contained"
+                        onClick={() => router.push(`/vehicles/${vehicle.id}`)}>
                         {VEHICLE_CARD_LABELS.detailsButton}
                     </Button>
                 </Box>

@@ -26,7 +26,7 @@ INSERT INTO ADDITIONAL_SERVICE(name, description, price_per_day)
 VALUES ('Winter Equipment', 'Winter equipment package suitable for driving in cold weather conditions.', 8.00);
 
 INSERT INTO VEHICLE(name, description, type, price_per_day, image_path)
-VALUES ('Volkswagen Golf 8', 'Comfortable compact car suitable for city and longer trips.', 'COMPACT', 45.00, '/images/vehicles/1.png');
+VALUES ('Volkswagen Golf 8', 'It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout. The point of using Lorem Ipsum is that it has a more-or-less normal distribution of letters, as opposed to using ''Content here, content here'', making it look like readable English. Many desktop publishing packages and web page editors now use Lorem Ipsum as their default model text, and a search for ''lorem ipsum'' will uncover many web sites still in their infancy. Various versions have evolved over the years, sometimes by accident, sometimes on purpose (injected humour and the like).', 'COMPACT', 45.00, '/images/vehicles/1.png');
 
 INSERT INTO VEHICLE(name, description, type, price_per_day, image_path)
 VALUES ('Toyota Yaris', 'Small and economical car, ideal for city driving and short rentals.', 'ECONOMY', 35.00, '/images/vehicles/2.png');

@@ -32,3 +32,26 @@ export const VEHICLE_CARD_LABELS = {
     currency: "EUR",
     detailsButton: "View Details"
 };
+
+export const VEHICLE_DETAILS_PAGE_LABELS = {
+    currency: "EUR",
+    rentalPeriodTitle: "Rental period",
+    startDate: "Start date",
+    endDate: "End date",
+    notSelected: "Not selected",
+    insuranceTitle: "Insurance package",
+    additionalServicesTitle: "Additional services",
+    noAdditionalServices: "No additional services available.",
+    unavailablePeriodError: "Selected period contains unavailable dates.",
+    invalidPeriodError: "End date must be after start date.",
+    summaryTitle: "Booking summary",
+    totalPerDay: "Total per day",
+    numberOfDays: "Number of days",
+    totalPrice: "Total price",
+    buyButton: "Buy",
+    included: "Included",
+    perDay: "/ day",
+    pricePerDay: "Price per day",
+    loadingError: "Failed to load vehicle details.",
+    vehicleNotFound: "Vehicle not found."
+};
