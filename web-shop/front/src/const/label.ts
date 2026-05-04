@@ -53,5 +53,7 @@ export const VEHICLE_DETAILS_PAGE_LABELS = {
     perDay: "/ day",
     pricePerDay: "Price per day",
     loadingError: "Failed to load vehicle details.",
-    vehicleNotFound: "Vehicle not found."
+    vehicleNotFound: "Vehicle not found.",
+    availabilityTitle: "Vehicle availability",
+    availabilitySubtitle: "Reserved dates are marked in green."
 };

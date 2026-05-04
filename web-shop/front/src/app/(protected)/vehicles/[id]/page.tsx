@@ -7,24 +7,36 @@ import { Dayjs } from "dayjs";
 import {
     Alert,
     Box,
-    CircularProgress
+    CircularProgress,
+    Typography
 } from "@mui/material";
 
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 
+import VehicleAdminCalendarCard from "@/components/vehicles/VehicleAdminCalendarCard";
 import VehicleBookingCard from "@/components/vehicles/VehicleBookingCard";
 import VehicleInfoCard from "@/components/vehicles/VehicleInfoCard";
+
 import { getUnavailablePeriods } from "@/api/reservationApi";
 import { getVehicleById } from "@/api/vehicleApi";
 import { getVehicleOptions } from "@/api/vehicleOptionsApi";
+
+import { useAuthState } from "@/hooks/useAuthState";
+
 import { UnavailablePeriod } from "@/types/reservation";
 import { Vehicle } from "@/types/vehicle";
 import { InsurancePackage, AdditionalService } from "@/types/vehicleOptions";
-import { VEHICLE_DETAILS_PAGE_LABELS } from "@/const/label";
+
+const VEHICLE_DETAILS_PAGE_LABELS = {
+    loadingError: "Failed to load vehicle details.",
+    vehicleNotFound: "Vehicle not found.",
+    pageTitle: "Vehicle details"
+};
 
 export default function VehicleDetailsPage() {
     const params = useParams();
+    const authState = useAuthState();
 
     const [vehicle, setVehicle] = useState<Vehicle | null>(null);
     const [insurancePackages, setInsurancePackages] = useState<InsurancePackage[]>([]);
@@ -38,6 +50,7 @@ export default function VehicleDetailsPage() {
     const [error, setError] = useState("");
 
     const vehicleId = Number(params.id);
+    const isAdmin = authState.role === "ADMIN";
 
     useEffect(() => {
         const fetchData = async () => {
@@ -70,7 +83,7 @@ export default function VehicleDetailsPage() {
         fetchData();
     }, [vehicleId]);
 
-    if (loading) {
+    if (loading || authState.isLoading) {
         return (
             <Box
                 sx={{
@@ -114,6 +127,15 @@ export default function VehicleDetailsPage() {
                     },
                     py: 3
                 }}>
+                <Typography
+                    variant="h4"
+                    component="h1"
+                    sx={{
+                        fontWeight: 700,
+                        mb: 3
+                    }}>
+                    {VEHICLE_DETAILS_PAGE_LABELS.pageTitle}
+                </Typography>
 
                 <Box
                     sx={{
@@ -129,19 +151,24 @@ export default function VehicleDetailsPage() {
                     <VehicleInfoCard
                         vehicle={vehicle} />
 
-                    <VehicleBookingCard
-                        vehiclePricePerDay={vehicle.pricePerDay}
-                        insurancePackages={insurancePackages}
-                        additionalServices={additionalServices}
-                        unavailablePeriods={unavailablePeriods}
-                        selectedInsuranceId={selectedInsuranceId}
-                        selectedAdditionalServiceIds={selectedAdditionalServiceIds}
-                        startDate={startDate}
-                        endDate={endDate}
-                        setSelectedInsuranceId={setSelectedInsuranceId}
-                        setSelectedAdditionalServiceIds={setSelectedAdditionalServiceIds}
-                        setStartDate={setStartDate}
-                        setEndDate={setEndDate} />
+                    {isAdmin ? (
+                        <VehicleAdminCalendarCard
+                            unavailablePeriods={unavailablePeriods} />
+                    ) : (
+                        <VehicleBookingCard
+                            vehiclePricePerDay={vehicle.pricePerDay}
+                            insurancePackages={insurancePackages}
+                            additionalServices={additionalServices}
+                            unavailablePeriods={unavailablePeriods}
+                            selectedInsuranceId={selectedInsuranceId}
+                            selectedAdditionalServiceIds={selectedAdditionalServiceIds}
+                            startDate={startDate}
+                            endDate={endDate}
+                            setSelectedInsuranceId={setSelectedInsuranceId}
+                            setSelectedAdditionalServiceIds={setSelectedAdditionalServiceIds}
+                            setStartDate={setStartDate}
+                            setEndDate={setEndDate} />
+                    )}
                 </Box>
             </Box>
         </LocalizationProvider>
