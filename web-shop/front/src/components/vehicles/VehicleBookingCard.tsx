@@ -320,62 +320,58 @@ export default function VehicleBookingCard({
                                             }}>
                                             <Box
                                                 sx={{
-                                                    display: "grid",
-                                                    gridTemplateColumns: "1fr auto",
-                                                    gap: 1.5,
-                                                    alignItems: "flex-start"
+                                                    display: "flex",
+                                                    flexDirection: "column",
+                                                    gap: 0.75
                                                 }}>
-                                                <Box>
-                                                    <Box
+                                                <Box
+                                                    sx={{
+                                                        display: "grid",
+                                                        gridTemplateColumns: "1fr auto auto",
+                                                        alignItems: "center",
+                                                        gap: 1.5
+                                                    }}>
+                                                    <Typography
+                                                        variant="body1"
                                                         sx={{
-                                                            display: "flex",
-                                                            justifyContent: "space-between",
-                                                            alignItems: "flex-start",
-                                                            gap: 1,
-                                                            mb: 0.5
+                                                            fontWeight: 700
                                                         }}>
-                                                        <Typography
-                                                            variant="body1"
-                                                            sx={{
-                                                                fontWeight: 700
-                                                            }}>
-                                                            {insurancePackage.name}
-                                                        </Typography>
-
-                                                        <Typography
-                                                            variant="body2"
-                                                            sx={{
-                                                                fontWeight: 700,
-                                                                color: insurancePackage.pricePerDay === 0 ? "success.main" : "primary.main",
-                                                                whiteSpace: "nowrap"
-                                                            }}>
-                                                            {insurancePackage.pricePerDay === 0
-                                                                ? VEHICLE_DETAILS_PAGE_LABELS.included
-                                                                : `+${insurancePackage.pricePerDay} ${VEHICLE_DETAILS_PAGE_LABELS.currency}`}
-                                                        </Typography>
-                                                    </Box>
+                                                        {insurancePackage.name}
+                                                    </Typography>
 
                                                     <Typography
                                                         variant="body2"
-                                                        color="text.secondary"
                                                         sx={{
-                                                            display: "-webkit-box",
-                                                            WebkitLineClamp: 2,
-                                                            WebkitBoxOrient: "vertical",
-                                                            overflow: "hidden"
+                                                            fontWeight: 700,
+                                                            color: insurancePackage.pricePerDay === 0 ? "success.main" : "primary.main",
+                                                            whiteSpace: "nowrap"
                                                         }}>
-                                                        {insurancePackage.description}
+                                                        {insurancePackage.pricePerDay === 0
+                                                            ? VEHICLE_DETAILS_PAGE_LABELS.included
+                                                            : `+${insurancePackage.pricePerDay} ${VEHICLE_DETAILS_PAGE_LABELS.currency}`}
                                                     </Typography>
+
+                                                    <Radio
+                                                        checked={isSelected}
+                                                        onClick={(event) => event.stopPropagation()}
+                                                        onChange={() => setSelectedInsuranceId(insurancePackage.id)}
+                                                        size="small"
+                                                        sx={{
+                                                            p: 0
+                                                        }} />
                                                 </Box>
 
-                                                <Radio
-                                                    checked={isSelected}
-                                                    onClick={(event) => event.stopPropagation()}
-                                                    onChange={() => setSelectedInsuranceId(insurancePackage.id)}
-                                                    size="small"
+                                                <Typography
+                                                    variant="body2"
+                                                    color="text.secondary"
                                                     sx={{
-                                                        p: 0.5
-                                                    }} />
+                                                        display: "-webkit-box",
+                                                        WebkitLineClamp: 2,
+                                                        WebkitBoxOrient: "vertical",
+                                                        overflow: "hidden"
+                                                    }}>
+                                                    {insurancePackage.description}
+                                                </Typography>
                                             </Box>
                                         </Box>
                                     );
@@ -431,60 +427,56 @@ export default function VehicleBookingCard({
                                             }}>
                                             <Box
                                                 sx={{
-                                                    display: "grid",
-                                                    gridTemplateColumns: "1fr auto",
-                                                    gap: 1.5,
-                                                    alignItems: "flex-start"
+                                                    display: "flex",
+                                                    flexDirection: "column",
+                                                    gap: 0.75
                                                 }}>
-                                                <Box>
-                                                    <Box
+                                                <Box
+                                                    sx={{
+                                                        display: "grid",
+                                                        gridTemplateColumns: "1fr auto auto",
+                                                        alignItems: "center",
+                                                        gap: 1.5
+                                                    }}>
+                                                    <Typography
+                                                        variant="body1"
                                                         sx={{
-                                                            display: "flex",
-                                                            justifyContent: "space-between",
-                                                            alignItems: "flex-start",
-                                                            gap: 1,
-                                                            mb: 0.5
+                                                            fontWeight: 700
                                                         }}>
-                                                        <Typography
-                                                            variant="body1"
-                                                            sx={{
-                                                                fontWeight: 700
-                                                            }}>
-                                                            {service.name}
-                                                        </Typography>
-
-                                                        <Typography
-                                                            variant="body2"
-                                                            sx={{
-                                                                fontWeight: 700,
-                                                                color: "primary.main",
-                                                                whiteSpace: "nowrap"
-                                                            }}>
-                                                            +{service.pricePerDay} {VEHICLE_DETAILS_PAGE_LABELS.currency}
-                                                        </Typography>
-                                                    </Box>
+                                                        {service.name}
+                                                    </Typography>
 
                                                     <Typography
                                                         variant="body2"
-                                                        color="text.secondary"
                                                         sx={{
-                                                            display: "-webkit-box",
-                                                            WebkitLineClamp: 2,
-                                                            WebkitBoxOrient: "vertical",
-                                                            overflow: "hidden"
+                                                            fontWeight: 700,
+                                                            color: "primary.main",
+                                                            whiteSpace: "nowrap"
                                                         }}>
-                                                        {service.description}
+                                                        +{service.pricePerDay} {VEHICLE_DETAILS_PAGE_LABELS.currency}
                                                     </Typography>
+
+                                                    <Checkbox
+                                                        checked={isSelected}
+                                                        onClick={(event) => event.stopPropagation()}
+                                                        onChange={() => handleAdditionalServiceChange(service.id)}
+                                                        size="small"
+                                                        sx={{
+                                                            p: 0
+                                                        }} />
                                                 </Box>
 
-                                                <Checkbox
-                                                    checked={isSelected}
-                                                    onClick={(event) => event.stopPropagation()}
-                                                    onChange={() => handleAdditionalServiceChange(service.id)}
-                                                    size="small"
+                                                <Typography
+                                                    variant="body2"
+                                                    color="text.secondary"
                                                     sx={{
-                                                        p: 0.5
-                                                    }} />
+                                                        display: "-webkit-box",
+                                                        WebkitLineClamp: 2,
+                                                        WebkitBoxOrient: "vertical",
+                                                        overflow: "hidden"
+                                                    }}>
+                                                    {service.description}
+                                                </Typography>
                                             </Box>
                                         </Box>
                                     );
@@ -497,7 +489,7 @@ export default function VehicleBookingCard({
                         sx={{
                             display: "flex",
                             flexDirection: "column",
-                            gap: 3
+                            gap: 2
                         }}>
                         <Box>
                             <Box
@@ -559,70 +551,6 @@ export default function VehicleBookingCard({
                                     slots={{
                                         day: RangePickerDay
                                     }} />
-                            </Box>
-
-                            <Box
-                                sx={{
-                                    display: "grid",
-                                    gridTemplateColumns: {
-                                        xs: "1fr",
-                                        sm: "1fr 1fr"
-                                    },
-                                    gap: 2
-                                }}>
-                                <Box
-                                    sx={{
-                                        p: 2,
-                                        borderRadius: "12px",
-                                        bgcolor: "grey.50",
-                                        border: "1px solid",
-                                        borderColor: "divider"
-                                    }}>
-                                    <Typography
-                                        variant="body2"
-                                        color="text.secondary"
-                                        sx={{
-                                            mb: 0.5
-                                        }}>
-                                        {VEHICLE_DETAILS_PAGE_LABELS.startDate}
-                                    </Typography>
-
-                                    <Typography
-                                        sx={{
-                                            fontWeight: 700
-                                        }}>
-                                        {startDate
-                                            ? startDate.format("DD.MM.YYYY")
-                                            : VEHICLE_DETAILS_PAGE_LABELS.notSelected}
-                                    </Typography>
-                                </Box>
-
-                                <Box
-                                    sx={{
-                                        p: 2,
-                                        borderRadius: "12px",
-                                        bgcolor: "grey.50",
-                                        border: "1px solid",
-                                        borderColor: "divider"
-                                    }}>
-                                    <Typography
-                                        variant="body2"
-                                        color="text.secondary"
-                                        sx={{
-                                            mb: 0.5
-                                        }}>
-                                        {VEHICLE_DETAILS_PAGE_LABELS.endDate}
-                                    </Typography>
-
-                                    <Typography
-                                        sx={{
-                                            fontWeight: 700
-                                        }}>
-                                        {endDate
-                                            ? endDate.format("DD.MM.YYYY")
-                                            : VEHICLE_DETAILS_PAGE_LABELS.notSelected}
-                                    </Typography>
-                                </Box>
                             </Box>
                         </Box>
 
