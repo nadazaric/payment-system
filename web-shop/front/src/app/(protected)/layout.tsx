@@ -32,7 +32,12 @@ export default function ProtectedLayout({ children }: ProtectedLayoutProps) {
         <Box sx={{ minHeight: "100vh", bgcolor: "background.default" }}>
             <Navbar username={authState.username} role={authState.role} />
 
-            <Box component="main" sx={{ p: 3 }}>
+            <Box
+                component="main"
+                sx={{
+                    p: 3,
+                    pt: "84px"
+                }}>
                 {children}
             </Box>
         </Box>

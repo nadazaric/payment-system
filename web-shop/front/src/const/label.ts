@@ -26,3 +26,9 @@ export const NAVBAR_LABELS = {
     productsOption: "Vehicles",
     rentalHistory: "Rental History",
 }
+
+export const VEHICLE_CARD_LABELS = {
+    pricePerDay: "Price per day",
+    currency: "EUR",
+    detailsButton: "View Details"
+};

@@ -29,9 +29,15 @@ export default function Navbar({ username, role }: NavbarProps) {
 
     return (
         <AppBar
-            position="static"
+            position="fixed"
             elevation={0}
-            sx={{ bgcolor: "background.paper", color: "text.primary", borderBottom: "1px solid", borderColor: "divider" }} >
+            sx={{
+                bgcolor: "background.paper",
+                color: "text.primary",
+                borderBottom: "1px solid",
+                borderColor: "divider",
+                zIndex: (theme) => theme.zIndex.drawer + 1
+            }}>
             <Toolbar sx={{ minHeight: 72, display: "flex", justifyContent: "space-between" }}>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 4 }}>
                     <Typography variant="h5" sx={{ fontWeight: 700, color: "primary.main", cursor: "pointer" }} onClick={() => router.push("/")}>

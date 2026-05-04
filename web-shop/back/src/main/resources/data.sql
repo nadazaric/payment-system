@@ -32,7 +32,7 @@ INSERT INTO VEHICLE(name, description, type, price_per_day, image_path)
 VALUES ('Toyota Yaris', 'Small and economical car, ideal for city driving and short rentals.', 'ECONOMY', 35.00, '/images/vehicles/2.png');
 
 INSERT INTO VEHICLE(name, description, type, price_per_day, image_path)
-VALUES ('BMW X3', 'Spacious SUV with premium comfort, suitable for longer trips and family travel.', 'SUV', 85.00, '/images/vehicles/3.png');
+VALUES ('BMW X3', 'Spacious SUV with premium comfort, suitable for longer trips and family travel.', 'SUV', 85.00, '/images/vehicles/3.jpg');
 
 INSERT INTO VEHICLE(name, description, type, price_per_day, image_path)
-VALUES ('Mercedes-Benz Vito', 'Large van with plenty of space, ideal for group travel or extra luggage.', 'VAN', 95.00, '/images/vehicles/4.png');
+VALUES ('Mercedes-Benz Vito', 'Large van with plenty of space, ideal for group travel or extra luggage.', 'VAN', 95.00, '/images/vehicles/4.jpg');
