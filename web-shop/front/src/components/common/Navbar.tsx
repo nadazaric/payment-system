@@ -6,7 +6,6 @@ import { notifyAuthChange } from "@/hooks/useAuthState";
 import { NAVBAR_LABELS } from "@/const/label";
 
 const navItems = [
-    { label: "Home", path: "/" },
     { label: NAVBAR_LABELS.productsOption, path: "/vehicles" },
     { label: NAVBAR_LABELS.rentalHistory, path: "/rental-history" },
 ];
@@ -40,7 +39,7 @@ export default function Navbar({ username, role }: NavbarProps) {
             }}>
             <Toolbar sx={{ minHeight: 72, display: "flex", justifyContent: "space-between" }}>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 4 }}>
-                    <Typography variant="h5" sx={{ fontWeight: 700, color: "primary.main", cursor: "pointer" }} onClick={() => router.push("/")}>
+                    <Typography variant="h5" sx={{ fontWeight: 700, color: "primary.main", cursor: "pointer" }} onClick={() => router.push("/vehicles")}>
                         {NAVBAR_LABELS.title}
                     </Typography>
 

@@ -35,7 +35,7 @@ export default function LoginForm({ onRegisterClick }: LoginFormProps) {
 
             notifyAuthChange();
 
-            router.push("/");
+            router.push("/vehicles");
         } catch {
             setError(AUTH_LABELS.invalidCredentials);
         } finally {
