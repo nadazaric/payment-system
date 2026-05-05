@@ -1,11 +1,13 @@
 package com.sep.web_shop.back.security;
 
+import com.sep.web_shop.back.feature_auth.enumeration.Role;
 import com.sep.web_shop.back.security.jwt.JwtRequestFilter;
 import com.sep.web_shop.back.security.jwt.JwtTokenUtilImpl;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -43,6 +45,8 @@ public class SecurityConfiguration {
         http.authorizeHttpRequests( auth -> auth
                         .requestMatchers("/api/user/login").permitAll()
                         .requestMatchers("/api/user/register").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/vehicles").hasAuthority(Role.ADMIN.toString())
+                        .requestMatchers(HttpMethod.POST, "/api/reservations").hasAuthority(Role.CUSTOMER.toString())
                         .anyRequest().authenticated() )
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors((cors) -> cors

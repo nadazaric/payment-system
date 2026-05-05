@@ -57,3 +57,16 @@ export const VEHICLE_DETAILS_PAGE_LABELS = {
     availabilityTitle: "Vehicle availability",
     availabilitySubtitle: "Reserved dates are marked in green."
 };
+
+export const ADD_VEHICLE_DIALOG_LABELS = {
+    title: "Add vehicle",
+    name: "Name",
+    description: "Description",
+    pricePerDay: "Price per day",
+    image: "Upload vehicle image",
+    noImage: "Click to upload vehicle image",
+    cancel: "Cancel",
+    save: "Save",
+    saving: "Saving...",
+    error: "Failed to create vehicle."
+};

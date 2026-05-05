@@ -8,3 +8,11 @@ export type Vehicle = {
     pricePerDay: number;
     imagePath: string;
 };
+
+export type CreateVehicleRequest = {
+    name: string;
+    description: string;
+    type: string;
+    pricePerDay: number;
+    image: File;
+};
