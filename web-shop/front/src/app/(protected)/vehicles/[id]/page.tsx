@@ -167,7 +167,8 @@ export default function VehicleDetailsPage() {
                             setSelectedInsuranceId={setSelectedInsuranceId}
                             setSelectedAdditionalServiceIds={setSelectedAdditionalServiceIds}
                             setStartDate={setStartDate}
-                            setEndDate={setEndDate} />
+                            setEndDate={setEndDate}
+                            vehicleId={vehicle.id} />
                     )}
                 </Box>
             </Box>

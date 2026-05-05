@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useRouter } from "next/navigation";
 import dayjs, { Dayjs } from "dayjs";
 
 import {
@@ -18,6 +19,7 @@ import {
 import { DateCalendar } from "@mui/x-date-pickers/DateCalendar";
 import { PickerDay } from "@mui/x-date-pickers/PickerDay";
 
+import { createReservation } from "@/api/reservationApi";
 import { InsurancePackage, AdditionalService } from "@/types/vehicleOptions";
 import { UnavailablePeriod } from "@/types/reservation";
 import { VEHICLE_DETAILS_PAGE_LABELS } from "@/const/label";
@@ -25,6 +27,7 @@ import { VEHICLE_DETAILS_PAGE_LABELS } from "@/const/label";
 type RangePickerDayProps = React.ComponentProps<typeof PickerDay>;
 
 type VehicleBookingCardProps = {
+    vehicleId: number;
     vehiclePricePerDay: number;
     insurancePackages: InsurancePackage[];
     additionalServices: AdditionalService[];
@@ -40,6 +43,7 @@ type VehicleBookingCardProps = {
 };
 
 export default function VehicleBookingCard({
+    vehicleId,
     vehiclePricePerDay,
     insurancePackages,
     additionalServices,
@@ -53,6 +57,11 @@ export default function VehicleBookingCard({
     setStartDate,
     setEndDate
 }: VehicleBookingCardProps) {
+    const router = useRouter();
+
+    const [saving, setSaving] = React.useState(false);
+    const [reservationError, setReservationError] = React.useState("");
+
     const isUnavailableDate = (date: Dayjs) => {
         return unavailablePeriods.some((period) => {
             const unavailableStartDate = dayjs(period.startDate);
@@ -251,6 +260,31 @@ export default function VehicleBookingCard({
     );
 
     const calendarValue = endDate ?? startDate ?? dayjs();
+
+    const handleBuy = async () => {
+        if (!startDate || !endDate || !selectedInsuranceId) {
+            return;
+        }
+
+        try {
+            setSaving(true);
+            setReservationError("");
+
+            await createReservation({
+                vehicleId,
+                startDate: startDate.format("YYYY-MM-DD"),
+                endDate: endDate.format("YYYY-MM-DD"),
+                insurancePackageId: selectedInsuranceId,
+                additionalServiceIds: selectedAdditionalServiceIds
+            });
+
+            router.push("/vehicles");
+        } catch {
+            setReservationError("Failed to create reservation.");
+        } finally {
+            setSaving(false);
+        }
+    };
 
     return (
         <Card
@@ -640,12 +674,24 @@ export default function VehicleBookingCard({
                             </Box>
                         </Box>
 
+                        {reservationError && (
+                            <Typography
+                                variant="body2"
+                                sx={{
+                                    color: "error.main",
+                                    fontWeight: 600
+                                }}>
+                                {reservationError}
+                            </Typography>
+                        )}
+
                         <Button
                             fullWidth
                             variant="contained"
                             size="large"
-                            disabled={!canBuy}>
-                            {VEHICLE_DETAILS_PAGE_LABELS.buyButton}
+                            disabled={!canBuy || saving}
+                            onClick={handleBuy}>
+                            {saving ? "Saving..." : VEHICLE_DETAILS_PAGE_LABELS.buyButton}
                         </Button>
                     </Box>
                 </Box>

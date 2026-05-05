@@ -1,12 +1,16 @@
 package com.sep.web_shop.back.feature_reservation.controller;
 
+import com.sep.web_shop.back.feature_reservation.dto.CreateReservationDTO;
+import com.sep.web_shop.back.feature_reservation.dto.ReservationDetailsDTO;
 import com.sep.web_shop.back.feature_reservation.dto.UnavailablePeriodDTO;
 import com.sep.web_shop.back.feature_reservation.service.interf.ReservationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.Authentication;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/reservations")
@@ -18,6 +22,21 @@ public class ReservationController {
     @GetMapping("/vehicles/{vehicleId}/unavailable-periods")
     public ResponseEntity<List<UnavailablePeriodDTO>> getUnavailablePeriods(@PathVariable Long vehicleId) {
         return ResponseEntity.ok(reservationService.getUnavailablePeriods(vehicleId));
+    }
+
+    @PostMapping
+    public ResponseEntity<ReservationDetailsDTO> createReservation(
+            @RequestBody CreateReservationDTO createReservationDTO,
+            Authentication authentication
+    ) {
+        Optional<ReservationDetailsDTO> reservationDetailsDTO = reservationService.createReservation(
+                createReservationDTO,
+                authentication.getName()
+        );
+
+        return reservationDetailsDTO
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.badRequest().build());
     }
 
 }
