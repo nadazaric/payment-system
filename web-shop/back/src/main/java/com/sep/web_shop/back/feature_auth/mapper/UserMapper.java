@@ -1,6 +1,5 @@
 package com.sep.web_shop.back.feature_auth.mapper;
 
-import com.sep.web_shop.back.feature_auth.dto.LoginUserDTO;
 import com.sep.web_shop.back.feature_auth.dto.RegisterUserDTO;
 import com.sep.web_shop.back.feature_auth.dto.UserDetailsDTO;
 import com.sep.web_shop.back.feature_auth.model.User;

@@ -1,5 +1,7 @@
 version: '3.8'
-name: udd-doc-search
+
+name: sep
+
 services:
   ws-postgres:
     image: postgres:17
@@ -30,6 +32,18 @@ services:
     networks:
       - app-network
     restart: always
+
+  nginx:
+    image: nginx:alpine
+    container_name: ws-nginx
+    ports:
+      - ${NGINX_PORT}:80
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./vehicles:/usr/share/nginx/html/images/vehicles:ro
+    networks:
+      - app-network
+    restart: unless-stopped
 
 volumes:
   ws-postgres-data:
