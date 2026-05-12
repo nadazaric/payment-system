@@ -45,8 +45,10 @@ public class SecurityConfiguration {
         http.authorizeHttpRequests( auth -> auth
                         .requestMatchers("/api/user/login").permitAll()
                         .requestMatchers("/api/user/register").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/vehicles").hasAuthority(Role.ADMIN.toString())
-                        .requestMatchers(HttpMethod.POST, "/api/reservations").hasAuthority(Role.CUSTOMER.toString())
+                        .requestMatchers(HttpMethod.POST, "/api/vehicles").hasAuthority(Role.ADMIN.name())
+                        .requestMatchers(HttpMethod.POST, "/api/reservations").hasAuthority(Role.CUSTOMER.name())
+                        .requestMatchers(HttpMethod.GET, "/api/reservations/vehicles/*").hasAuthority(Role.ADMIN.name())
+                        .requestMatchers(HttpMethod.GET, "/api/reservations").hasAuthority(Role.CUSTOMER.name())
                         .anyRequest().authenticated() )
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors((cors) -> cors

@@ -12,14 +12,20 @@ import {
 
 import Grid from "@mui/material/Grid";
 
-import { getReservations } from "@/api/reservationApi";
+import {
+    getReservations,
+    getReservationsByVehicle
+} from "@/api/reservationApi";
+import { getVehicles } from "@/api/vehicleApi";
 import ReservationHistoryCard from "@/components/reservations/ReservationHistoryCard";
+import { useAuthState } from "@/hooks/useAuthState";
 
 import {
     ReservationHistory,
     ReservationTimeStatus
 } from "@/types/reservation";
 
+import { Vehicle } from "@/types/vehicle";
 import { getReservationTimeStatus } from "@/utils/reservationUtils";
 import { RENTAL_HISTORY_PAGE_LABELS } from "@/const/label";
 
@@ -50,15 +56,87 @@ const RESERVATION_FILTERS: {
 ];
 
 export default function RentalHistoryPage() {
+    const authState = useAuthState();
+
     const [reservations, setReservations] = useState<ReservationHistory[]>([]);
+    const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+    const [selectedVehicleId, setSelectedVehicleId] = useState<number | "">("");
     const [selectedFilter, setSelectedFilter] = useState<ReservationFilter>(RESERVATION_FILTERS[0].value);
-    const [loading, setLoading] = useState(true);
+    const [initialLoading, setInitialLoading] = useState(true);
+    const [reservationsLoading, setReservationsLoading] = useState(false);
     const [error, setError] = useState("");
 
+    const isAdmin = authState.role === "ADMIN";
+
     useEffect(() => {
+        if (authState.isLoading) {
+            return;
+        }
+
         let ignore = false;
 
-        getReservations()
+        if (!isAdmin) {
+            getReservations()
+                .then((data) => {
+                    if (!ignore) {
+                        setReservations(data);
+                    }
+                })
+                .catch(() => {
+                    if (!ignore) {
+                        setError(RENTAL_HISTORY_PAGE_LABELS.loadingError);
+                    }
+                })
+                .finally(() => {
+                    if (!ignore) {
+                        setInitialLoading(false);
+                    }
+                });
+
+            return () => {
+                ignore = true;
+            };
+        }
+
+        getVehicles()
+            .then((data) => {
+                if (!ignore) {
+                    setVehicles(data);
+
+                    if (data.length > 0) {
+                        setSelectedVehicleId(data[0].id);
+                    } else {
+                        setInitialLoading(false);
+                    }
+                }
+            })
+            .catch(() => {
+                if (!ignore) {
+                    setError(RENTAL_HISTORY_PAGE_LABELS.loadingVehiclesError);
+                    setInitialLoading(false);
+                }
+            });
+
+        return () => {
+            ignore = true;
+        };
+    }, [
+        authState.isLoading,
+        isAdmin
+    ]);
+
+    useEffect(() => {
+        if (
+            authState.isLoading
+            || !isAdmin
+            || selectedVehicleId === ""
+        ) {
+            return;
+        }
+
+        let ignore = false;
+
+        getReservationsByVehicle(selectedVehicleId)
             .then((data) => {
                 if (!ignore) {
                     setReservations(data);
@@ -71,14 +149,19 @@ export default function RentalHistoryPage() {
             })
             .finally(() => {
                 if (!ignore) {
-                    setLoading(false);
+                    setInitialLoading(false);
+                    setReservationsLoading(false);
                 }
             });
 
         return () => {
             ignore = true;
         };
-    }, []);
+    }, [
+        authState.isLoading,
+        isAdmin,
+        selectedVehicleId
+    ]);
 
     const reservationsWithStatus = useMemo(() => {
         return reservations.map((reservation) => ({
@@ -103,7 +186,17 @@ export default function RentalHistoryPage() {
         selectedFilter
     ]);
 
-    if (loading) {
+    const handleVehicleChange = (vehicleId: number) => {
+        if (vehicleId === selectedVehicleId) {
+            return;
+        }
+
+        setError("");
+        setReservationsLoading(true);
+        setSelectedVehicleId(vehicleId);
+    };
+
+    if (initialLoading || authState.isLoading) {
         return (
             <Box
                 sx={{
@@ -139,6 +232,68 @@ export default function RentalHistoryPage() {
                 </Typography>
             </Box>
 
+            {!error && isAdmin && vehicles.length > 0 && (
+                <Box
+                    sx={{
+                        mb: 2.5
+                    }}>
+                    <Box
+                        sx={{
+                            display: "flex",
+                            flexWrap: "wrap",
+                            gap: 1
+                        }}>
+                        {vehicles.map((vehicle) => {
+                            const isSelected = selectedVehicleId === vehicle.id;
+
+                            return (
+                                <Chip
+                                    key={vehicle.id}
+                                    label={vehicle.name}
+                                    clickable
+                                    color={isSelected ? "primary" : "default"}
+                                    variant={isSelected ? "filled" : "outlined"}
+                                    onClick={() => handleVehicleChange(vehicle.id)}
+                                    sx={{
+                                        fontWeight: 600
+                                    }} />
+                            );
+                        })}
+                    </Box>
+                </Box>
+            )}
+
+            {!error && (
+                <Box
+                    sx={{
+                        mb: 3
+                    }}>
+                    <Box
+                        sx={{
+                            display: "flex",
+                            flexWrap: "wrap",
+                            gap: 1
+                        }}>
+                        {RESERVATION_FILTERS.map((filter) => {
+                            const isSelected = selectedFilter === filter.value;
+
+                            return (
+                                <Chip
+                                    key={filter.value}
+                                    label={filter.label}
+                                    clickable
+                                    color={isSelected ? "primary" : "default"}
+                                    variant={isSelected ? "filled" : "outlined"}
+                                    onClick={() => setSelectedFilter(filter.value)}
+                                    sx={{
+                                        fontWeight: 600
+                                    }} />
+                            );
+                        })}
+                    </Box>
+                </Box>
+            )}
+
             {error && (
                 <Alert
                     severity="error"
@@ -149,65 +304,62 @@ export default function RentalHistoryPage() {
                 </Alert>
             )}
 
-            {!error && reservations.length > 0 && (
-                <Box
+            {!error && isAdmin && vehicles.length === 0 && (
+                <Alert
+                    severity="info"
                     sx={{
-                        display: "flex",
-                        flexWrap: "wrap",
-                        gap: 1,
                         mb: 3
                     }}>
-                    {RESERVATION_FILTERS.map((filter) => {
-                        const isSelected = selectedFilter === filter.value;
-
-                        return (
-                            <Chip
-                                key={filter.value}
-                                label={filter.label}
-                                clickable
-                                color={isSelected ? "primary" : "default"}
-                                variant={isSelected ? "filled" : "outlined"}
-                                onClick={() => setSelectedFilter(filter.value)}
-                                sx={{
-                                    fontWeight: 600
-                                }} />
-                        );
-                    })}
-                </Box>
+                    {RENTAL_HISTORY_PAGE_LABELS.noVehicles}
+                </Alert>
             )}
 
-            {!error && reservations.length === 0 && (
+            {!error && reservations.length === 0 && !reservationsLoading && (
                 <Alert
                     severity="info">
                     {RENTAL_HISTORY_PAGE_LABELS.noReservations}
                 </Alert>
             )}
 
-            {!error && reservations.length > 0 && filteredReservations.length === 0 && (
+            {!error && reservations.length > 0 && filteredReservations.length === 0 && !reservationsLoading && (
                 <Alert
                     severity="info">
                     {RENTAL_HISTORY_PAGE_LABELS.noFilteredReservations}
                 </Alert>
             )}
 
-            <Grid
-                container
-                spacing={3}>
-                {filteredReservations.map(({ reservation, timeStatus }) => (
-                    <Grid
-                        key={reservation.id}
-                        size={{
-                            xs: 12,
-                            sm: 6,
-                            md: 4,
-                            lg: 4
-                        }}>
-                        <ReservationHistoryCard
-                            reservation={reservation}
-                            timeStatus={timeStatus} />
-                    </Grid>
-                ))}
-            </Grid>
+            {reservationsLoading && (
+                <Box
+                    sx={{
+                        display: "flex",
+                        justifyContent: "center",
+                        my: 4
+                    }}>
+                    <CircularProgress
+                        size={28} />
+                </Box>
+            )}
+
+            {!reservationsLoading && (
+                <Grid
+                    container
+                    spacing={3}>
+                    {filteredReservations.map(({ reservation, timeStatus }) => (
+                        <Grid
+                            key={reservation.id}
+                            size={{
+                                xs: 12,
+                                sm: 6,
+                                md: 4,
+                                lg: 4
+                            }}>
+                            <ReservationHistoryCard
+                                reservation={reservation}
+                                timeStatus={timeStatus} />
+                        </Grid>
+                    ))}
+                </Grid>
+            )}
         </Box>
     );
 }

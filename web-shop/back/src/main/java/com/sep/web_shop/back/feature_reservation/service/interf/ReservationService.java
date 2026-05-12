@@ -16,4 +16,6 @@ public interface ReservationService {
 
     List<ReservationHistoryDTO> getReservations(String username);
 
+    List<ReservationHistoryDTO> getReservationsByVehicle(Long vehicleId);
+
 }

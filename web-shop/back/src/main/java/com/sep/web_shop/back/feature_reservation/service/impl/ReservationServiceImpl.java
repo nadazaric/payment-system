@@ -135,4 +135,11 @@ public class ReservationServiceImpl implements ReservationService {
         );
     }
 
+    @Override
+    public List<ReservationHistoryDTO> getReservationsByVehicle(Long vehicleId) {
+        return reservationMapper.toHistoryDtoList(
+                reservationRepository.findByVehicleIdOrderByStartDateDesc(vehicleId)
+        );
+    }
+
 }

@@ -85,5 +85,7 @@ export const RENTAL_HISTORY_PAGE_LABELS = {
     additionalServices: "Additional services",
     noAdditionalServices: "No additional services",
     total: "Total",
-    currency: "EUR"
+    currency: "EUR",
+    loadingVehiclesError: "Failed to load vehicles.",
+    noVehicles: "No vehicles are currently available."
 };

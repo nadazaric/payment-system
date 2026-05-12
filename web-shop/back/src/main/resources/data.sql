@@ -4,6 +4,9 @@ VALUES ('Nada Zaric', 'nada', 'nada@email.com', '$2a$12$7hc0JeJJx4ynUkfw1N528.pj
 INSERT INTO APP_USER(name, username, email, password, role)
 VALUES ('Gordana Mikic', 'goga', 'goga@email.com', '$2a$10$XOdmu89Fp5WtTbY/trC3H.NnucImTNZB7UPBmCxJRsuizmeRv2YMu', 'CUSTOMER');
 
+INSERT INTO APP_USER(name, username, email, password, role)
+VALUES ('Ranka Milovanovic', 'ranka', 'ranka@email.com', '$2a$10$1nNhoiALYeW0/MyVtmY4wu/uZLLIc2iE2ByItCXQnsft/vZUqaiHe', 'CUSTOMER');
+
 INSERT INTO INSURANCE_PACKAGE(name, description, price_per_day)
 VALUES ('Basic Insurance', 'Basic insurance included in the rental price.', 0.00);
 
@@ -38,13 +41,13 @@ INSERT INTO VEHICLE(name, description, type, price_per_day, image_path)
 VALUES ('Mercedes-Benz Vito', 'Large van with plenty of space, ideal for group travel or extra luggage.', 'VAN', 95.00, '/images/vehicles/4.jpg');
 
 INSERT INTO RESERVATION(vehicle_id, user_id, insurance_package_id, start_date, end_date, total_price, payment_status)
-VALUES (1, 2, 1, '2026-05-01', '2026-05-05', 180.00, 'PAID');
+VALUES (1, 3, 1, '2026-05-01', '2026-05-05', 180.00, 'PAID');
 
 INSERT INTO RESERVATION(vehicle_id, user_id, insurance_package_id, start_date, end_date, total_price, payment_status)
 VALUES (2, 2, 1, '2026-05-10', '2026-05-14', 140.00, 'PAID');
 
 INSERT INTO RESERVATION(vehicle_id, user_id, insurance_package_id, start_date, end_date, total_price, payment_status)
-VALUES (3, 2, 1, '2026-06-01', '2026-06-05', 372.00, 'PAID');
+VALUES (3, 3, 1, '2026-06-01', '2026-06-05', 372.00, 'PAID');
 
 INSERT INTO RESERVATION(vehicle_id, user_id, insurance_package_id, start_date, end_date, total_price, payment_status)
 VALUES (4, 2, 1, '2026-06-10', '2026-06-13', 303.00, 'PENDING');

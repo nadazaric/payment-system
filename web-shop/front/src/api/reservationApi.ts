@@ -3,7 +3,7 @@ import { CreateReservationRequest, ReservationDetails, ReservationHistory, Unava
 
 const ROOT_PATH = "/reservations"
 export const getUnavailablePeriods = async (vehicleId: number): Promise<UnavailablePeriod[]> => {
-    const response = await axiosInstance.get<UnavailablePeriod[]>(`${ROOT_PATH}/vehicles/${vehicleId}/unavailable-periods`);
+    const response = await axiosInstance.get<UnavailablePeriod[]>(`${ROOT_PATH}/unavailable-periods/vehicles/${vehicleId}`);
 
     return response.data;
 };
@@ -16,6 +16,12 @@ export const createReservation = async (request: CreateReservationRequest): Prom
 
 export const getReservations = async (): Promise<ReservationHistory[]> => {
     const response = await axiosInstance.get<ReservationHistory[]>(`${ROOT_PATH}`);
+
+    return response.data;
+};
+
+export const getReservationsByVehicle = async (vehicleId: number): Promise<ReservationHistory[]> => {
+    const response = await axiosInstance.get<ReservationHistory[]>(`${ROOT_PATH}/vehicles/${vehicleId}`);
 
     return response.data;
 };

@@ -17,4 +17,6 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
 
     List<Reservation> findByUserUsernameOrderByStartDateDesc(String username);
 
+    List<Reservation> findByVehicleIdOrderByStartDateDesc(Long vehicleId);
+
 }

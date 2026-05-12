@@ -20,7 +20,7 @@ public class ReservationController {
 
     private final ReservationService reservationService;
 
-    @GetMapping("/vehicles/{vehicleId}/unavailable-periods")
+    @GetMapping("/unavailable-periods/vehicles/{vehicleId}")
     public ResponseEntity<List<UnavailablePeriodDTO>> getUnavailablePeriods(@PathVariable Long vehicleId) {
         return ResponseEntity.ok(reservationService.getUnavailablePeriods(vehicleId));
     }
@@ -46,6 +46,15 @@ public class ReservationController {
     ) {
         return ResponseEntity.ok(
                 reservationService.getReservations(authentication.getName())
+        );
+    }
+
+    @GetMapping("/vehicles/{vehicleId}")
+    public ResponseEntity<List<ReservationHistoryDTO>> getReservationsByVehicle(
+            @PathVariable Long vehicleId
+    ) {
+        return ResponseEntity.ok(
+                reservationService.getReservationsByVehicle(vehicleId)
         );
     }
 
