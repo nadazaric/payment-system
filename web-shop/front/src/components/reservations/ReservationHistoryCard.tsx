@@ -26,10 +26,6 @@ type ReservationHistoryCardProps = {
     timeStatus: ReservationTimeStatus | null;
 };
 
-const RESERVATION_HISTORY_CARD_LABELS = {
-    
-};
-
 const IMAGE_BASE_URL = process.env.NEXT_PUBLIC_IMAGE_BASE_URL ?? "";
 
 const getPaymentStatusStyles = (

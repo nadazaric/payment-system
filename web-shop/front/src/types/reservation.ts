@@ -12,7 +12,7 @@ export type CreateReservationRequest = {
     startDate: string;
     endDate: string;
     insurancePackageId: number;
-    paymentStatus: PaymentStatus;
+    additionalServiceIds: number[];
 };
 
 export type ReservationDetails = {

@@ -98,10 +98,7 @@ public class ReservationServiceImpl implements ReservationService {
             return Optional.empty();
         }
 
-        long numberOfDays = ChronoUnit.DAYS.between(
-                createReservationDTO.startDate(),
-                createReservationDTO.endDate()
-        );
+        long numberOfDays = ChronoUnit.DAYS.between(createReservationDTO.startDate(), createReservationDTO.endDate()) + 1;
 
         BigDecimal additionalServicesPricePerDay = additionalServices.stream()
                 .map(AdditionalService::getPricePerDay)

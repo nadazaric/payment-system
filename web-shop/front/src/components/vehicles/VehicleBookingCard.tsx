@@ -229,7 +229,7 @@ export default function VehicleBookingCard({
         + additionalServicesPrice;
 
     const numberOfDays = startDate && endDate && endDate.isAfter(startDate, "day")
-        ? endDate.diff(startDate, "day")
+        ? endDate.diff(startDate, "day") + 1
         : 0;
 
     const totalPrice = totalPerDay * numberOfDays;

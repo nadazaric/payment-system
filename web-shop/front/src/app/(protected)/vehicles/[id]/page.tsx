@@ -27,12 +27,7 @@ import { useAuthState } from "@/hooks/useAuthState";
 import { UnavailablePeriod } from "@/types/reservation";
 import { Vehicle } from "@/types/vehicle";
 import { InsurancePackage, AdditionalService } from "@/types/vehicleOptions";
-
-const VEHICLE_DETAILS_PAGE_LABELS = {
-    loadingError: "Failed to load vehicle details.",
-    vehicleNotFound: "Vehicle not found.",
-    pageTitle: "Vehicle details"
-};
+import { VEHICLE_DETAILS_PAGE_LABELS } from "@/const/label";
 
 export default function VehicleDetailsPage() {
     const params = useParams();

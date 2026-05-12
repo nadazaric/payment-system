@@ -34,6 +34,7 @@ export const VEHICLE_CARD_LABELS = {
 };
 
 export const VEHICLE_DETAILS_PAGE_LABELS = {
+    pageTitle: "Vehicle details",
     currency: "EUR",
     rentalPeriodTitle: "Rental period",
     startDate: "Start date",
