@@ -99,6 +99,16 @@ const theme = createTheme({
                 },
             },
         },
+
+        // ------------------------------------------------------------ Chips
+        MuiChip: {
+            styleOverrides: {
+                root: {
+                    borderRadius: 6,
+                    fontWeight: 600,
+                },
+            },
+        },
     },
 });
 

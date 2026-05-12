@@ -1,3 +1,7 @@
+export type PaymentStatus = "PENDING" | "PAID" | "FAILED";
+
+export type ReservationTimeStatus = "ACTIVE" | "UPCOMING" | "COMPLETED";
+
 export type UnavailablePeriod = {
     startDate: string;
     endDate: string;
@@ -8,7 +12,7 @@ export type CreateReservationRequest = {
     startDate: string;
     endDate: string;
     insurancePackageId: number;
-    additionalServiceIds: number[];
+    paymentStatus: PaymentStatus;
 };
 
 export type ReservationDetails = {
@@ -20,4 +24,18 @@ export type ReservationDetails = {
     additionalServiceIds: number[];
     totalPrice: number;
     status: string;
+};
+
+export type ReservationHistory = {
+    id: number;
+    vehicleId: number;
+    vehicleName: string;
+    vehicleImagePath: string;
+    vehicleType: string;
+    startDate: string;
+    endDate: string;
+    insurancePackageName: string;
+    additionalServiceNames: string[];
+    totalPrice: number;
+    paymentStatus: PaymentStatus;
 };

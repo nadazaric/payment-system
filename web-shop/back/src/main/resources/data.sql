@@ -37,26 +37,41 @@ VALUES ('BMW X3', 'Spacious SUV with premium comfort, suitable for longer trips 
 INSERT INTO VEHICLE(name, description, type, price_per_day, image_path)
 VALUES ('Mercedes-Benz Vito', 'Large van with plenty of space, ideal for group travel or extra luggage.', 'VAN', 95.00, '/images/vehicles/4.jpg');
 
-INSERT INTO RESERVATION(vehicle_id, user_id, insurance_package_id, start_date, end_date, total_price, status)
-VALUES (1, 2, 1, '2026-05-10', '2026-05-15', 225.00, 'CREATED');
+INSERT INTO RESERVATION(vehicle_id, user_id, insurance_package_id, start_date, end_date, total_price, payment_status)
+VALUES (1, 2, 1, '2026-05-01', '2026-05-05', 180.00, 'PAID');
 
-INSERT INTO RESERVATION(vehicle_id, user_id, insurance_package_id, start_date, end_date, total_price, status)
-VALUES (1, 2, 1, '2026-06-01', '2026-06-04', 135.00, 'CREATED');
+INSERT INTO RESERVATION(vehicle_id, user_id, insurance_package_id, start_date, end_date, total_price, payment_status)
+VALUES (2, 2, 1, '2026-05-10', '2026-05-14', 140.00, 'PAID');
 
-INSERT INTO RESERVATION(vehicle_id, user_id, insurance_package_id, start_date, end_date, total_price, status)
-VALUES (2, 2, 1, '2026-05-20', '2026-05-25', 175.00, 'CREATED');
+INSERT INTO RESERVATION(vehicle_id, user_id, insurance_package_id, start_date, end_date, total_price, payment_status)
+VALUES (3, 2, 1, '2026-06-01', '2026-06-05', 372.00, 'PAID');
 
-INSERT INTO RESERVATION(vehicle_id, user_id, insurance_package_id, start_date, end_date, total_price, status)
-VALUES (3, 2, 1, '2026-05-12', '2026-05-18', 510.00, 'CREATED');
+INSERT INTO RESERVATION(vehicle_id, user_id, insurance_package_id, start_date, end_date, total_price, payment_status)
+VALUES (4, 2, 1, '2026-06-10', '2026-06-13', 303.00, 'PENDING');
+
+INSERT INTO RESERVATION(vehicle_id, user_id, insurance_package_id, start_date, end_date, total_price, payment_status)
+VALUES (1, 2, 1, '2026-05-11', '2026-05-15', 180.00, 'PENDING');
+
+INSERT INTO RESERVATION(vehicle_id, user_id, insurance_package_id, start_date, end_date, total_price, payment_status)
+VALUES (2, 2, 1, '2026-05-02', '2026-05-06', 140.00, 'FAILED');
+
+INSERT INTO RESERVATION(vehicle_id, user_id, insurance_package_id, start_date, end_date, total_price, payment_status)
+VALUES (3, 2, 1, '2026-06-20', '2026-06-24', 340.00, 'FAILED');
+
+INSERT INTO RESERVATION(vehicle_id, user_id, insurance_package_id, start_date, end_date, total_price, payment_status)
+VALUES (4, 2, 2, '2026-04-20', '2026-04-25', 525.00, 'PAID');
+
+INSERT INTO RESERVATION(vehicle_id, user_id, insurance_package_id, start_date, end_date, total_price, payment_status)
+VALUES (1, 2, 3, '2026-07-01', '2026-07-04', 216.00, 'PAID');
 
 INSERT INTO RESERVATION_ADDITIONAL_SERVICES(reservation_id, additional_service_id)
-VALUES (1, 1);
-
-INSERT INTO RESERVATION_ADDITIONAL_SERVICES(reservation_id, additional_service_id)
-VALUES (1, 2);
-
-INSERT INTO RESERVATION_ADDITIONAL_SERVICES(reservation_id, additional_service_id)
-VALUES (4, 1);
+VALUES (3, 4);
 
 INSERT INTO RESERVATION_ADDITIONAL_SERVICES(reservation_id, additional_service_id)
 VALUES (4, 2);
+
+INSERT INTO RESERVATION_ADDITIONAL_SERVICES(reservation_id, additional_service_id)
+VALUES (9, 1);
+
+INSERT INTO RESERVATION_ADDITIONAL_SERVICES(reservation_id, additional_service_id)
+VALUES (9, 3);

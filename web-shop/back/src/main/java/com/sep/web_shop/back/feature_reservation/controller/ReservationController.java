@@ -2,6 +2,7 @@ package com.sep.web_shop.back.feature_reservation.controller;
 
 import com.sep.web_shop.back.feature_reservation.dto.CreateReservationDTO;
 import com.sep.web_shop.back.feature_reservation.dto.ReservationDetailsDTO;
+import com.sep.web_shop.back.feature_reservation.dto.ReservationHistoryDTO;
 import com.sep.web_shop.back.feature_reservation.dto.UnavailablePeriodDTO;
 import com.sep.web_shop.back.feature_reservation.service.interf.ReservationService;
 import lombok.RequiredArgsConstructor;
@@ -37,6 +38,15 @@ public class ReservationController {
         return reservationDetailsDTO
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.badRequest().build());
+    }
+
+    @GetMapping
+    public ResponseEntity<List<ReservationHistoryDTO>> getReservations(
+            Authentication authentication
+    ) {
+        return ResponseEntity.ok(
+                reservationService.getReservations(authentication.getName())
+        );
     }
 
 }

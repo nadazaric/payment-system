@@ -70,3 +70,20 @@ export const ADD_VEHICLE_DIALOG_LABELS = {
     saving: "Saving...",
     error: "Failed to create vehicle."
 };
+
+export const RENTAL_HISTORY_PAGE_LABELS = {
+    title: "Rental history",
+    description: "Overview of your vehicle reservations.",
+    loadingError: "Failed to load reservations.",
+    noReservations: "You do not have any reservations yet.",
+    noFilteredReservations: "No reservations match the selected filter.",
+    activeChip: "Active",
+    upcomingChip: "Upcoming",
+    completedChip: "Completed",
+    paymentFailedChip: "Payment Failed",
+    insurance: "Insurance",
+    additionalServices: "Additional services",
+    noAdditionalServices: "No additional services",
+    total: "Total",
+    currency: "EUR"
+};

@@ -4,8 +4,9 @@ import com.sep.web_shop.back.feature_auth.model.User;
 import com.sep.web_shop.back.feature_auth.repository.UserRepository;
 import com.sep.web_shop.back.feature_reservation.dto.CreateReservationDTO;
 import com.sep.web_shop.back.feature_reservation.dto.ReservationDetailsDTO;
+import com.sep.web_shop.back.feature_reservation.dto.ReservationHistoryDTO;
 import com.sep.web_shop.back.feature_reservation.dto.UnavailablePeriodDTO;
-import com.sep.web_shop.back.feature_reservation.enumeration.ReservationStatus;
+import com.sep.web_shop.back.feature_reservation.enumeration.PaymentStatus;
 import com.sep.web_shop.back.feature_reservation.mapper.ReservationMapper;
 import com.sep.web_shop.back.feature_reservation.model.Reservation;
 import com.sep.web_shop.back.feature_reservation.repository.ReservationRepository;
@@ -59,9 +60,8 @@ public class ReservationServiceImpl implements ReservationService {
         }
 
         boolean vehicleUnavailable = reservationRepository
-                .existsByVehicleIdAndStatusAndStartDateLessThanEqualAndEndDateGreaterThanEqual(
+                .existsByVehicleIdAndStartDateLessThanEqualAndEndDateGreaterThanEqual(
                         createReservationDTO.vehicleId(),
-                        ReservationStatus.CREATED,
                         createReservationDTO.endDate(),
                         createReservationDTO.startDate()
                 );
@@ -121,11 +121,18 @@ public class ReservationServiceImpl implements ReservationService {
         reservation.setStartDate(createReservationDTO.startDate());
         reservation.setEndDate(createReservationDTO.endDate());
         reservation.setTotalPrice(totalPrice);
-        reservation.setStatus(ReservationStatus.CREATED);
+        reservation.setPaymentStatus(PaymentStatus.PENDING);
 
         Reservation savedReservation = reservationRepository.save(reservation);
 
         return Optional.of(reservationMapper.toDetailsDTO(savedReservation));
+    }
+
+    @Override
+    public List<ReservationHistoryDTO> getReservations(String username) {
+        return reservationMapper.toHistoryDtoList(
+                reservationRepository.findByUserUsernameOrderByStartDateDesc(username)
+        );
     }
 
 }

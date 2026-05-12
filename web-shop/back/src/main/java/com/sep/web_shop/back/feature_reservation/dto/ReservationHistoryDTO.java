@@ -6,13 +6,16 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
-public record ReservationDetailsDTO(
+public record ReservationHistoryDTO(
         Long id,
         Long vehicleId,
+        String vehicleName,
+        String vehicleImagePath,
+        String vehicleType,
         LocalDate startDate,
         LocalDate endDate,
-        Long insurancePackageId,
-        List<Long> additionalServiceIds,
+        String insurancePackageName,
+        List<String> additionalServiceNames,
         BigDecimal totalPrice,
         PaymentStatus paymentStatus
 ) {
