@@ -45,12 +45,7 @@ public record MerchantRegistrationResponse(
                 description = "Reference of the automatically created default seller account.",
                 example = "MAIN_SELLER"
         )
-        String defaultSellerReference,
+        String defaultSellerReference
 
-        @Schema(
-                description = "Information message for the merchant admin.",
-                example = "Merchant registered successfully. Save the merchant password now because it will not be shown again."
-        )
-        String message
 ) {
 }

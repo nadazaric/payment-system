@@ -49,7 +49,7 @@ public class MerchantSellerAccount {
         this.merchant = merchant;
         this.sellerReference = sellerReference;
         this.displayName = displayName;
-        this.active = true;
+        this.active = false;
     }
 
     @PrePersist

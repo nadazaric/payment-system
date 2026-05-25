@@ -65,7 +65,7 @@ public class Merchant {
         this.successUrl = successUrl;
         this.failUrl = failUrl;
         this.errorUrl = errorUrl;
-        this.active = true;
+        this.active = false;
     }
 
     @PrePersist
