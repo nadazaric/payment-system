@@ -1,5 +1,7 @@
 package com.sep.psp.back.feature_merchant.service.impl;
 
+import com.sep.psp.back.feature_merchant.dto.MerchantLoginRequest;
+import com.sep.psp.back.feature_merchant.dto.MerchantLoginResponse;
 import com.sep.psp.back.feature_merchant.dto.MerchantRegistrationRequest;
 import com.sep.psp.back.feature_merchant.dto.MerchantRegistrationResponse;
 import com.sep.psp.back.feature_merchant.mapper.MerchantMapper;
@@ -11,9 +13,14 @@ import com.sep.psp.back.feature_merchant.repository.MerchantRepository;
 import com.sep.psp.back.feature_merchant.repository.MerchantSellerAccountRepository;
 import com.sep.psp.back.feature_merchant.service.interf.MerchantCredentialGenerator;
 import com.sep.psp.back.feature_merchant.service.interf.MerchantService;
+import com.sep.psp.back.security.jwt.JwtTokenUtil;
 import com.sep.psp.back.shared.error.exception.BadRequestException;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -34,6 +41,10 @@ public class MerchantServiceImpl implements MerchantService {
     @Autowired PasswordEncoder passwordEncoder;
 
     @Autowired MerchantMapper merchantMapper;
+
+    @Autowired AuthenticationManager authenticationManager;
+
+    @Autowired JwtTokenUtil jwtTokenUtil;
 
     @Override
     @Transactional
@@ -114,6 +125,30 @@ public class MerchantServiceImpl implements MerchantService {
         } while (merchantRepository.existsById(merchantId));
 
         return merchantId;
+    }
+
+    @Override
+    @Transactional
+    public MerchantLoginResponse loginMerchantAdmin(MerchantLoginRequest request) {
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        request.username(),
+                        request.password()
+                )
+        );
+
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        MerchantAdmin merchantAdmin = merchantAdminRepository.findByUsername(request.username())
+                .orElseThrow(() -> new BadRequestException("Invalid username or password."));
+
+        String token = jwtTokenUtil.generateToken(
+                merchantAdmin.getUsername(),
+                "MERCHANT_ADMIN",
+                merchantAdmin.getMerchant().getMerchantId()
+        );
+
+        return new MerchantLoginResponse(token);
     }
 
 }

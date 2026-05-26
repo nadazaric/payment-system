@@ -1,5 +1,7 @@
 package com.sep.psp.back.feature_merchant.controller;
 
+import com.sep.psp.back.feature_merchant.dto.MerchantLoginRequest;
+import com.sep.psp.back.feature_merchant.dto.MerchantLoginResponse;
 import com.sep.psp.back.feature_merchant.dto.MerchantRegistrationRequest;
 import com.sep.psp.back.feature_merchant.dto.MerchantRegistrationResponse;
 import com.sep.psp.back.feature_merchant.service.interf.MerchantService;
@@ -52,6 +54,33 @@ public class MerchantController {
             @Valid @RequestBody MerchantRegistrationRequest request
     ) {
         return merchantService.registerMerchant(request);
+    }
+
+    // ----------------------------------------------------------------------------------------------------------------- Login
+    @Operation(
+            summary = "Log in merchant admin",
+            description = """
+                Authenticates a merchant admin using username and password.
+                Returns a JWT token that must be used as Bearer token for protected merchant endpoints.
+                """
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Merchant admin logged in successfully.",
+                    content = @Content(schema = @Schema(implementation = MerchantLoginResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Invalid username or password.",
+                    content = @Content
+            )
+    })
+    @PostMapping("/login")
+    public MerchantLoginResponse loginMerchantAdmin(
+            @Valid @RequestBody MerchantLoginRequest request
+    ) {
+        return merchantService.loginMerchantAdmin(request);
     }
 
 }

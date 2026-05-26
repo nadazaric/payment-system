@@ -5,9 +5,13 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 public interface JwtTokenUtil {
 
-    String generateToken(String role);
+    String generateToken(String username, String role, String merchantId);
 
     String getUsernameFromJWT(String token);
+
+    String getRoleFromJWT(String token);
+
+    String getMerchantIdFromJWT(String token);
 
     boolean validateToken(String token);
 
