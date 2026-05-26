@@ -1,9 +1,6 @@
 package com.sep.psp.back.feature_merchant.service.impl;
 
-import com.sep.psp.back.feature_merchant.dto.MerchantLoginRequest;
-import com.sep.psp.back.feature_merchant.dto.MerchantLoginResponse;
-import com.sep.psp.back.feature_merchant.dto.MerchantRegistrationRequest;
-import com.sep.psp.back.feature_merchant.dto.MerchantRegistrationResponse;
+import com.sep.psp.back.feature_merchant.dto.*;
 import com.sep.psp.back.feature_merchant.mapper.MerchantMapper;
 import com.sep.psp.back.feature_merchant.model.Merchant;
 import com.sep.psp.back.feature_merchant.model.MerchantAdmin;
@@ -23,6 +20,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 public class MerchantServiceImpl implements MerchantService {
@@ -149,6 +148,68 @@ public class MerchantServiceImpl implements MerchantService {
         );
 
         return new MerchantLoginResponse(token);
+    }
+
+    @Override
+    public MerchantProfileResponse getCurrentMerchantProfile() {
+        String username = getAuthenticatedUsername();
+
+        MerchantAdmin merchantAdmin = merchantAdminRepository.findByUsername(username)
+                .orElseThrow(() -> new BadRequestException("Authenticated merchant admin not found."));
+
+        return merchantMapper.toProfileResponse(merchantAdmin);
+    }
+
+    private String getAuthenticatedUsername() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || authentication.getName() == null) {
+            throw new BadRequestException("Authenticated user not found.");
+        }
+
+        return authentication.getName();
+    }
+
+    @Override
+    public List<MerchantSellerAccountResponse> getCurrentMerchantSellerAccounts() {
+        String username = getAuthenticatedUsername();
+
+        MerchantAdmin merchantAdmin = merchantAdminRepository.findByUsername(username)
+                .orElseThrow(() -> new BadRequestException("Authenticated merchant admin not found."));
+
+        List<MerchantSellerAccount> sellerAccounts = merchantSellerAccountRepository.findByMerchant(
+                merchantAdmin.getMerchant()
+        );
+
+        return merchantMapper.toSellerAccountResponseList(sellerAccounts);
+    }
+
+    @Override
+    @Transactional
+    public MerchantSellerAccountResponse createSellerAccount(CreateMerchantSellerAccountRequest request) {
+        String username = getAuthenticatedUsername();
+
+        MerchantAdmin merchantAdmin = merchantAdminRepository.findByUsername(username)
+                .orElseThrow(() -> new BadRequestException("Authenticated merchant admin not found."));
+
+        Merchant merchant = merchantAdmin.getMerchant();
+
+        if (merchantSellerAccountRepository.existsByMerchantAndSellerReference(
+                merchant,
+                request.sellerReference()
+        )) {
+            throw new BadRequestException("Seller reference is already in use for this merchant.");
+        }
+
+        MerchantSellerAccount sellerAccount = new MerchantSellerAccount(
+                merchant,
+                request.sellerReference(),
+                request.displayName()
+        );
+
+        MerchantSellerAccount savedSellerAccount = merchantSellerAccountRepository.save(sellerAccount);
+
+        return merchantMapper.toSellerAccountResponse(savedSellerAccount);
     }
 
 }
