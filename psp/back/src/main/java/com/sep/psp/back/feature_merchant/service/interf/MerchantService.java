@@ -16,4 +16,12 @@ public interface MerchantService {
 
     MerchantSellerAccountResponse createSellerAccount(CreateMerchantSellerAccountRequest request);
 
+    void updateSellerPaymentMethods(String sellerId, UpdateSellerPaymentMethodsRequest request);
+
+    void updateCurrentMerchantProfile(UpdateMerchantProfileRequest request);
+
+    RegenerateMerchantPasswordResponse regenerateMerchantPassword();
+
+    void updateSellerAccount(String sellerId, UpdateMerchantSellerAccountRequest request);
+
 }

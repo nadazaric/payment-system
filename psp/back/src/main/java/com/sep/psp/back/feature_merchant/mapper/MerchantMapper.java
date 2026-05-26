@@ -6,12 +6,16 @@ import com.sep.psp.back.feature_merchant.dto.MerchantSellerAccountResponse;
 import com.sep.psp.back.feature_merchant.model.Merchant;
 import com.sep.psp.back.feature_merchant.model.MerchantAdmin;
 import com.sep.psp.back.feature_merchant.model.MerchantSellerAccount;
+import com.sep.psp.back.feature_payment.mapper.PaymentMethodMapper;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
 import java.util.List;
 
-@Mapper(componentModel = "spring")
+@Mapper(
+        componentModel = "spring",
+        uses = PaymentMethodMapper.class
+)
 public interface MerchantMapper {
 
     @Mapping(source = "merchantAdmin.username", target = "adminUsername")

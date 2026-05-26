@@ -54,3 +54,12 @@ VALUES (
            'Main seller',
            false
        );
+
+INSERT INTO payment_method (
+    code,
+    display_name,
+    active
+)
+VALUES
+    ('CARD', 'Payment card', true),
+    ('QR_CODE', 'QR code', true);

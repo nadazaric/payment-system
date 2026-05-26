@@ -162,4 +162,131 @@ public class MerchantController {
         return merchantService.createSellerAccount(request);
     }
 
+    // ----------------------------------------------------------------------------------------------------------------- Update Seller payment methods
+    @Operation(
+            summary = "Update seller payment methods",
+            description = """
+                Updates payment methods available for a seller account.
+                The seller account must belong to the currently authenticated merchant.
+                At least one active payment method must be selected.
+                """
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "204",
+                    description = "Seller payment methods updated successfully."
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Invalid request, seller does not belong to merchant, or payment method is invalid.",
+                    content = @Content
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Missing or invalid JWT token.",
+                    content = @Content
+            )
+    })
+    @PutMapping("/sellers/{sellerId}/payment-methods")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void updateSellerPaymentMethods(
+            @PathVariable String sellerId,
+            @Valid @RequestBody UpdateSellerPaymentMethodsRequest request
+    ) {
+        merchantService.updateSellerPaymentMethods(sellerId, request);
+    }
+
+    // ----------------------------------------------------------------------------------------------------------------- Update profile
+    @Operation(
+            summary = "Update current merchant profile",
+            description = """
+                Updates profile information for the currently authenticated merchant.
+                The merchant is resolved from the JWT Bearer token.
+                Merchant ID, merchant password/API key and active status cannot be updated through this endpoint.
+                """
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "204",
+                    description = "Merchant profile updated successfully."
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Invalid request data.",
+                    content = @Content
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Missing or invalid JWT token.",
+                    content = @Content
+            )
+    })
+    @PutMapping("/profile")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void updateCurrentMerchantProfile(
+            @Valid @RequestBody UpdateMerchantProfileRequest request
+    ) {
+        merchantService.updateCurrentMerchantProfile(request);
+    }
+
+    // ----------------------------------------------------------------------------------------------------------------- Regenerate merchant password
+    @Operation(
+            summary = "Regenerate merchant password/API key",
+            description = """
+                Generates a new merchant password/API key for the currently authenticated merchant.
+                The new value is returned only once and must be stored by the merchant.
+                The old merchant password/API key becomes invalid.
+                """
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Merchant password/API key regenerated successfully.",
+                    content = @Content(schema = @Schema(implementation = RegenerateMerchantPasswordResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Missing or invalid JWT token.",
+                    content = @Content
+            )
+    })
+    @PostMapping("/api-key/regenerate")
+    public RegenerateMerchantPasswordResponse regenerateMerchantPassword() {
+        return merchantService.regenerateMerchantPassword();
+    }
+
+    // ----------------------------------------------------------------------------------------------------------------- Update seller
+    @Operation(
+            summary = "Update merchant seller account",
+            description = """
+                Updates seller account information for the currently authenticated merchant.
+                The seller account must belong to the authenticated merchant.
+                Active status and payment methods cannot be updated through this endpoint.
+                """
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "204",
+                    description = "Seller account updated successfully."
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Invalid request, seller not found, seller does not belong to merchant, or seller reference already exists.",
+                    content = @Content
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Missing or invalid JWT token.",
+                    content = @Content
+            )
+    })
+    @PutMapping("/sellers/{sellerId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void updateSellerAccount(
+            @PathVariable String sellerId,
+            @Valid @RequestBody UpdateMerchantSellerAccountRequest request
+    ) {
+        merchantService.updateSellerAccount(sellerId, request);
+    }
+
 }
