@@ -17,6 +17,20 @@ services:
     networks:
       - app-network
 
+  psp-postgres:
+    image: postgres:17
+    container_name: psp-postgres
+    environment:
+      - POSTGRES_USER=${PSP_DB_USERNAME}
+      - POSTGRES_PASSWORD=${PSP_DB_PASSWORD}
+      - POSTGRES_DB=${PSP_DB_NAME}
+    volumes:
+      - psp-postgres-data:/var/lib/postgresql/data
+    ports:
+      - ${PSP_DB_PORT}:5432
+    networks:
+      - app-network
+
   pgadmin:
     image: dpage/pgadmin4
     container_name: pgadmin
@@ -29,6 +43,7 @@ services:
       - pgadmin-data:/var/lib/pgadmin
     depends_on:
       - ws-postgres
+      - psp-postgres
     networks:
       - app-network
     restart: always
@@ -47,6 +62,7 @@ services:
 
 volumes:
   ws-postgres-data:
+  psp-postgres-data:
   pgadmin-data:
 
 networks:
