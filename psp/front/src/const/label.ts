@@ -83,4 +83,6 @@ export const MERCHANT_LABELS = {
     profileUpdated: "Merchant profile updated.",
     apiKeyRegenerated: "Merchant password regenerated.",
     genericError: "Something went wrong. Please try again.",
+    savedSuccessfully: "Changes saved successfully.",
+    saveFailed: "Action failed. Please check the entered data.",
 };

@@ -15,8 +15,16 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.List;
+
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -156,6 +164,23 @@ public class GlobalExceptionHandler {
         return new FieldErrorResponse(
                 fieldError.getField(),
                 fieldError.getDefaultMessage()
+        );
+    }
+
+    @ExceptionHandler(AuthenticationException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public ErrorResponse handleAuthenticationException(
+            AuthenticationException exception,
+            HttpServletRequest request
+    ) {
+        return new ErrorResponse(
+                Instant.now(),
+                HttpStatus.UNAUTHORIZED.value(),
+                HttpStatus.UNAUTHORIZED.getReasonPhrase(),
+                ErrorCode.UNAUTHORIZED.name(),
+                "Invalid username or password.",
+                request.getRequestURI(),
+                List.of()
         );
     }
 

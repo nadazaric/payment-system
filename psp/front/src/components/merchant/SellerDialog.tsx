@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import axios from "axios";
 import {
+    Alert,
     Button,
     Dialog,
     DialogActions,
@@ -11,6 +13,8 @@ import {
     TextField
 } from "@mui/material";
 import { createMerchantSeller, updateMerchantSeller } from "@/api/merchantApi";
+import { useNotification } from "@/components/common/NotificationProvider";
+import { Severity } from "@/const/enums";
 import { MERCHANT_LABELS } from "@/const/label";
 import {
     CreateMerchantSellerAccountRequest,
@@ -25,9 +29,34 @@ type SellerDialogProps = {
     onSaved: () => void;
 };
 
+type SellerDialogContentProps = {
+    seller: MerchantSellerAccount | null;
+    onClose: () => void;
+    onSaved: () => void;
+};
+
 const emptyForm = {
     sellerReference: "",
     displayName: "",
+};
+
+const getInitialForm = (seller: MerchantSellerAccount | null) => {
+    if (!seller) {
+        return emptyForm;
+    }
+
+    return {
+        sellerReference: seller.sellerReference,
+        displayName: seller.displayName,
+    };
+};
+
+const getErrorMessage = (error: unknown) => {
+    if (axios.isAxiosError(error)) {
+        return error.response?.data?.message || MERCHANT_LABELS.saveFailed;
+    }
+
+    return MERCHANT_LABELS.saveFailed;
 };
 
 export default function SellerDialog({
@@ -36,21 +65,31 @@ export default function SellerDialog({
     onClose,
     onSaved
 }: SellerDialogProps) {
-    const [form, setForm] = useState(emptyForm);
+    if (!open) {
+        return null;
+    }
+
+    return (
+        <SellerDialogContent
+            key={seller?.id || "create-seller"}
+            seller={seller}
+            onClose={onClose}
+            onSaved={onSaved} />
+    );
+}
+
+function SellerDialogContent({
+    seller,
+    onClose,
+    onSaved
+}: SellerDialogContentProps) {
+    const { showNotification } = useNotification();
+
+    const [form, setForm] = useState(() => getInitialForm(seller));
+    const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
 
     const isEditMode = Boolean(seller);
-
-    useEffect(() => {
-        if (seller) {
-            setForm({
-                sellerReference: seller.sellerReference,
-                displayName: seller.displayName,
-            });
-        } else {
-            setForm(emptyForm);
-        }
-    }, [seller, open]);
 
     const updateField = (field: keyof typeof emptyForm, value: string) => {
         setForm((current) => ({
@@ -59,8 +98,17 @@ export default function SellerDialog({
         }));
     };
 
+    const handleClose = () => {
+        if (!loading) {
+            setError("");
+            onClose();
+        }
+    };
+
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
+
+        setError("");
         setLoading(true);
 
         try {
@@ -72,7 +120,14 @@ export default function SellerDialog({
                 await createMerchantSeller(request);
             }
 
+            showNotification(MERCHANT_LABELS.savedSuccessfully, Severity.Success);
             onSaved();
+            onClose();
+        } catch (error) {
+            const message = getErrorMessage(error);
+
+            setError(message);
+            showNotification(message, Severity.Error);
         } finally {
             setLoading(false);
         }
@@ -80,13 +135,14 @@ export default function SellerDialog({
 
     return (
         <Dialog
-            open={open}
-            onClose={loading ? undefined : onClose}
+            open
+            onClose={handleClose}
             maxWidth="sm"
             fullWidth>
             <DialogTitle>
                 {isEditMode ? MERCHANT_LABELS.editSellerTitle : MERCHANT_LABELS.createSellerTitle}
             </DialogTitle>
+
             <DialogContent>
                 <Stack
                     component="form"
@@ -94,6 +150,12 @@ export default function SellerDialog({
                     onSubmit={handleSubmit}
                     spacing={2}
                     sx={{ pt: 1 }}>
+                    {error && (
+                        <Alert severity="error">
+                            {error}
+                        </Alert>
+                    )}
+
                     <TextField
                         label={MERCHANT_LABELS.sellerReference}
                         value={form.sellerReference}
@@ -109,10 +171,11 @@ export default function SellerDialog({
                         required />
                 </Stack>
             </DialogContent>
+
             <DialogActions>
                 <Button
                     type="button"
-                    onClick={onClose}
+                    onClick={handleClose}
                     disabled={loading}>
                     {MERCHANT_LABELS.cancel}
                 </Button>
