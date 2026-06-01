@@ -24,26 +24,16 @@ public class PaymentPlugin {
     private String baseUrl;
 
     @Column(nullable = false)
-    private String manifestPath;
-
-    @Column(nullable = false)
-    private String healthCheckPath;
-
-    @Column(nullable = false)
     private boolean active;
 
     public PaymentPlugin(
             String code,
             String displayName,
-            String baseUrl,
-            String manifestPath,
-            String healthCheckPath
+            String baseUrl
     ) {
         this.code = code;
         this.displayName = displayName;
         this.baseUrl = baseUrl;
-        this.manifestPath = manifestPath;
-        this.healthCheckPath = healthCheckPath;
         this.active = true;
     }
 

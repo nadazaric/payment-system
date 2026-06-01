@@ -31,20 +31,6 @@ public record PluginRegistrationRequest(
         )
         String baseUrl,
 
-        @NotBlank(message = "Manifest path is required.")
-        @Schema(
-                description = "Path where plugin manifest can be fetched.",
-                example = "/api/plugin/manifest"
-        )
-        String manifestPath,
-
-        @NotBlank(message = "Health check path is required.")
-        @Schema(
-                description = "Path where plugin health can be checked.",
-                example = "/api/plugin/health"
-        )
-        String healthCheckPath,
-
         @Schema(
                 description = "Shows whether this plugin is active. If omitted, true is used.",
                 example = "true"

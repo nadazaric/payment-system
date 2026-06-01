@@ -59,8 +59,6 @@ public class PluginRegistryServiceImpl implements PluginRegistryService {
         plugin.setCode(request.pluginCode());
         plugin.setDisplayName(request.displayName());
         plugin.setBaseUrl(request.baseUrl());
-        plugin.setManifestPath(request.manifestPath());
-        plugin.setHealthCheckPath(request.healthCheckPath());
         plugin.setActive(resolveActive(request.active()));
 
         PaymentPlugin savedPlugin = paymentPluginRepository.save(plugin);
