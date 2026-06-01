@@ -1,0 +1,19 @@
+{
+  "pluginCode": "MOCK_PLUGIN",
+  "displayName": "Mock Payment Plugin",
+  "active": true,
+  "methods": [
+    {
+      "code": "MOCK_PAY",
+      "displayName": "Mock payment",
+      "active": true,
+      "updateRequired": false,
+      "configFields": [
+        {
+          "fieldName": "mockApiKey",
+          "fieldType": "PASSWORD"
+        }
+      ]
+    }
+  ]
+}
