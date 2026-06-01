@@ -55,11 +55,58 @@ VALUES (
            false
        );
 
-INSERT INTO payment_method (
+INSERT INTO payment_plugin (
     code,
     display_name,
+    base_url,
+    manifest_path,
+    health_check_path,
     active
 )
 VALUES
-    ('CARD', 'Payment card', true),
-    ('QR_CODE', 'QR code', true);
+    (
+        'BANK_PLUGIN',
+        'Bank Payment Plugin',
+        'http://localhost:8082',
+        '/api/plugin/manifest',
+        '/api/plugin/health',
+        true
+    ),
+    (
+        'MOCK_PLUGIN',
+        'Mock Payment Plugin',
+        'http://localhost:8085',
+        '/api/plugin/manifest',
+        '/api/plugin/health',
+        true
+    );
+
+INSERT INTO payment_method (
+    code,
+    display_name,
+    active,
+    plugin_code,
+    config_schema_json
+)
+VALUES
+    (
+        'CARD',
+        'Payment card',
+        true,
+        'BANK_PLUGIN',
+        '[{"fieldKey":"bankMerchantId","label":"Bank merchant ID","fieldType":"TEXT","required":true,"sensitive":false,"placeholder":"Enter bank merchant ID"},{"fieldKey":"bankMerchantPassword","label":"Bank merchant password","fieldType":"PASSWORD","required":true,"sensitive":true,"placeholder":"Enter bank merchant password"}]'
+    ),
+    (
+        'QR_CODE',
+        'QR code',
+        true,
+        'BANK_PLUGIN',
+        '[{"fieldKey":"recipientAccountNumber","label":"Recipient account number","fieldType":"TEXT","required":true,"sensitive":false,"placeholder":"Enter recipient account number"},{"fieldKey":"recipientName","label":"Recipient name","fieldType":"TEXT","required":true,"sensitive":false,"placeholder":"Enter recipient name"}]'
+    ),
+    (
+        'MOCK_PAY',
+        'Mock payment',
+        true,
+        'MOCK_PLUGIN',
+        '[{"fieldKey":"mockApiKey","label":"Mock API key","fieldType":"PASSWORD","required":true,"sensitive":true,"placeholder":"Enter mock API key"}]'
+    );

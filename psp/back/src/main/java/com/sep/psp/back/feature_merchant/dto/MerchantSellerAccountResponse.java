@@ -1,6 +1,5 @@
 package com.sep.psp.back.feature_merchant.dto;
 
-import com.sep.psp.back.feature_payment.dto.PaymentMethodResponse;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.util.List;
@@ -27,13 +26,12 @@ public record MerchantSellerAccountResponse(
         String displayName,
 
         @Schema(
-                description = "Shows whether this seller account is active for payments.",
+                description = "Shows whether this seller account has at least one currently available payment method.",
                 example = "true"
         )
         boolean active,
 
-        @Schema(description = "Payment methods currently available for this seller account.")
-        List<PaymentMethodResponse> availablePaymentMethods
-
+        @Schema(description = "Payment methods configured or requiring configuration for this seller account.")
+        List<SellerPaymentMethodResponse> paymentMethods
 ) {
 }

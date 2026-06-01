@@ -1,0 +1,324 @@
+package com.sep.psp.back.feature_merchant.service.impl;
+
+import com.sep.psp.back.feature_merchant.dto.UpdateSellerPaymentMethodsRequest;
+import com.sep.psp.back.feature_merchant.model.Merchant;
+import com.sep.psp.back.feature_merchant.model.MerchantAdmin;
+import com.sep.psp.back.feature_merchant.model.MerchantSellerAccount;
+import com.sep.psp.back.feature_merchant.model.MerchantSellerPaymentMethod;
+import com.sep.psp.back.feature_merchant.repository.MerchantAdminRepository;
+import com.sep.psp.back.feature_merchant.repository.MerchantRepository;
+import com.sep.psp.back.feature_merchant.repository.MerchantSellerAccountRepository;
+import com.sep.psp.back.feature_merchant.repository.MerchantSellerPaymentMethodRepository;
+import com.sep.psp.back.feature_merchant.service.interf.SellerPaymentMethodService;
+import com.sep.psp.back.feature_payment.model.PaymentMethod;
+import com.sep.psp.back.feature_payment.repository.PaymentMethodRepository;
+import com.sep.psp.back.shared.error.exception.BadRequestException;
+import com.sep.psp.back.shared.logging.LogStrings;
+import com.sep.psp.back.shared.logging.service.interf.AppLoggerService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
+
+@Service
+public class SellerPaymentMethodServiceImpl implements SellerPaymentMethodService {
+
+    @Autowired
+    MerchantRepository merchantRepository;
+
+    @Autowired
+    MerchantAdminRepository merchantAdminRepository;
+
+    @Autowired
+    MerchantSellerAccountRepository merchantSellerAccountRepository;
+
+    @Autowired
+    MerchantSellerPaymentMethodRepository merchantSellerPaymentMethodRepository;
+
+    @Autowired
+    PaymentMethodRepository paymentMethodRepository;
+
+    @Autowired
+    AppLoggerService appLoggerService;
+
+    @Override
+    @Transactional
+    public void updateSellerPaymentMethods(
+            String sellerId,
+            UpdateSellerPaymentMethodsRequest request,
+            String authenticatedUsername
+    ) {
+        validatePaymentMethodSelection(
+                sellerId,
+                request
+        );
+
+        MerchantAdmin merchantAdmin = getAuthenticatedMerchantAdmin(authenticatedUsername);
+        Merchant merchant = merchantAdmin.getMerchant();
+
+        MerchantSellerAccount sellerAccount = getSellerAccountForMerchant(
+                sellerId,
+                merchant
+        );
+
+        Set<String> requestedPaymentMethodCodes = getUniquePaymentMethodCodes(request);
+
+        List<PaymentMethod> paymentMethods = getPaymentMethodsOrThrow(
+                requestedPaymentMethodCodes,
+                merchant,
+                sellerId
+        );
+
+        validatePaymentMethodsAreActive(
+                paymentMethods,
+                merchant,
+                sellerId,
+                requestedPaymentMethodCodes
+        );
+
+        validatePaymentPluginsAreActive(
+                paymentMethods,
+                merchant,
+                sellerId,
+                requestedPaymentMethodCodes
+        );
+
+        removeUnselectedSellerPaymentMethods(
+                sellerAccount,
+                requestedPaymentMethodCodes
+        );
+
+        addOrUpdateSellerPaymentMethods(
+                sellerAccount,
+                paymentMethods
+        );
+
+        updateSellerActiveStatus(sellerAccount);
+        updateMerchantActiveStatus(merchant);
+
+        logPaymentMethodsUpdated(
+                merchant,
+                sellerAccount,
+                requestedPaymentMethodCodes
+        );
+    }
+
+    private void validatePaymentMethodSelection(
+            String sellerId,
+            UpdateSellerPaymentMethodsRequest request
+    ) {
+        if (request.paymentMethodCodes() == null || request.paymentMethodCodes().isEmpty()) {
+            appLoggerService.warn(
+                    LogStrings.Feature.PAYMENT_METHOD,
+                    LogStrings.Action.PAYMENT_METHOD_UPDATE_REJECTED,
+                    "reason={} sellerId={}",
+                    LogStrings.Reason.EMPTY_SELECTION,
+                    sellerId
+            );
+
+            throw new BadRequestException("At least one payment method must be selected.");
+        }
+    }
+
+    private MerchantAdmin getAuthenticatedMerchantAdmin(String authenticatedUsername) {
+        return merchantAdminRepository.findByUsername(authenticatedUsername)
+                .orElseThrow(() -> new BadRequestException("Authenticated merchant admin not found."));
+    }
+
+    private MerchantSellerAccount getSellerAccountForMerchant(
+            String sellerId,
+            Merchant merchant
+    ) {
+        MerchantSellerAccount sellerAccount = merchantSellerAccountRepository.findById(sellerId)
+                .orElseThrow(() -> {
+                    appLoggerService.warn(
+                            LogStrings.Feature.PAYMENT_METHOD,
+                            LogStrings.Action.PAYMENT_METHOD_UPDATE_REJECTED,
+                            "reason={} merchantId={} sellerId={}",
+                            LogStrings.Reason.SELLER_NOT_FOUND,
+                            merchant.getMerchantId(),
+                            sellerId
+                    );
+
+                    return new BadRequestException("Seller account not found.");
+                });
+
+        if (!sellerAccount.getMerchant().getMerchantId().equals(merchant.getMerchantId())) {
+            appLoggerService.warn(
+                    LogStrings.Feature.PAYMENT_METHOD,
+                    LogStrings.Action.PAYMENT_METHOD_UPDATE_REJECTED,
+                    "reason={} merchantId={} sellerId={}",
+                    LogStrings.Reason.OWNER_MISMATCH,
+                    merchant.getMerchantId(),
+                    sellerId
+            );
+
+            throw new BadRequestException("Seller account does not belong to the authenticated merchant.");
+        }
+
+        return sellerAccount;
+    }
+
+    private Set<String> getUniquePaymentMethodCodes(UpdateSellerPaymentMethodsRequest request) {
+        return new LinkedHashSet<>(request.paymentMethodCodes());
+    }
+
+    private List<PaymentMethod> getPaymentMethodsOrThrow(
+            Set<String> requestedPaymentMethodCodes,
+            Merchant merchant,
+            String sellerId
+    ) {
+        List<PaymentMethod> paymentMethods = paymentMethodRepository.findAllById(requestedPaymentMethodCodes);
+
+        if (paymentMethods.size() != requestedPaymentMethodCodes.size()) {
+            appLoggerService.warn(
+                    LogStrings.Feature.PAYMENT_METHOD,
+                    LogStrings.Action.PAYMENT_METHOD_UPDATE_REJECTED,
+                    "reason={} merchantId={} sellerId={} requestedCodes={}",
+                    LogStrings.Reason.UNKNOWN_PAYMENT_METHOD,
+                    merchant.getMerchantId(),
+                    sellerId,
+                    requestedPaymentMethodCodes
+            );
+
+            throw new BadRequestException("One or more payment methods do not exist.");
+        }
+
+        return paymentMethods;
+    }
+
+    private void validatePaymentMethodsAreActive(
+            List<PaymentMethod> paymentMethods,
+            Merchant merchant,
+            String sellerId,
+            Set<String> requestedPaymentMethodCodes
+    ) {
+        boolean hasInactivePaymentMethod = paymentMethods.stream()
+                .anyMatch(paymentMethod -> !paymentMethod.isActive());
+
+        if (hasInactivePaymentMethod) {
+            appLoggerService.warn(
+                    LogStrings.Feature.PAYMENT_METHOD,
+                    LogStrings.Action.PAYMENT_METHOD_UPDATE_REJECTED,
+                    "reason={} merchantId={} sellerId={} requestedCodes={}",
+                    LogStrings.Reason.INACTIVE_PAYMENT_METHOD,
+                    merchant.getMerchantId(),
+                    sellerId,
+                    requestedPaymentMethodCodes
+            );
+
+            throw new BadRequestException("One or more payment methods are not active.");
+        }
+    }
+
+    private void validatePaymentPluginsAreActive(
+            List<PaymentMethod> paymentMethods,
+            Merchant merchant,
+            String sellerId,
+            Set<String> requestedPaymentMethodCodes
+    ) {
+        boolean hasInactivePaymentPlugin = paymentMethods.stream()
+                .anyMatch(paymentMethod -> !paymentMethod.getPlugin().isActive());
+
+        if (hasInactivePaymentPlugin) {
+            appLoggerService.warn(
+                    LogStrings.Feature.PAYMENT_METHOD,
+                    LogStrings.Action.PAYMENT_METHOD_UPDATE_REJECTED,
+                    "reason={} merchantId={} sellerId={} requestedCodes={}",
+                    LogStrings.Reason.INACTIVE_PAYMENT_PLUGIN,
+                    merchant.getMerchantId(),
+                    sellerId,
+                    requestedPaymentMethodCodes
+            );
+
+            throw new BadRequestException("One or more payment method plugins are not active.");
+        }
+    }
+
+    private void removeUnselectedSellerPaymentMethods(
+            MerchantSellerAccount sellerAccount,
+            Set<String> requestedPaymentMethodCodes
+    ) {
+        List<MerchantSellerPaymentMethod> existingSellerPaymentMethods =
+                merchantSellerPaymentMethodRepository.findBySellerAccount(sellerAccount);
+
+        existingSellerPaymentMethods.stream()
+                .filter(sellerPaymentMethod -> !requestedPaymentMethodCodes.contains(
+                        sellerPaymentMethod.getPaymentMethod().getCode()
+                ))
+                .forEach(merchantSellerPaymentMethodRepository::delete);
+    }
+
+    private void addOrUpdateSellerPaymentMethods(
+            MerchantSellerAccount sellerAccount,
+            List<PaymentMethod> paymentMethods
+    ) {
+        for (PaymentMethod paymentMethod : paymentMethods) {
+            MerchantSellerPaymentMethod sellerPaymentMethod = merchantSellerPaymentMethodRepository
+                    .findBySellerAccountAndPaymentMethod(
+                            sellerAccount,
+                            paymentMethod
+                    )
+                    .orElseGet(() -> new MerchantSellerPaymentMethod(
+                            sellerAccount,
+                            paymentMethod,
+                            true
+                    ));
+
+            sellerPaymentMethod.setConfigured(true);
+
+            merchantSellerPaymentMethodRepository.save(sellerPaymentMethod);
+        }
+    }
+
+    private void updateSellerActiveStatus(MerchantSellerAccount sellerAccount) {
+        boolean sellerActive = merchantSellerPaymentMethodRepository.findBySellerAccount(sellerAccount)
+                .stream()
+                .anyMatch(MerchantSellerPaymentMethod::isAvailableForPayments);
+
+        sellerAccount.setActive(sellerActive);
+
+        merchantSellerAccountRepository.save(sellerAccount);
+    }
+
+    private void updateMerchantActiveStatus(Merchant merchant) {
+        boolean previousMerchantActive = merchant.isActive();
+
+        List<MerchantSellerAccount> sellerAccounts = merchantSellerAccountRepository.findByMerchant(merchant);
+
+        boolean hasActiveSeller = sellerAccounts.stream()
+                .anyMatch(MerchantSellerAccount::isActive);
+
+        merchant.setActive(hasActiveSeller);
+
+        merchantRepository.save(merchant);
+
+        if (previousMerchantActive != merchant.isActive()) {
+            appLoggerService.info(
+                    LogStrings.Feature.MERCHANT,
+                    LogStrings.Action.ACTIVE_STATUS_CHANGED,
+                    "merchantId={} active={}",
+                    merchant.getMerchantId(),
+                    merchant.isActive()
+            );
+        }
+    }
+
+    private void logPaymentMethodsUpdated(
+            Merchant merchant,
+            MerchantSellerAccount sellerAccount,
+            Set<String> requestedPaymentMethodCodes
+    ) {
+        appLoggerService.info(
+                LogStrings.Feature.PAYMENT_METHOD,
+                LogStrings.Action.PAYMENT_METHODS_UPDATED,
+                "merchantId={} sellerId={} codes={}",
+                merchant.getMerchantId(),
+                sellerAccount.getId(),
+                requestedPaymentMethodCodes
+        );
+    }
+}

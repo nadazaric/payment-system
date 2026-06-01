@@ -7,6 +7,6 @@ import java.util.List;
 
 public interface PaymentMethodRepository extends JpaRepository<PaymentMethod, String> {
 
-    List<PaymentMethod> findByActiveTrue();
+    List<PaymentMethod> findByActiveTrueAndPlugin_ActiveTrue();
 
 }

@@ -1,6 +1,16 @@
 package com.sep.psp.back.feature_merchant.service.impl;
 
-import com.sep.psp.back.feature_merchant.dto.*;
+import com.sep.psp.back.feature_merchant.dto.CreateMerchantSellerAccountRequest;
+import com.sep.psp.back.feature_merchant.dto.MerchantLoginRequest;
+import com.sep.psp.back.feature_merchant.dto.MerchantLoginResponse;
+import com.sep.psp.back.feature_merchant.dto.MerchantProfileResponse;
+import com.sep.psp.back.feature_merchant.dto.MerchantRegistrationRequest;
+import com.sep.psp.back.feature_merchant.dto.MerchantRegistrationResponse;
+import com.sep.psp.back.feature_merchant.dto.MerchantSellerAccountResponse;
+import com.sep.psp.back.feature_merchant.dto.RegenerateMerchantPasswordResponse;
+import com.sep.psp.back.feature_merchant.dto.UpdateMerchantProfileRequest;
+import com.sep.psp.back.feature_merchant.dto.UpdateMerchantSellerAccountRequest;
+import com.sep.psp.back.feature_merchant.dto.UpdateSellerPaymentMethodsRequest;
 import com.sep.psp.back.feature_merchant.mapper.MerchantMapper;
 import com.sep.psp.back.feature_merchant.model.Merchant;
 import com.sep.psp.back.feature_merchant.model.MerchantAdmin;
@@ -10,25 +20,22 @@ import com.sep.psp.back.feature_merchant.repository.MerchantRepository;
 import com.sep.psp.back.feature_merchant.repository.MerchantSellerAccountRepository;
 import com.sep.psp.back.feature_merchant.service.interf.MerchantCredentialGenerator;
 import com.sep.psp.back.feature_merchant.service.interf.MerchantService;
-import com.sep.psp.back.feature_payment.model.PaymentMethod;
-import com.sep.psp.back.feature_payment.repository.PaymentMethodRepository;
+import com.sep.psp.back.feature_merchant.service.interf.SellerPaymentMethodService;
 import com.sep.psp.back.security.jwt.JwtTokenUtil;
 import com.sep.psp.back.shared.error.exception.BadRequestException;
 import com.sep.psp.back.shared.logging.LogStrings;
 import com.sep.psp.back.shared.logging.service.interf.AppLoggerService;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.security.core.AuthenticationException;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
 
 @Service
 public class MerchantServiceImpl implements MerchantService {
@@ -61,7 +68,7 @@ public class MerchantServiceImpl implements MerchantService {
     JwtTokenUtil jwtTokenUtil;
 
     @Autowired
-    PaymentMethodRepository paymentMethodRepository;
+    SellerPaymentMethodService sellerPaymentMethodService;
 
     @Autowired
     AppLoggerService appLoggerService;
@@ -301,126 +308,11 @@ public class MerchantServiceImpl implements MerchantService {
             String sellerId,
             UpdateSellerPaymentMethodsRequest request
     ) {
-        if (request.paymentMethodCodes() == null || request.paymentMethodCodes().isEmpty()) {
-            appLoggerService.warn(
-                    LogStrings.Feature.PAYMENT_METHOD,
-                    LogStrings.Action.PAYMENT_METHOD_UPDATE_REJECTED,
-                    "reason={} sellerId={}",
-                    LogStrings.Reason.EMPTY_SELECTION,
-                    sellerId
-            );
-
-            throw new BadRequestException("At least one payment method must be selected.");
-        }
-
-        String username = getAuthenticatedUsername();
-
-        MerchantAdmin merchantAdmin = merchantAdminRepository.findByUsername(username)
-                .orElseThrow(() -> new BadRequestException("Authenticated merchant admin not found."));
-
-        Merchant merchant = merchantAdmin.getMerchant();
-
-        MerchantSellerAccount sellerAccount = merchantSellerAccountRepository.findById(sellerId)
-                .orElseThrow(() -> {
-                    appLoggerService.warn(
-                            LogStrings.Feature.PAYMENT_METHOD,
-                            LogStrings.Action.PAYMENT_METHOD_UPDATE_REJECTED,
-                            "reason={} merchantId={} sellerId={}",
-                            LogStrings.Reason.SELLER_NOT_FOUND,
-                            merchant.getMerchantId(),
-                            sellerId
-                    );
-
-                    return new BadRequestException("Seller account not found.");
-                });
-
-
-        if (!sellerAccount.getMerchant().getMerchantId().equals(merchant.getMerchantId())) {
-            appLoggerService.warn(
-                    LogStrings.Feature.PAYMENT_METHOD,
-                    LogStrings.Action.PAYMENT_METHOD_UPDATE_REJECTED,
-                    "reason={} merchantId={} sellerId={}",
-                    LogStrings.Reason.OWNER_MISMATCH,
-                    merchant.getMerchantId(),
-                    sellerId
-            );
-
-            throw new BadRequestException("Seller account does not belong to the authenticated merchant.");
-        }
-
-        Set<String> uniquePaymentMethodCodes = new LinkedHashSet<>(request.paymentMethodCodes());
-
-        List<PaymentMethod> paymentMethods = paymentMethodRepository.findAllById(uniquePaymentMethodCodes);
-
-        if (paymentMethods.size() != uniquePaymentMethodCodes.size()) {
-            appLoggerService.warn(
-                    LogStrings.Feature.PAYMENT_METHOD,
-                    LogStrings.Action.PAYMENT_METHOD_UPDATE_REJECTED,
-                    "reason={} merchantId={} sellerId={} requestedCodes={}",
-                    LogStrings.Reason.UNKNOWN_PAYMENT_METHOD,
-                    merchant.getMerchantId(),
-                    sellerId,
-                    uniquePaymentMethodCodes
-            );
-
-            throw new BadRequestException("One or more payment methods do not exist.");
-        }
-
-        boolean hasInactivePaymentMethod = paymentMethods.stream()
-                .anyMatch(paymentMethod -> !paymentMethod.isActive());
-
-        if (hasInactivePaymentMethod) {
-            appLoggerService.warn(
-                    LogStrings.Feature.PAYMENT_METHOD,
-                    LogStrings.Action.PAYMENT_METHOD_UPDATE_REJECTED,
-                    "reason={} merchantId={} sellerId={} requestedCodes={}",
-                    LogStrings.Reason.INACTIVE_PAYMENT_METHOD,
-                    merchant.getMerchantId(),
-                    sellerId,
-                    uniquePaymentMethodCodes
-            );
-
-            throw new BadRequestException("One or more payment methods are not active.");
-        }
-
-        sellerAccount.getAvailablePaymentMethods().clear();
-        sellerAccount.getAvailablePaymentMethods().addAll(paymentMethods);
-        sellerAccount.setActive(!sellerAccount.getAvailablePaymentMethods().isEmpty());
-
-        merchantSellerAccountRepository.save(sellerAccount);
-
-        appLoggerService.info(
-                LogStrings.Feature.PAYMENT_METHOD,
-                LogStrings.Action.PAYMENT_METHODS_UPDATED,
-                "merchantId={} sellerId={} codes={}",
-                merchant.getMerchantId(),
-                sellerAccount.getId(),
-                uniquePaymentMethodCodes
+        sellerPaymentMethodService.updateSellerPaymentMethods(
+                sellerId,
+                request,
+                getAuthenticatedUsername()
         );
-
-        updateMerchantActiveStatus(merchant);
-    }
-
-    private void updateMerchantActiveStatus(Merchant merchant) {
-        boolean previousMerchantActive = merchant.isActive();
-
-        List<MerchantSellerAccount> sellerAccounts = merchantSellerAccountRepository.findByMerchant(merchant);
-
-        boolean hasActiveSeller = sellerAccounts.stream()
-                .anyMatch(MerchantSellerAccount::isActive);
-
-        merchant.setActive(hasActiveSeller);
-        merchantRepository.save(merchant);
-
-        if (previousMerchantActive != merchant.isActive()) {
-            appLoggerService.info(
-                    LogStrings.Feature.MERCHANT,
-                    LogStrings.Action.ACTIVE_STATUS_CHANGED,
-                    "merchantId={} active={}",
-                    merchant.getMerchantId(),
-                    merchant.isActive()
-            );
-        }
     }
 
     @Override

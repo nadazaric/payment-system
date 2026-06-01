@@ -55,6 +55,7 @@ public final class LogStrings {
         public static final String EMPTY_SELECTION = "empty_selection";
         public static final String UNKNOWN_PAYMENT_METHOD = "unknown_payment_method";
         public static final String INACTIVE_PAYMENT_METHOD = "inactive_payment_method";
+        public static final String INACTIVE_PAYMENT_PLUGIN = "inactive_payment_plugin";
 
         private Reason() {
         }
