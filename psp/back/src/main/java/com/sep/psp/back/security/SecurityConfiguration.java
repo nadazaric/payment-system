@@ -45,6 +45,7 @@ public class SecurityConfiguration {
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/api/merchant/register").permitAll()
                         .requestMatchers("/api/merchant/login").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/plugins/register").permitAll()
                         .anyRequest().authenticated() )
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors((cors) -> cors
