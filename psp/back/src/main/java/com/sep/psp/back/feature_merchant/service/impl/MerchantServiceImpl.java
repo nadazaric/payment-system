@@ -1,16 +1,6 @@
 package com.sep.psp.back.feature_merchant.service.impl;
 
-import com.sep.psp.back.feature_merchant.dto.CreateMerchantSellerAccountRequest;
-import com.sep.psp.back.feature_merchant.dto.MerchantLoginRequest;
-import com.sep.psp.back.feature_merchant.dto.MerchantLoginResponse;
-import com.sep.psp.back.feature_merchant.dto.MerchantProfileResponse;
-import com.sep.psp.back.feature_merchant.dto.MerchantRegistrationRequest;
-import com.sep.psp.back.feature_merchant.dto.MerchantRegistrationResponse;
-import com.sep.psp.back.feature_merchant.dto.MerchantSellerAccountResponse;
-import com.sep.psp.back.feature_merchant.dto.RegenerateMerchantPasswordResponse;
-import com.sep.psp.back.feature_merchant.dto.UpdateMerchantProfileRequest;
-import com.sep.psp.back.feature_merchant.dto.UpdateMerchantSellerAccountRequest;
-import com.sep.psp.back.feature_merchant.dto.UpdateSellerPaymentMethodsRequest;
+import com.sep.psp.back.feature_merchant.dto.*;
 import com.sep.psp.back.feature_merchant.mapper.MerchantMapper;
 import com.sep.psp.back.feature_merchant.model.Merchant;
 import com.sep.psp.back.feature_merchant.model.MerchantAdmin;
@@ -437,6 +427,21 @@ public class MerchantServiceImpl implements MerchantService {
                 merchant.getMerchantId(),
                 sellerAccount.getId(),
                 sellerAccount.getSellerReference()
+        );
+    }
+
+    @Override
+    @Transactional
+    public ConfigureSellerPaymentMethodResponse configureSellerPaymentMethod(
+            String sellerId,
+            String paymentMethodCode,
+            ConfigureSellerPaymentMethodRequest request
+    ) {
+        return sellerPaymentMethodService.configureSellerPaymentMethod(
+                sellerId,
+                paymentMethodCode,
+                request,
+                getAuthenticatedUsername()
         );
     }
 

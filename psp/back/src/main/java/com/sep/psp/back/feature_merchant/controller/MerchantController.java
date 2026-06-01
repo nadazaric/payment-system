@@ -289,4 +289,23 @@ public class MerchantController {
         merchantService.updateSellerAccount(sellerId, request);
     }
 
+    // ----------------------------------------------------------------------------------------------------------------- Update payment configuration
+    @Operation(
+            summary = "Configure seller payment method",
+            description = "Configures a payment method for a seller account by sending configuration values to the payment plugin."
+    )
+    @PostMapping("/sellers/{sellerId}/payment-methods/{paymentMethodCode}/configuration")
+    public ConfigureSellerPaymentMethodResponse configureSellerPaymentMethod(
+            @PathVariable String sellerId,
+            @PathVariable String paymentMethodCode,
+            @Valid @RequestBody ConfigureSellerPaymentMethodRequest request
+    ) {
+        return merchantService.configureSellerPaymentMethod(
+                sellerId,
+                paymentMethodCode,
+                request
+        );
+    }
+
+
 }

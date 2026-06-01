@@ -1,5 +1,9 @@
 package com.sep.psp.back.feature_merchant.service.impl;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sep.psp.back.feature_merchant.dto.ConfigureSellerPaymentMethodRequest;
+import com.sep.psp.back.feature_merchant.dto.ConfigureSellerPaymentMethodResponse;
 import com.sep.psp.back.feature_merchant.dto.UpdateSellerPaymentMethodsRequest;
 import com.sep.psp.back.feature_merchant.model.Merchant;
 import com.sep.psp.back.feature_merchant.model.MerchantAdmin;
@@ -10,8 +14,11 @@ import com.sep.psp.back.feature_merchant.repository.MerchantRepository;
 import com.sep.psp.back.feature_merchant.repository.MerchantSellerAccountRepository;
 import com.sep.psp.back.feature_merchant.repository.MerchantSellerPaymentMethodRepository;
 import com.sep.psp.back.feature_merchant.service.interf.SellerPaymentMethodService;
+import com.sep.psp.back.feature_payment.dto.PaymentMethodConfigField;
 import com.sep.psp.back.feature_payment.model.PaymentMethod;
 import com.sep.psp.back.feature_payment.repository.PaymentMethodRepository;
+import com.sep.psp.back.feature_plugin.dto.PluginConfigurationResponse;
+import com.sep.psp.back.feature_plugin.service.interf.PluginConfigurationService;
 import com.sep.psp.back.shared.error.exception.BadRequestException;
 import com.sep.psp.back.shared.logging.LogStrings;
 import com.sep.psp.back.shared.logging.service.interf.AppLoggerService;
@@ -19,9 +26,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class SellerPaymentMethodServiceImpl implements SellerPaymentMethodService {
@@ -42,7 +51,12 @@ public class SellerPaymentMethodServiceImpl implements SellerPaymentMethodServic
     PaymentMethodRepository paymentMethodRepository;
 
     @Autowired
+    PluginConfigurationService pluginConfigurationService;
+
+    @Autowired
     AppLoggerService appLoggerService;
+
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
     @Transactional
@@ -91,7 +105,7 @@ public class SellerPaymentMethodServiceImpl implements SellerPaymentMethodServic
                 requestedPaymentMethodCodes
         );
 
-        addOrUpdateSellerPaymentMethods(
+        validateSelectedPaymentMethodsAreConfigured(
                 sellerAccount,
                 paymentMethods
         );
@@ -103,6 +117,69 @@ public class SellerPaymentMethodServiceImpl implements SellerPaymentMethodServic
                 merchant,
                 sellerAccount,
                 requestedPaymentMethodCodes
+        );
+    }
+
+    @Override
+    @Transactional
+    public ConfigureSellerPaymentMethodResponse configureSellerPaymentMethod(
+            String sellerId,
+            String paymentMethodCode,
+            ConfigureSellerPaymentMethodRequest request,
+            String authenticatedUsername
+    ) {
+        MerchantAdmin merchantAdmin = getAuthenticatedMerchantAdmin(authenticatedUsername);
+        Merchant merchant = merchantAdmin.getMerchant();
+
+        MerchantSellerAccount sellerAccount = getSellerAccountForMerchant(
+                sellerId,
+                merchant
+        );
+
+        PaymentMethod paymentMethod = paymentMethodRepository.findById(paymentMethodCode)
+                .orElseThrow(() -> new BadRequestException("Payment method does not exist."));
+
+        validateSinglePaymentMethodIsActive(paymentMethod);
+        validateSinglePaymentPluginIsActive(paymentMethod);
+
+        validateConfigurationValues(
+                paymentMethod,
+                request
+        );
+
+        PluginConfigurationResponse pluginResponse = pluginConfigurationService.configurePaymentMethod(
+                paymentMethod,
+                merchant,
+                sellerAccount,
+                request.values()
+        );
+
+        if (!pluginResponse.configured()) {
+            throw new BadRequestException("Payment plugin rejected seller payment method configuration.");
+        }
+
+        MerchantSellerPaymentMethod sellerPaymentMethod = merchantSellerPaymentMethodRepository
+                .findBySellerAccountAndPaymentMethod(
+                        sellerAccount,
+                        paymentMethod
+                )
+                .orElseGet(() -> new MerchantSellerPaymentMethod(
+                        sellerAccount,
+                        paymentMethod,
+                        false
+                ));
+
+        sellerPaymentMethod.setConfigured(true);
+
+        merchantSellerPaymentMethodRepository.save(sellerPaymentMethod);
+
+        updateSellerActiveStatus(sellerAccount);
+        updateMerchantActiveStatus(merchant);
+
+        return new ConfigureSellerPaymentMethodResponse(
+                paymentMethod.getCode(),
+                true,
+                pluginResponse.message()
         );
     }
 
@@ -252,7 +329,7 @@ public class SellerPaymentMethodServiceImpl implements SellerPaymentMethodServic
                 .forEach(merchantSellerPaymentMethodRepository::delete);
     }
 
-    private void addOrUpdateSellerPaymentMethods(
+    private void validateSelectedPaymentMethodsAreConfigured(
             MerchantSellerAccount sellerAccount,
             List<PaymentMethod> paymentMethods
     ) {
@@ -262,15 +339,66 @@ public class SellerPaymentMethodServiceImpl implements SellerPaymentMethodServic
                             sellerAccount,
                             paymentMethod
                     )
-                    .orElseGet(() -> new MerchantSellerPaymentMethod(
-                            sellerAccount,
-                            paymentMethod,
-                            true
+                    .orElseThrow(() -> new BadRequestException(
+                            "Payment method must be configured before it can be assigned to the seller."
                     ));
 
-            sellerPaymentMethod.setConfigured(true);
+            if (!sellerPaymentMethod.isConfigured()) {
+                throw new BadRequestException(
+                        "Payment method must be configured before it can be assigned to the seller."
+                );
+            }
+        }
+    }
 
-            merchantSellerPaymentMethodRepository.save(sellerPaymentMethod);
+    private void validateSinglePaymentMethodIsActive(PaymentMethod paymentMethod) {
+        if (!paymentMethod.isActive()) {
+            throw new BadRequestException("Payment method is not active.");
+        }
+    }
+
+    private void validateSinglePaymentPluginIsActive(PaymentMethod paymentMethod) {
+        if (!paymentMethod.getPlugin().isActive()) {
+            throw new BadRequestException("Payment method plugin is not active.");
+        }
+    }
+
+    private void validateConfigurationValues(
+            PaymentMethod paymentMethod,
+            ConfigureSellerPaymentMethodRequest request
+    ) {
+        List<PaymentMethodConfigField> configFields = readConfigFields(paymentMethod);
+
+        Set<String> requiredFieldNames = configFields.stream()
+                .map(PaymentMethodConfigField::fieldName)
+                .collect(Collectors.toSet());
+
+        for (String fieldName : requiredFieldNames) {
+            String value = request.values().get(fieldName);
+
+            if (value == null || value.isBlank()) {
+                throw new BadRequestException("Missing configuration value: " + fieldName);
+            }
+        }
+
+        Set<String> submittedFieldNames = new HashSet<>(request.values().keySet());
+
+        submittedFieldNames.removeAll(requiredFieldNames);
+
+        if (!submittedFieldNames.isEmpty()) {
+            throw new BadRequestException("Unknown configuration fields: " + submittedFieldNames);
+        }
+    }
+
+    private List<PaymentMethodConfigField> readConfigFields(PaymentMethod paymentMethod) {
+        try {
+            return objectMapper.readValue(
+                    paymentMethod.getConfigSchemaJson(),
+                    new TypeReference<>() {
+                    }
+            );
+        } catch (Exception exception) {
+            throw new BadRequestException("Invalid payment method configuration schema.");
         }
     }
 

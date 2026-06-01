@@ -24,4 +24,6 @@ public interface MerchantService {
 
     void updateSellerAccount(String sellerId, UpdateMerchantSellerAccountRequest request);
 
+    ConfigureSellerPaymentMethodResponse configureSellerPaymentMethod(String sellerId, String paymentMethodCode, ConfigureSellerPaymentMethodRequest request);
+
 }
