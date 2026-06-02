@@ -64,7 +64,7 @@ public class JwtTokenUtilImpl implements JwtTokenUtil {
     }
 
     @Override
-    public boolean validateToken(String token) {
+    public Boolean validateToken(String token) {
         try {
             Claims claims = getClaims(token);
 

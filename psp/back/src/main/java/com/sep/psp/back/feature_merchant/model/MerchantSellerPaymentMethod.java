@@ -43,22 +43,22 @@ public class MerchantSellerPaymentMethod {
     private PaymentMethod paymentMethod;
 
     @Column(nullable = false)
-    private boolean configured;
+    private Boolean configured;
 
     public MerchantSellerPaymentMethod(
             MerchantSellerAccount sellerAccount,
             PaymentMethod paymentMethod,
-            boolean configured
+            Boolean configured
     ) {
         this.sellerAccount = sellerAccount;
         this.paymentMethod = paymentMethod;
         this.configured = configured;
     }
 
-    public boolean isAvailableForPayments() {
+    public Boolean isAvailableForPayments() {
         return this.configured
-                && this.paymentMethod.isActive()
-                && this.paymentMethod.getPlugin().isActive();
+                && this.paymentMethod.getActive()
+                && this.paymentMethod.getPlugin().getActive();
     }
 
     @PrePersist

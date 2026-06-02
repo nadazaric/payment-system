@@ -2,6 +2,7 @@ package com.sep.psp.back.feature_superadmin.service.impl;
 
 import com.sep.psp.back.feature_plugin.model.PaymentPlugin;
 import com.sep.psp.back.feature_plugin.repository.PaymentPluginRepository;
+import com.sep.psp.back.feature_plugin.service.interf.PluginSecretEncryptionService;
 import com.sep.psp.back.feature_superadmin.dto.CreateExpectedPluginRequest;
 import com.sep.psp.back.feature_superadmin.dto.CreateExpectedPluginResponse;
 import com.sep.psp.back.feature_superadmin.dto.SuperAdminPluginResponse;
@@ -26,6 +27,9 @@ public class SuperAdminServiceImpl implements SuperAdminService {
 
     @Autowired
     PaymentPluginRepository paymentPluginRepository;
+
+    @Autowired
+    PluginSecretEncryptionService pluginSecretEncryptionService;
 
     @Autowired
     AppLoggerService appLoggerService;
@@ -55,11 +59,12 @@ public class SuperAdminServiceImpl implements SuperAdminService {
         }
 
         String pluginSecret = generatePluginSecret();
+        String encryptedPluginSecret = pluginSecretEncryptionService.encrypt(pluginSecret);
 
         PaymentPlugin paymentPlugin = new PaymentPlugin(
                 pluginCode,
                 request.displayName().trim(),
-                pluginSecret
+                encryptedPluginSecret
         );
 
         PaymentPlugin savedPlugin = paymentPluginRepository.save(paymentPlugin);
@@ -70,16 +75,16 @@ public class SuperAdminServiceImpl implements SuperAdminService {
                 "pluginCode={} displayName={} active={} registered={}",
                 savedPlugin.getCode(),
                 savedPlugin.getDisplayName(),
-                savedPlugin.isActive(),
-                savedPlugin.isRegistered()
+                savedPlugin.getActive(),
+                savedPlugin.getRegistered()
         );
 
         return new CreateExpectedPluginResponse(
                 savedPlugin.getCode(),
                 savedPlugin.getDisplayName(),
                 pluginSecret,
-                savedPlugin.isActive(),
-                savedPlugin.isRegistered(),
+                savedPlugin.getActive(),
+                savedPlugin.getRegistered(),
                 "Expected plugin created successfully."
         );
     }
@@ -119,8 +124,9 @@ public class SuperAdminServiceImpl implements SuperAdminService {
                 paymentPlugin.getCode(),
                 paymentPlugin.getDisplayName(),
                 paymentPlugin.getBaseUrl(),
-                paymentPlugin.isActive(),
-                paymentPlugin.isRegistered()
+                paymentPlugin.getActive(),
+                paymentPlugin.getRegistered()
         );
     }
+
 }

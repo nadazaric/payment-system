@@ -23,23 +23,23 @@ public class PaymentPlugin {
     private String baseUrl;
 
     @Column(nullable = false)
-    private boolean active;
+    private Boolean active;
 
     @Column(nullable = false)
-    private boolean registered;
+    private Boolean registered;
 
-    @Column(nullable = false)
-    private String pluginSecret;
+    @Column(nullable = false, columnDefinition = "TEXT")
+    private String encryptedPluginSecret;
 
     public PaymentPlugin(
             String code,
             String displayName,
-            String pluginSecret
+            String encryptedPluginSecret
     ) {
         this.code = code;
         this.displayName = displayName;
-        this.pluginSecret = pluginSecret;
-        this.active = true;
+        this.encryptedPluginSecret = encryptedPluginSecret;
+        this.active = false;
         this.registered = false;
     }
 

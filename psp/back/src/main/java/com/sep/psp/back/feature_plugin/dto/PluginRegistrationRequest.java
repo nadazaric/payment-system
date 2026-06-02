@@ -7,7 +7,7 @@ import jakarta.validation.constraints.NotEmpty;
 
 import java.util.List;
 
-@Schema(description = "Request used by a plugin to register itself and its payment methods on PSP.")
+@Schema(description = "Request used by a plugin to synchronize itself and its payment methods on PSP.")
 public record PluginRegistrationRequest(
 
         @NotBlank(message = "Plugin code is required.")
@@ -30,12 +30,6 @@ public record PluginRegistrationRequest(
                 example = "http://localhost:8085"
         )
         String baseUrl,
-
-        @Schema(
-                description = "Shows whether this plugin is active. If omitted, true is used.",
-                example = "true"
-        )
-        Boolean active,
 
         @Valid
         @NotEmpty(message = "At least one payment method must be provided.")

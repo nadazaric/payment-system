@@ -13,7 +13,7 @@ public interface JwtTokenUtil {
 
     String getMerchantIdFromJWT(String token);
 
-    boolean validateToken(String token);
+    Boolean validateToken(String token);
 
     UserDetails getAuthenticatedUser();
 

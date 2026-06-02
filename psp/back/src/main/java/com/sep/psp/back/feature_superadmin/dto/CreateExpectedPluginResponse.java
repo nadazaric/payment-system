@@ -26,13 +26,13 @@ public record CreateExpectedPluginResponse(
                 description = "Shows whether plugin is active.",
                 example = "true"
         )
-        boolean active,
+        Boolean active,
 
         @Schema(
                 description = "Shows whether plugin has already synchronized its manifest.",
                 example = "false"
         )
-        boolean registered,
+        Boolean registered,
 
         @Schema(
                 description = "Result message.",

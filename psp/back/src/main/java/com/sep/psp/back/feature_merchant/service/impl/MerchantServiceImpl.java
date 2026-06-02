@@ -355,7 +355,7 @@ public class MerchantServiceImpl implements MerchantService {
             throw new BadRequestException("Seller account does not belong to the authenticated merchant.");
         }
 
-        boolean sellerReferenceChanged = !sellerAccount.getSellerReference().equals(request.sellerReference());
+        Boolean sellerReferenceChanged = !sellerAccount.getSellerReference().equals(request.sellerReference());
 
         if (sellerReferenceChanged && merchantSellerAccountRepository.existsByMerchantAndSellerReference(merchant, request.sellerReference())) {
             appLoggerService.warn(

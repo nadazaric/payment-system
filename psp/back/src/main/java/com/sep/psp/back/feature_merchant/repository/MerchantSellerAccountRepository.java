@@ -10,6 +10,6 @@ public interface MerchantSellerAccountRepository extends JpaRepository<MerchantS
 
     List<MerchantSellerAccount> findByMerchant(Merchant merchant);
 
-    boolean existsByMerchantAndSellerReference(Merchant merchant, String sellerReference);
+    Boolean existsByMerchantAndSellerReference(Merchant merchant, String sellerReference);
 
 }

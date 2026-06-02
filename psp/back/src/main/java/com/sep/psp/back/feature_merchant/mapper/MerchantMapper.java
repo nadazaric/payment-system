@@ -44,7 +44,7 @@ public interface MerchantMapper {
                 sellerAccount.getId(),
                 sellerAccount.getSellerReference(),
                 sellerAccount.getDisplayName(),
-                sellerAccount.isActive(),
+                sellerAccount.getActive(),
                 toSellerPaymentMethodResponseList(sellerAccount.getPaymentMethods())
         );
     }
@@ -73,14 +73,14 @@ public interface MerchantMapper {
                 sellerPaymentMethod.getPaymentMethod().getCode(),
                 sellerPaymentMethod.getPaymentMethod().getDisplayName(),
                 sellerPaymentMethod.getPaymentMethod().getPlugin().getCode(),
-                !sellerPaymentMethod.isConfigured()
+                !sellerPaymentMethod.getConfigured()
         );
     }
 
-    default boolean shouldShowSellerPaymentMethod(
+    default Boolean shouldShowSellerPaymentMethod(
             MerchantSellerPaymentMethod sellerPaymentMethod
     ) {
-        return sellerPaymentMethod.getPaymentMethod().isActive()
-                && sellerPaymentMethod.getPaymentMethod().getPlugin().isActive();
+        return sellerPaymentMethod.getPaymentMethod().getActive()
+                && sellerPaymentMethod.getPaymentMethod().getPlugin().getActive();
     }
 }

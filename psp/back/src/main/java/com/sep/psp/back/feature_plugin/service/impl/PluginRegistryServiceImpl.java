@@ -1,5 +1,6 @@
 package com.sep.psp.back.feature_plugin.service.impl;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sep.psp.back.feature_merchant.model.Merchant;
 import com.sep.psp.back.feature_merchant.model.MerchantSellerAccount;
 import com.sep.psp.back.feature_merchant.model.MerchantSellerPaymentMethod;
@@ -13,14 +14,19 @@ import com.sep.psp.back.feature_plugin.dto.PluginRegistrationRequest;
 import com.sep.psp.back.feature_plugin.dto.PluginRegistrationResponse;
 import com.sep.psp.back.feature_plugin.model.PaymentPlugin;
 import com.sep.psp.back.feature_plugin.repository.PaymentPluginRepository;
+import com.sep.psp.back.feature_plugin.service.interf.PluginHmacService;
 import com.sep.psp.back.feature_plugin.service.interf.PluginRegistryService;
+import com.sep.psp.back.feature_plugin.service.interf.PluginSecretEncryptionService;
 import com.sep.psp.back.shared.error.exception.BadRequestException;
 import com.sep.psp.back.shared.logging.LogStrings;
 import com.sep.psp.back.shared.logging.service.interf.AppLoggerService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -29,6 +35,11 @@ import java.util.Set;
 
 @Service
 public class PluginRegistryServiceImpl implements PluginRegistryService {
+
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
+    @Value("${psp.plugin-hmac.max-timestamp-age-minutes:5}")
+    long maxTimestampAgeMinutes;
 
     @Autowired
     PaymentPluginRepository paymentPluginRepository;
@@ -46,24 +57,57 @@ public class PluginRegistryServiceImpl implements PluginRegistryService {
     MerchantRepository merchantRepository;
 
     @Autowired
+    PluginHmacService pluginHmacService;
+
+    @Autowired
+    PluginSecretEncryptionService pluginSecretEncryptionService;
+
+    @Autowired
     AppLoggerService appLoggerService;
 
     @Override
     @Transactional
-    public PluginRegistrationResponse registerPlugin(PluginRegistrationRequest request) {
+    public PluginRegistrationResponse syncPlugin(
+            String pluginCodeHeader,
+            String timestamp,
+            String signature,
+            String requestBody
+    ) {
+        PluginRegistrationRequest request = readRegistrationRequest(requestBody);
+
+        String pluginCode = normalizePluginCode(request.pluginCode());
+
+        validateSyncHeaders(
+                pluginCodeHeader,
+                pluginCode,
+                timestamp,
+                signature
+        );
+
+        PaymentPlugin plugin = paymentPluginRepository.findById(pluginCode)
+                .orElseThrow(() -> new BadRequestException("Payment plugin is not expected by PSP."));
+
+        if (plugin.getRegistered() && !plugin.getActive()) {
+            throw new BadRequestException("Payment plugin is disabled by PSP super admin.");
+        }
+
+        validateSignature(
+                plugin,
+                timestamp,
+                requestBody,
+                signature
+        );
+
         validateUniqueMethodCodes(request);
 
-        PaymentPlugin plugin = paymentPluginRepository.findById(request.pluginCode())
-                .orElseGet(PaymentPlugin::new);
-
-        plugin.setCode(request.pluginCode());
         plugin.setDisplayName(request.displayName());
         plugin.setBaseUrl(request.baseUrl());
-        plugin.setActive(resolveActive(request.active()));
+        plugin.setRegistered(true);
+        plugin.setActive(true);
 
         PaymentPlugin savedPlugin = paymentPluginRepository.save(plugin);
 
-        Set<String> registeredMethodCodes = new LinkedHashSet<>();
+        Set<String> synchronizedMethodCodes = new LinkedHashSet<>();
 
         for (PluginPaymentMethodRegistrationRequest methodRequest : request.methods()) {
             PaymentMethod paymentMethod = createOrUpdatePaymentMethod(
@@ -71,7 +115,7 @@ public class PluginRegistryServiceImpl implements PluginRegistryService {
                     methodRequest
             );
 
-            registeredMethodCodes.add(paymentMethod.getCode());
+            synchronizedMethodCodes.add(paymentMethod.getCode());
 
             if (Boolean.TRUE.equals(methodRequest.updateRequired())) {
                 markSellerConfigurationsAsRequired(paymentMethod);
@@ -80,22 +124,86 @@ public class PluginRegistryServiceImpl implements PluginRegistryService {
 
         deactivateMethodsMissingFromManifest(
                 savedPlugin,
-                registeredMethodCodes
+                synchronizedMethodCodes
         );
 
         appLoggerService.info(
-                LogStrings.Feature.PAYMENT_METHOD,
-                LogStrings.Action.REGISTER_COMPLETED,
+                LogStrings.Feature.PAYMENT_PLUGIN,
+                LogStrings.Action.PLUGIN_SYNC_COMPLETED,
                 "pluginCode={} methodCodes={}",
                 savedPlugin.getCode(),
-                registeredMethodCodes
+                synchronizedMethodCodes
         );
 
         return new PluginRegistrationResponse(
                 savedPlugin.getCode(),
-                registeredMethodCodes.stream().toList(),
-                "Plugin registered successfully."
+                synchronizedMethodCodes.stream().toList(),
+                "Plugin synchronized successfully."
         );
+    }
+
+    private PluginRegistrationRequest readRegistrationRequest(String requestBody) {
+        try {
+            return objectMapper.readValue(
+                    requestBody,
+                    PluginRegistrationRequest.class
+            );
+        } catch (Exception exception) {
+            throw new BadRequestException("Invalid plugin sync request body.");
+        }
+    }
+
+    private void validateSyncHeaders(
+            String pluginCodeHeader,
+            String pluginCode,
+            String timestamp,
+            String signature
+    ) {
+        if (pluginCodeHeader == null || pluginCodeHeader.isBlank()) {
+            throw new BadRequestException("Plugin code header is required.");
+        }
+
+        if (!normalizePluginCode(pluginCodeHeader).equals(pluginCode)) {
+            throw new BadRequestException("Plugin code header does not match request body.");
+        }
+
+        if (timestamp == null || timestamp.isBlank()) {
+            throw new BadRequestException("Timestamp header is required.");
+        }
+
+        if (signature == null || signature.isBlank()) {
+            throw new BadRequestException("Signature header is required.");
+        }
+
+        validateTimestamp(timestamp);
+    }
+
+    private void validateTimestamp(String timestamp) {
+        try {
+            Instant requestInstant = Instant.parse(timestamp);
+            Instant now = Instant.now();
+
+            Duration age = Duration.between(
+                    requestInstant,
+                    now
+            ).abs();
+
+            if (age.compareTo(Duration.ofMinutes(maxTimestampAgeMinutes)) > 0) {
+                throw new BadRequestException("Plugin request timestamp is not valid.");
+            }
+        } catch (Exception exception) {
+            throw new BadRequestException("Plugin request timestamp is not valid.");
+        }
+    }
+
+    private void validateSignature(PaymentPlugin plugin, String timestamp, String requestBody, String signature) {
+        String pluginSecret = pluginSecretEncryptionService.decrypt(plugin.getEncryptedPluginSecret());
+
+        Boolean signatureValid = pluginHmacService.isSignatureValid(pluginSecret, timestamp, requestBody, signature);
+
+        if (!signatureValid) {
+            throw new BadRequestException("Invalid plugin request signature.");
+        }
     }
 
     private void validateUniqueMethodCodes(PluginRegistrationRequest request) {
@@ -108,10 +216,7 @@ public class PluginRegistryServiceImpl implements PluginRegistryService {
         }
     }
 
-    private PaymentMethod createOrUpdatePaymentMethod(
-            PaymentPlugin plugin,
-            PluginPaymentMethodRegistrationRequest methodRequest
-    ) {
+    private PaymentMethod createOrUpdatePaymentMethod(PaymentPlugin plugin, PluginPaymentMethodRegistrationRequest methodRequest) {
         PaymentMethod paymentMethod = paymentMethodRepository.findById(methodRequest.code())
                 .orElseGet(PaymentMethod::new);
 
@@ -129,15 +234,12 @@ public class PluginRegistryServiceImpl implements PluginRegistryService {
         return paymentMethodRepository.save(paymentMethod);
     }
 
-    private void deactivateMethodsMissingFromManifest(
-            PaymentPlugin plugin,
-            Set<String> registeredMethodCodes
-    ) {
+    private void deactivateMethodsMissingFromManifest(PaymentPlugin plugin, Set<String> synchronizedMethodCodes) {
         List<PaymentMethod> existingPluginMethods = paymentMethodRepository.findByPlugin(plugin);
 
         List<PaymentMethod> removedMethods = existingPluginMethods.stream()
-                .filter(paymentMethod -> !registeredMethodCodes.contains(paymentMethod.getCode()))
-                .filter(PaymentMethod::isActive)
+                .filter(paymentMethod -> !synchronizedMethodCodes.contains(paymentMethod.getCode()))
+                .filter(PaymentMethod::getActive)
                 .toList();
 
         removedMethods.forEach(paymentMethod -> {
@@ -169,7 +271,7 @@ public class PluginRegistryServiceImpl implements PluginRegistryService {
         ));
 
         affectedSellers.values().forEach(sellerAccount -> {
-            boolean sellerActive = merchantSellerPaymentMethodRepository.findBySellerAccount(sellerAccount)
+            Boolean sellerActive = merchantSellerPaymentMethodRepository.findBySellerAccount(sellerAccount)
                     .stream()
                     .anyMatch(MerchantSellerPaymentMethod::isAvailableForPayments);
 
@@ -191,15 +293,20 @@ public class PluginRegistryServiceImpl implements PluginRegistryService {
     private void updateMerchantActiveStatus(Merchant merchant) {
         List<MerchantSellerAccount> sellerAccounts = merchantSellerAccountRepository.findByMerchant(merchant);
 
-        boolean merchantActive = sellerAccounts.stream()
-                .anyMatch(MerchantSellerAccount::isActive);
+        Boolean merchantActive = sellerAccounts.stream()
+                .anyMatch(MerchantSellerAccount::getActive);
 
         merchant.setActive(merchantActive);
 
         merchantRepository.save(merchant);
     }
 
-    private boolean resolveActive(Boolean active) {
+    private Boolean resolveActive(Boolean active) {
         return active == null || active;
     }
+
+    private String normalizePluginCode(String pluginCode) {
+        return pluginCode.trim().toUpperCase();
+    }
+
 }

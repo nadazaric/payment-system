@@ -25,7 +25,7 @@ public class PaymentMethod {
     private String displayName;
 
     @Column(nullable = false)
-    private boolean active;
+    private Boolean active;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "plugin_code", nullable = false)

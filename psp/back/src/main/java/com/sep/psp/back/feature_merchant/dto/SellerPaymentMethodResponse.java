@@ -27,6 +27,6 @@ public record SellerPaymentMethodResponse(
                 description = "Shows whether this payment method requires configuration before it can be used.",
                 example = "false"
         )
-        boolean configurationRequired
+        Boolean configurationRequired
 ) {
 }

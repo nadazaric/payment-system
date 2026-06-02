@@ -15,7 +15,7 @@ public record ConfigureSellerPaymentMethodResponse(
                 description = "Shows whether the payment method is configured.",
                 example = "true"
         )
-        boolean configured,
+        Boolean configured,
 
         @Schema(
                 description = "Configuration result message.",

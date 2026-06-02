@@ -9,7 +9,7 @@ public record PluginConfigurationResponse(
                 description = "Shows whether configuration was accepted by plugin.",
                 example = "true"
         )
-        boolean configured,
+        Boolean configured,
 
         @Schema(
                 description = "Configuration result message.",

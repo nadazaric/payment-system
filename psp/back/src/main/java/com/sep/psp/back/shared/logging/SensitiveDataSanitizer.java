@@ -80,7 +80,7 @@ public final class SensitiveDataSanitizer {
         return value;
     }
 
-    private static boolean isSensitiveKey(String key) {
+    private static Boolean isSensitiveKey(String key) {
         return SENSITIVE_KEYS
                 .stream()
                 .anyMatch(sensitiveKey -> sensitiveKey.equalsIgnoreCase(key));

@@ -1,17 +1,15 @@
 package com.sep.psp.back.feature_plugin.controller;
 
-import com.sep.psp.back.feature_plugin.dto.PluginRegistrationRequest;
 import com.sep.psp.back.feature_plugin.dto.PluginRegistrationResponse;
 import com.sep.psp.back.feature_plugin.service.interf.PluginRegistryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 @Tag(
-        name = "Plugins",
-        description = "Endpoints for registering payment plugins."
+        name = "Payment plugins",
+        description = "Endpoints for synchronizing payment plugins."
 )
 @RestController
 @RequestMapping("/api/plugins")
@@ -21,17 +19,25 @@ public class PluginController {
     PluginRegistryService pluginRegistryService;
 
     @Operation(
-            summary = "Register payment plugin",
+            summary = "Synchronize payment plugin",
             description = """
-                    Registers or updates a payment plugin and its payment methods.
-                    The plugin sends its full manifest when it starts.
+                    Synchronizes an expected payment plugin and its payment methods.
+                    Plugin must already be created by PSP super admin and must sign the request.
                     """
     )
-    @PostMapping("/register")
-    public PluginRegistrationResponse registerPlugin(
-            @Valid @RequestBody PluginRegistrationRequest request
+    @PostMapping("/sync")
+    public PluginRegistrationResponse syncPlugin(
+            @RequestHeader("X-Plugin-Code") String pluginCodeHeader,
+            @RequestHeader("X-Timestamp") String timestamp,
+            @RequestHeader("X-Signature") String signature,
+            @RequestBody String requestBody
     ) {
-        return pluginRegistryService.registerPlugin(request);
+        return pluginRegistryService.syncPlugin(
+                pluginCodeHeader,
+                timestamp,
+                signature,
+                requestBody
+        );
     }
 
 }

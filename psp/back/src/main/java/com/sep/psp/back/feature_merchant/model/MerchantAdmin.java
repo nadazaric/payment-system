@@ -37,7 +37,7 @@ public class MerchantAdmin {
     private String name;
 
     @Column(name = "active", nullable = false)
-    private boolean active;
+    private Boolean active;
 
     public MerchantAdmin(
             Merchant merchant,

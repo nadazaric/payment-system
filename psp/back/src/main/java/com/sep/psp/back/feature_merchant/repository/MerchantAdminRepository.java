@@ -9,6 +9,6 @@ public interface MerchantAdminRepository extends JpaRepository<MerchantAdmin, St
 
     Optional<MerchantAdmin> findByUsername(String username);
 
-    boolean existsByUsername(String username);
+    Boolean existsByUsername(String username);
 
 }
