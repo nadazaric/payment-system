@@ -1,3 +1,16 @@
+INSERT INTO super_admin (
+    username,
+    password_hash,
+    name,
+    active
+)
+VALUES (
+           'superadmin',
+           '$2y$10$r6nKsSEwhdNgT741zO1njufAy8JCTd1txS70JWvqMFecmEysf9yMK',
+           'PSP Super Admin',
+           true
+       );
+
 INSERT INTO merchant (
     merchant_id,
     merchant_name,

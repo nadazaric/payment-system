@@ -43,6 +43,7 @@ public class SecurityConfiguration {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.authorizeHttpRequests( auth -> auth
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
+                        .requestMatchers("/api/auth/login").permitAll()
                         .requestMatchers("/api/merchant/register").permitAll()
                         .requestMatchers("/api/merchant/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/plugins/register").permitAll()
