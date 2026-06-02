@@ -12,6 +12,7 @@ public final class LogStrings {
         public static final String MERCHANT = "MERCHANT";
         public static final String SELLER = "SELLER";
         public static final String PAYMENT_METHOD = "PAYMENT METHOD";
+        public static final String PAYMENT_PLUGIN = "PAYMENT PLUGIN";
 
         private Feature() {
         }
@@ -42,6 +43,11 @@ public final class LogStrings {
 
         public static final String API_KEY_REGENERATED = "API KEY REGENERATED";
 
+        public static final String EXPECTED_PLUGIN_CREATE_STARTED = "expected_plugin_create_started";
+        public static final String EXPECTED_PLUGIN_CREATED = "expected_plugin_created";
+        public static final String EXPECTED_PLUGIN_CREATE_REJECTED = "expected_plugin_create_rejected";
+        public static final String PAYMENT_PLUGINS_LISTED = "payment_plugins_listed";
+
         private Action() {
         }
     }
@@ -56,6 +62,7 @@ public final class LogStrings {
         public static final String UNKNOWN_PAYMENT_METHOD = "unknown_payment_method";
         public static final String INACTIVE_PAYMENT_METHOD = "inactive_payment_method";
         public static final String INACTIVE_PAYMENT_PLUGIN = "inactive_payment_plugin";
+        public static final String PAYMENT_PLUGIN_EXISTS = "payment_plugin_exists";
 
         private Reason() {
         }

@@ -170,50 +170,6 @@ public class MerchantServiceImpl implements MerchantService {
     }
 
     @Override
-    public MerchantLoginResponse loginMerchantAdmin(MerchantLoginRequest request) {
-        Authentication authentication;
-
-        try {
-            authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(
-                            request.username(),
-                            request.password()
-                    )
-            );
-        } catch (AuthenticationException exception) {
-            appLoggerService.warn(
-                    LogStrings.Feature.AUTH,
-                    LogStrings.Action.LOGIN_REJECTED,
-                    "username={}",
-                    request.username()
-            );
-
-            throw exception;
-        }
-
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-
-        MerchantAdmin merchantAdmin = merchantAdminRepository.findByUsername(request.username())
-                .orElseThrow(() -> new BadRequestException("Invalid username or password."));
-
-        String token = jwtTokenUtil.generateToken(
-                merchantAdmin.getUsername(),
-                "MERCHANT_ADMIN",
-                merchantAdmin.getMerchant().getMerchantId()
-        );
-
-        appLoggerService.info(
-                LogStrings.Feature.AUTH,
-                LogStrings.Action.LOGIN_SUCCESS,
-                "username={} merchantId={}",
-                merchantAdmin.getUsername(),
-                merchantAdmin.getMerchant().getMerchantId()
-        );
-
-        return new MerchantLoginResponse(token);
-    }
-
-    @Override
     @Transactional(readOnly = true)
     public MerchantProfileResponse getCurrentMerchantProfile() {
         String username = getAuthenticatedUsername();

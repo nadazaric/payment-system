@@ -20,21 +20,27 @@ public class PaymentPlugin {
     @Column(nullable = false)
     private String displayName;
 
-    @Column(nullable = false)
     private String baseUrl;
 
     @Column(nullable = false)
     private boolean active;
 
+    @Column(nullable = false)
+    private boolean registered;
+
+    @Column(nullable = false)
+    private String pluginSecret;
+
     public PaymentPlugin(
             String code,
             String displayName,
-            String baseUrl
+            String pluginSecret
     ) {
         this.code = code;
         this.displayName = displayName;
-        this.baseUrl = baseUrl;
+        this.pluginSecret = pluginSecret;
         this.active = true;
+        this.registered = false;
     }
 
 }

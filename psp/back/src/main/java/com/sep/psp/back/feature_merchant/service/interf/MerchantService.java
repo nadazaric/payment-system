@@ -8,8 +8,6 @@ public interface MerchantService {
 
     MerchantRegistrationResponse registerMerchant(MerchantRegistrationRequest request);
 
-    MerchantLoginResponse loginMerchantAdmin(MerchantLoginRequest request);
-
     MerchantProfileResponse getCurrentMerchantProfile();
 
     List<MerchantSellerAccountResponse> getCurrentMerchantSellerAccounts();

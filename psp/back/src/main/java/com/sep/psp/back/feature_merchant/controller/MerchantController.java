@@ -55,33 +55,6 @@ public class MerchantController {
         return merchantService.registerMerchant(request);
     }
 
-    // ----------------------------------------------------------------------------------------------------------------- Login
-    @Operation(
-            summary = "Log in merchant admin",
-            description = """
-                Authenticates a merchant admin using username and password.
-                Returns a JWT token that must be used as Bearer token for protected merchant endpoints.
-                """
-    )
-    @ApiResponses(value = {
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "Merchant admin logged in successfully.",
-                    content = @Content(schema = @Schema(implementation = MerchantLoginResponse.class))
-            ),
-            @ApiResponse(
-                    responseCode = "401",
-                    description = "Invalid username or password.",
-                    content = @Content
-            )
-    })
-    @PostMapping("/login")
-    public MerchantLoginResponse loginMerchantAdmin(
-            @Valid @RequestBody MerchantLoginRequest request
-    ) {
-        return merchantService.loginMerchantAdmin(request);
-    }
-
     // ----------------------------------------------------------------------------------------------------------------- Get Profile
     @Operation(
             summary = "Get current merchant profile",

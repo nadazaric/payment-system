@@ -1,5 +1,6 @@
 package com.sep.psp.back.security;
 
+import com.sep.psp.back.feature_auth.enumeration.UserRole;
 import com.sep.psp.back.security.jwt.JwtRequestFilter;
 import com.sep.psp.back.security.jwt.JwtTokenUtilImpl;
 import jakarta.servlet.http.HttpServletResponse;
@@ -45,8 +46,8 @@ public class SecurityConfiguration {
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/api/auth/login").permitAll()
                         .requestMatchers("/api/merchant/register").permitAll()
-                        .requestMatchers("/api/merchant/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/plugins/register").permitAll()
+                        .requestMatchers("/api/super-admin/**").hasAuthority(UserRole.SUPER_ADMIN.authority())
                         .anyRequest().authenticated() )
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors((cors) -> cors
