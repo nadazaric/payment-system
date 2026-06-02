@@ -24,7 +24,7 @@ public class SuperAdmin {
     private String name;
 
     @Column(nullable = false)
-    private Boolean active;
+    private boolean active;
 
     public SuperAdmin(
             String username,

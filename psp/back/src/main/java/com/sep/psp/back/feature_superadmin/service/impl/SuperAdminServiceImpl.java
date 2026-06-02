@@ -75,16 +75,16 @@ public class SuperAdminServiceImpl implements SuperAdminService {
                 "pluginCode={} displayName={} active={} registered={}",
                 savedPlugin.getCode(),
                 savedPlugin.getDisplayName(),
-                savedPlugin.getActive(),
-                savedPlugin.getRegistered()
+                savedPlugin.isActive(),
+                savedPlugin.isRegistered()
         );
 
         return new CreateExpectedPluginResponse(
                 savedPlugin.getCode(),
                 savedPlugin.getDisplayName(),
                 pluginSecret,
-                savedPlugin.getActive(),
-                savedPlugin.getRegistered(),
+                savedPlugin.isActive(),
+                savedPlugin.isRegistered(),
                 "Expected plugin created successfully."
         );
     }
@@ -124,8 +124,8 @@ public class SuperAdminServiceImpl implements SuperAdminService {
                 paymentPlugin.getCode(),
                 paymentPlugin.getDisplayName(),
                 paymentPlugin.getBaseUrl(),
-                paymentPlugin.getActive(),
-                paymentPlugin.getRegistered()
+                paymentPlugin.isActive(),
+                paymentPlugin.isRegistered()
         );
     }
 

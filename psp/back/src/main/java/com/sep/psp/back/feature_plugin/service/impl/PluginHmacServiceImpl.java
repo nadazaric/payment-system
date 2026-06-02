@@ -43,7 +43,7 @@ public class PluginHmacServiceImpl implements PluginHmacService {
     }
 
     @Override
-    public Boolean isSignatureValid(String secret, String timestamp, String requestBody, String receivedSignature) {
+    public boolean isSignatureValid(String secret, String timestamp, String requestBody, String receivedSignature) {
         String expectedSignature = generateSignature(secret, timestamp, requestBody);
 
         return MessageDigest.isEqual(

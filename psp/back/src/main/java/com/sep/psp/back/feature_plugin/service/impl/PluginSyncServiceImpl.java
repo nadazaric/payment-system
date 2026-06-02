@@ -15,7 +15,7 @@ import com.sep.psp.back.feature_plugin.dto.PluginRegistrationResponse;
 import com.sep.psp.back.feature_plugin.model.PaymentPlugin;
 import com.sep.psp.back.feature_plugin.repository.PaymentPluginRepository;
 import com.sep.psp.back.feature_plugin.service.interf.PluginHmacService;
-import com.sep.psp.back.feature_plugin.service.interf.PluginRegistryService;
+import com.sep.psp.back.feature_plugin.service.interf.PluginSyncService;
 import com.sep.psp.back.feature_plugin.service.interf.PluginSecretEncryptionService;
 import com.sep.psp.back.shared.error.exception.BadRequestException;
 import com.sep.psp.back.shared.logging.LogStrings;
@@ -34,11 +34,11 @@ import java.util.Map;
 import java.util.Set;
 
 @Service
-public class PluginRegistryServiceImpl implements PluginRegistryService {
+public class PluginSyncServiceImpl implements PluginSyncService {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    @Value("${psp.plugin-hmac.max-timestamp-age-minutes:5}")
+    @Value("${app.plugin.encryption-max-timestamp-age-minutes:5}")
     long maxTimestampAgeMinutes;
 
     @Autowired
@@ -87,7 +87,7 @@ public class PluginRegistryServiceImpl implements PluginRegistryService {
         PaymentPlugin plugin = paymentPluginRepository.findById(pluginCode)
                 .orElseThrow(() -> new BadRequestException("Payment plugin is not expected by PSP."));
 
-        if (plugin.getRegistered() && !plugin.getActive()) {
+        if (plugin.isRegistered() && !plugin.isActive()) {
             throw new BadRequestException("Payment plugin is disabled by PSP super admin.");
         }
 
@@ -117,7 +117,7 @@ public class PluginRegistryServiceImpl implements PluginRegistryService {
 
             synchronizedMethodCodes.add(paymentMethod.getCode());
 
-            if (Boolean.TRUE.equals(methodRequest.updateRequired())) {
+            if (methodRequest.updateRequired()) {
                 markSellerConfigurationsAsRequired(paymentMethod);
             }
         }
@@ -199,7 +199,7 @@ public class PluginRegistryServiceImpl implements PluginRegistryService {
     private void validateSignature(PaymentPlugin plugin, String timestamp, String requestBody, String signature) {
         String pluginSecret = pluginSecretEncryptionService.decrypt(plugin.getEncryptedPluginSecret());
 
-        Boolean signatureValid = pluginHmacService.isSignatureValid(pluginSecret, timestamp, requestBody, signature);
+        boolean signatureValid = pluginHmacService.isSignatureValid(pluginSecret, timestamp, requestBody, signature);
 
         if (!signatureValid) {
             throw new BadRequestException("Invalid plugin request signature.");
@@ -227,7 +227,7 @@ public class PluginRegistryServiceImpl implements PluginRegistryService {
 
         paymentMethod.setCode(methodRequest.code());
         paymentMethod.setDisplayName(methodRequest.displayName());
-        paymentMethod.setActive(resolveActive(methodRequest.active()));
+        paymentMethod.setActive(methodRequest.active());
         paymentMethod.setPlugin(plugin);
         paymentMethod.setConfigSchemaJson(methodRequest.configSchemaJson());
 
@@ -239,7 +239,7 @@ public class PluginRegistryServiceImpl implements PluginRegistryService {
 
         List<PaymentMethod> removedMethods = existingPluginMethods.stream()
                 .filter(paymentMethod -> !synchronizedMethodCodes.contains(paymentMethod.getCode()))
-                .filter(PaymentMethod::getActive)
+                .filter(PaymentMethod::isActive)
                 .toList();
 
         removedMethods.forEach(paymentMethod -> {
@@ -271,7 +271,7 @@ public class PluginRegistryServiceImpl implements PluginRegistryService {
         ));
 
         affectedSellers.values().forEach(sellerAccount -> {
-            Boolean sellerActive = merchantSellerPaymentMethodRepository.findBySellerAccount(sellerAccount)
+            boolean sellerActive = merchantSellerPaymentMethodRepository.findBySellerAccount(sellerAccount)
                     .stream()
                     .anyMatch(MerchantSellerPaymentMethod::isAvailableForPayments);
 
@@ -293,16 +293,12 @@ public class PluginRegistryServiceImpl implements PluginRegistryService {
     private void updateMerchantActiveStatus(Merchant merchant) {
         List<MerchantSellerAccount> sellerAccounts = merchantSellerAccountRepository.findByMerchant(merchant);
 
-        Boolean merchantActive = sellerAccounts.stream()
-                .anyMatch(MerchantSellerAccount::getActive);
+        boolean merchantActive = sellerAccounts.stream()
+                .anyMatch(MerchantSellerAccount::isActive);
 
         merchant.setActive(merchantActive);
 
         merchantRepository.save(merchant);
-    }
-
-    private Boolean resolveActive(Boolean active) {
-        return active == null || active;
     }
 
     private String normalizePluginCode(String pluginCode) {

@@ -1,7 +1,7 @@
 package com.sep.psp.back.feature_plugin.controller;
 
 import com.sep.psp.back.feature_plugin.dto.PluginRegistrationResponse;
-import com.sep.psp.back.feature_plugin.service.interf.PluginRegistryService;
+import com.sep.psp.back.feature_plugin.service.interf.PluginSyncService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 public class PluginController {
 
     @Autowired
-    PluginRegistryService pluginRegistryService;
+    PluginSyncService pluginSyncService;
 
     @Operation(
             summary = "Synchronize payment plugin",
@@ -32,7 +32,7 @@ public class PluginController {
             @RequestHeader("X-Signature") String signature,
             @RequestBody String requestBody
     ) {
-        return pluginRegistryService.syncPlugin(
+        return pluginSyncService.syncPlugin(
                 pluginCodeHeader,
                 timestamp,
                 signature,

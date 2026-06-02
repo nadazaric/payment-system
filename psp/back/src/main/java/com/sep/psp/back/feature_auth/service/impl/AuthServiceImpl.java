@@ -70,7 +70,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     private LoginResponse createSuperAdminLoginResponse(SuperAdmin superAdmin) {
-        if (!superAdmin.getActive()) {
+        if (!superAdmin.isActive()) {
             throw new BadRequestException("Super admin account is not active.");
         }
 
@@ -98,7 +98,7 @@ public class AuthServiceImpl implements AuthService {
         MerchantAdmin merchantAdmin = merchantAdminRepository.findByUsername(username)
                 .orElseThrow(() -> new BadRequestException("Invalid username or password."));
 
-        if (!merchantAdmin.getActive()) {
+        if (!merchantAdmin.isActive()) {
             throw new BadRequestException("Merchant admin account is not active.");
         }
 

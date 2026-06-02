@@ -35,7 +35,7 @@ public class CustomUserDetailsService implements UserDetailsService {
                 .username(superAdmin.getUsername())
                 .password(superAdmin.getPasswordHash())
                 .authorities(UserRole.SUPER_ADMIN.authority())
-                .disabled(!superAdmin.getActive())
+                .disabled(!superAdmin.isActive())
                 .build();
     }
 
@@ -44,7 +44,7 @@ public class CustomUserDetailsService implements UserDetailsService {
                 .username(merchantAdmin.getUsername())
                 .password(merchantAdmin.getPasswordHash())
                 .authorities(UserRole.MERCHANT_ADMIN.authority())
-                .disabled(!merchantAdmin.getActive())
+                .disabled(!merchantAdmin.isActive())
                 .build();
     }
 

@@ -45,7 +45,7 @@ public record MerchantProfileResponse(
                 description = "Shows whether the merchant is active for payment flow.",
                 example = "false"
         )
-        Boolean merchantActive,
+        boolean merchantActive,
 
         @Schema(
                 description = "Username of the currently authenticated merchant admin.",

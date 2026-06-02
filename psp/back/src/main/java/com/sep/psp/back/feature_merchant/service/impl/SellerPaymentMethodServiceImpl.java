@@ -273,8 +273,8 @@ public class SellerPaymentMethodServiceImpl implements SellerPaymentMethodServic
             String sellerId,
             Set<String> requestedPaymentMethodCodes
     ) {
-        Boolean hasInactivePaymentMethod = paymentMethods.stream()
-                .anyMatch(paymentMethod -> !paymentMethod.getActive());
+        boolean hasInactivePaymentMethod = paymentMethods.stream()
+                .anyMatch(paymentMethod -> !paymentMethod.isActive());
 
         if (hasInactivePaymentMethod) {
             appLoggerService.warn(
@@ -297,8 +297,8 @@ public class SellerPaymentMethodServiceImpl implements SellerPaymentMethodServic
             String sellerId,
             Set<String> requestedPaymentMethodCodes
     ) {
-        Boolean hasInactivePaymentPlugin = paymentMethods.stream()
-                .anyMatch(paymentMethod -> !paymentMethod.getPlugin().getActive());
+        boolean hasInactivePaymentPlugin = paymentMethods.stream()
+                .anyMatch(paymentMethod -> !paymentMethod.getPlugin().isActive());
 
         if (hasInactivePaymentPlugin) {
             appLoggerService.warn(
@@ -343,7 +343,7 @@ public class SellerPaymentMethodServiceImpl implements SellerPaymentMethodServic
                             "Payment method must be configured before it can be assigned to the seller."
                     ));
 
-            if (!sellerPaymentMethod.getConfigured()) {
+            if (!sellerPaymentMethod.isConfigured()) {
                 throw new BadRequestException(
                         "Payment method must be configured before it can be assigned to the seller."
                 );
@@ -352,13 +352,13 @@ public class SellerPaymentMethodServiceImpl implements SellerPaymentMethodServic
     }
 
     private void validateSinglePaymentMethodIsActive(PaymentMethod paymentMethod) {
-        if (!paymentMethod.getActive()) {
+        if (!paymentMethod.isActive()) {
             throw new BadRequestException("Payment method is not active.");
         }
     }
 
     private void validateSinglePaymentPluginIsActive(PaymentMethod paymentMethod) {
-        if (!paymentMethod.getPlugin().getActive()) {
+        if (!paymentMethod.getPlugin().isActive()) {
             throw new BadRequestException("Payment method plugin is not active.");
         }
     }
@@ -403,7 +403,7 @@ public class SellerPaymentMethodServiceImpl implements SellerPaymentMethodServic
     }
 
     private void updateSellerActiveStatus(MerchantSellerAccount sellerAccount) {
-        Boolean sellerActive = merchantSellerPaymentMethodRepository.findBySellerAccount(sellerAccount)
+        boolean sellerActive = merchantSellerPaymentMethodRepository.findBySellerAccount(sellerAccount)
                 .stream()
                 .anyMatch(MerchantSellerPaymentMethod::isAvailableForPayments);
 
@@ -413,24 +413,24 @@ public class SellerPaymentMethodServiceImpl implements SellerPaymentMethodServic
     }
 
     private void updateMerchantActiveStatus(Merchant merchant) {
-        Boolean previousMerchantActive = merchant.getActive();
+        boolean previousMerchantActive = merchant.isActive();
 
         List<MerchantSellerAccount> sellerAccounts = merchantSellerAccountRepository.findByMerchant(merchant);
 
-        Boolean hasActiveSeller = sellerAccounts.stream()
-                .anyMatch(MerchantSellerAccount::getActive);
+        boolean hasActiveSeller = sellerAccounts.stream()
+                .anyMatch(MerchantSellerAccount::isActive);
 
         merchant.setActive(hasActiveSeller);
 
         merchantRepository.save(merchant);
 
-        if (previousMerchantActive != merchant.getActive()) {
+        if (previousMerchantActive != merchant.isActive()) {
             appLoggerService.info(
                     LogStrings.Feature.MERCHANT,
                     LogStrings.Action.ACTIVE_STATUS_CHANGED,
                     "merchantId={} active={}",
                     merchant.getMerchantId(),
-                    merchant.getActive()
+                    merchant.isActive()
             );
         }
     }

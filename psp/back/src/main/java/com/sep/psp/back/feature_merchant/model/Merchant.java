@@ -41,7 +41,7 @@ public class Merchant {
     private String errorUrl;
 
     @Column(nullable = false)
-    private Boolean active;
+    private boolean active;
 
     @Column(nullable = false)
     private LocalDateTime createdAt;

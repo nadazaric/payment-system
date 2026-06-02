@@ -21,7 +21,7 @@ public record PaymentMethodResponse(
                 description = "Shows whether the payment method is globally active in PSP.",
                 example = "true"
         )
-        Boolean active,
+        boolean active,
 
         @Schema(
                 description = "Code of the plugin that provides this payment method.",

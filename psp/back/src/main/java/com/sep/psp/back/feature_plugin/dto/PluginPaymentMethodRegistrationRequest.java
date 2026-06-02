@@ -21,21 +21,21 @@ public record PluginPaymentMethodRegistrationRequest(
         String displayName,
 
         @Schema(
-                description = "Shows whether this payment method is active. If omitted, true is used.",
+                description = "Shows whether this payment method is active.",
                 example = "true"
         )
-        Boolean active,
+        boolean active,
 
         @Schema(
                 description = "Shows whether existing seller configurations for this method must be invalidated.",
                 example = "false"
         )
-        Boolean updateRequired,
+        boolean updateRequired,
 
         @NotBlank(message = "Configuration schema JSON is required.")
         @Schema(
                 description = "Configuration schema required by the plugin. PSP stores only field metadata, not configuration values.",
-                example = "[{\"fieldKey\":\"mockApiKey\",\"label\":\"Mock API key\",\"fieldType\":\"PASSWORD\",\"required\":true,\"sensitive\":true}]"
+                example = "[{\"fieldName\":\"mockApiKey\",\"fieldType\":\"PASSWORD\"}]"
         )
         String configSchemaJson
 ) {

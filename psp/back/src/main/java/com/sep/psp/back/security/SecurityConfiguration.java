@@ -46,7 +46,7 @@ public class SecurityConfiguration {
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/api/auth/login").permitAll()
                         .requestMatchers("/api/merchant/register").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/plugins/register").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/plugins/sync").permitAll()
                         .requestMatchers("/api/super-admin/**").hasAuthority(UserRole.SUPER_ADMIN.authority())
                         .anyRequest().authenticated() )
                 .csrf(AbstractHttpConfigurer::disable)

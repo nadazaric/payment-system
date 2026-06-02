@@ -27,12 +27,12 @@ public record SuperAdminPluginResponse(
                 description = "Shows whether plugin is active.",
                 example = "true"
         )
-        Boolean active,
+        boolean active,
 
         @Schema(
                 description = "Shows whether plugin has synchronized its manifest.",
                 example = "true"
         )
-        Boolean registered
+        boolean registered
 ) {
 }

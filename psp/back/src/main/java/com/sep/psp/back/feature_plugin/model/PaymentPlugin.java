@@ -23,10 +23,10 @@ public class PaymentPlugin {
     private String baseUrl;
 
     @Column(nullable = false)
-    private Boolean active;
+    private boolean active;
 
     @Column(nullable = false)
-    private Boolean registered;
+    private boolean registered;
 
     @Column(nullable = false, columnDefinition = "TEXT")
     private String encryptedPluginSecret;

@@ -38,7 +38,7 @@ public class MerchantSellerAccount {
     private String displayName;
 
     @Column(nullable = false)
-    private Boolean active;
+    private boolean active;
 
     @OneToMany(
             mappedBy = "sellerAccount",
@@ -58,7 +58,7 @@ public class MerchantSellerAccount {
         this.active = false;
     }
 
-    public Boolean hasAvailablePaymentMethods() {
+    public boolean hasAvailablePaymentMethods() {
         return this.paymentMethods.stream()
                 .anyMatch(MerchantSellerPaymentMethod::isAvailableForPayments);
     }

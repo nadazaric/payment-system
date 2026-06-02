@@ -2,7 +2,7 @@ package com.sep.psp.back.feature_plugin.service.interf;
 
 import com.sep.psp.back.feature_plugin.dto.PluginRegistrationResponse;
 
-public interface PluginRegistryService {
+public interface PluginSyncService {
 
     PluginRegistrationResponse syncPlugin(
             String pluginCodeHeader,
