@@ -18,8 +18,7 @@ pip-wheel-metadata/
 
 # Environment and local configuration
 .env
-.env.*
-!.env.example
+!.env
 
 # IDE/editor files
 .idea/
@@ -45,20 +44,6 @@ Thumbs.db
 *.pid
 *.tmp
 *.bak
-
-# Optional: if this repository also contains Spring Boot backend files
-target/
-.mvn/wrapper/maven-wrapper.jar
-application-local.properties
-application-local.yml
-
-# Optional: if this repository also contains frontend files
-node_modules/
-.next/
-out/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
 
 # Local plugin storage
 plugin-configurations.json

@@ -28,3 +28,13 @@ CONFIGURATIONS_FILE_PATH = os.getenv(
     "CONFIGURATIONS_FILE_PATH",
     "plugin-configurations.json"
 )
+
+PLUGIN_HOST = os.getenv(
+    "PLUGIN_HOST",
+    "0.0.0.0"
+)
+
+PLUGIN_PORT = int(os.getenv(
+    "PLUGIN_PORT",
+    "8085"
+))
