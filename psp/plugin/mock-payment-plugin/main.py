@@ -1,11 +1,16 @@
 import asyncio
+import base64
+import hashlib
+import hmac
 import json
 import logging
-from contextlib import asynccontextmanager
+import sys
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 import httpx
+import uvicorn
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
@@ -13,6 +18,7 @@ from config import (
     CONFIGURATIONS_FILE_PATH,
     MANIFEST_FILE_PATH,
     PLUGIN_BASE_URL,
+    PLUGIN_SECRET,
     PSP_BASE_URL
 )
 
@@ -119,17 +125,13 @@ def validate_configuration_request(request: PluginConfigurationRequest) -> None:
             )
 
 
-def build_registration_request() -> dict[str, Any]:
+def build_sync_request() -> dict[str, Any]:
     manifest = load_manifest()
 
-    registration_request = {
+    sync_request = {
         "pluginCode": manifest["pluginCode"],
         "displayName": manifest["displayName"],
         "baseUrl": PLUGIN_BASE_URL,
-        "active": manifest.get(
-            "active",
-            True
-        ),
         "methods": []
     }
 
@@ -139,7 +141,7 @@ def build_registration_request() -> dict[str, Any]:
             []
         )
 
-        registration_request["methods"].append({
+        sync_request["methods"].append({
             "code": method["code"],
             "displayName": method["displayName"],
             "active": method.get(
@@ -150,15 +152,96 @@ def build_registration_request() -> dict[str, Any]:
                 "updateRequired",
                 False
             ),
-            "configSchemaJson": json.dumps(config_fields)
+            "configSchemaJson": json.dumps(
+                config_fields,
+                separators=(",", ":")
+            )
         })
 
-    return registration_request
+    return sync_request
 
 
-async def register_plugin_on_psp() -> None:
-    register_url = f"{PSP_BASE_URL}/api/plugins/register"
-    registration_request = build_registration_request()
+def serialize_request_body(request_body: dict[str, Any]) -> str:
+    return json.dumps(
+        request_body,
+        separators=(",", ":"),
+        ensure_ascii=False
+    )
+
+
+def get_current_timestamp() -> str:
+    return datetime.now(timezone.utc) \
+        .isoformat() \
+        .replace("+00:00", "Z")
+
+
+def generate_signature(
+        secret: str,
+        timestamp: str,
+        request_body: str
+) -> str:
+    payload = f"{timestamp}.{request_body}"
+
+    signature_bytes = hmac.new(
+        secret.encode("utf-8"),
+        payload.encode("utf-8"),
+        hashlib.sha256
+    ).digest()
+
+    return base64.urlsafe_b64encode(signature_bytes) \
+        .decode("utf-8") \
+        .rstrip("=")
+
+
+def build_sync_headers(
+        plugin_code: str,
+        request_body: str
+) -> dict[str, str]:
+    if PLUGIN_SECRET is None or PLUGIN_SECRET == "":
+        raise RuntimeError("PLUGIN_SECRET is not configured.")
+
+    timestamp = get_current_timestamp()
+
+    signature = generate_signature(
+        PLUGIN_SECRET,
+        timestamp,
+        request_body
+    )
+
+    return {
+        "Content-Type": "application/json",
+        "X-Plugin-Code": plugin_code,
+        "X-Timestamp": timestamp,
+        "X-Signature": signature
+    }
+
+
+async def sync_plugin_on_psp() -> bool:
+    try:
+        sync_url = f"{PSP_BASE_URL}/api/plugins/sync"
+        sync_request = build_sync_request()
+        request_body = serialize_request_body(sync_request)
+
+        headers = build_sync_headers(
+            sync_request["pluginCode"],
+            request_body
+        )
+    except RuntimeError as exception:
+        logging.error(
+            "Mock plugin sync configuration error: %s",
+            exception
+        )
+
+        return False
+    except Exception as exception:
+        logging.error(
+            "Mock plugin could not build sync request: %s",
+            exception
+        )
+
+        return False
+
+    last_error = None
 
     for attempt in range(
             1,
@@ -167,13 +250,14 @@ async def register_plugin_on_psp() -> None:
         try:
             async with httpx.AsyncClient(timeout=5.0) as client:
                 response = await client.post(
-                    register_url,
-                    json=registration_request
+                    sync_url,
+                    content=request_body,
+                    headers=headers
                 )
 
                 if response.status_code >= 400:
                     logging.warning(
-                        "PSP rejected plugin registration. Status: %s, Body: %s",
+                        "PSP rejected plugin sync. Status: %s, Body: %s",
                         response.status_code,
                         response.text
                     )
@@ -181,15 +265,17 @@ async def register_plugin_on_psp() -> None:
                 response.raise_for_status()
 
                 logging.info(
-                    "Mock plugin registered on PSP. Response: %s",
+                    "Mock plugin synchronized with PSP. Response: %s",
                     response.text
                 )
 
-                return
+                return True
 
         except httpx.HTTPError as exception:
+            last_error = exception
+
             logging.warning(
-                "Failed to register mock plugin on PSP. Attempt %s/5. Reason: %s",
+                "Failed to synchronize mock plugin with PSP. Attempt %s/5. Reason: %s",
                 attempt,
                 exception
             )
@@ -197,21 +283,17 @@ async def register_plugin_on_psp() -> None:
             await asyncio.sleep(2)
 
     logging.error(
-        "Mock plugin could not be registered on PSP after all attempts."
+        "Mock plugin could not be synchronized with PSP after all attempts. Plugin will not start. Last error: %s",
+        last_error
     )
 
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    await register_plugin_on_psp()
-    yield
+    return False
 
 
 app = FastAPI(
     title="Mock Payment Plugin",
     description="Mock payment plugin used to test PSP pluggability.",
-    version="1.0.0",
-    lifespan=lifespan
+    version="1.0.0"
 )
 
 
@@ -255,11 +337,18 @@ def save_configuration(
 
 
 if __name__ == "__main__":
-    import uvicorn
+    synchronized = asyncio.run(sync_plugin_on_psp())
+
+    if not synchronized:
+        logging.error(
+            "Mock plugin stopped because synchronization with PSP failed."
+        )
+
+        sys.exit(1)
 
     uvicorn.run(
         "main:app",
         host="0.0.0.0",
         port=8085,
-        reload=True
+        reload=False
     )
