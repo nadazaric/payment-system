@@ -1,9 +1,11 @@
 package com.sep.psp.back.feature_plugin.controller;
 
+import com.sep.psp.back.feature_plugin.dto.PluginSyncRequest;
 import com.sep.psp.back.feature_plugin.dto.PluginSyncResponse;
 import com.sep.psp.back.feature_plugin.service.interf.PluginSyncService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,17 +29,9 @@ public class PluginController {
     )
     @PostMapping("/sync")
     public PluginSyncResponse syncPlugin(
-            @RequestHeader("X-Plugin-Code") String pluginCodeHeader,
-            @RequestHeader("X-Timestamp") String timestamp,
-            @RequestHeader("X-Signature") String signature,
-            @RequestBody String requestBody
+            @Valid @RequestBody PluginSyncRequest request
     ) {
-        return pluginSyncService.syncPlugin(
-                pluginCodeHeader,
-                timestamp,
-                signature,
-                requestBody
-        );
+        return pluginSyncService.syncPlugin(request);
     }
 
 }

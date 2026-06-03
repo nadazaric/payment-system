@@ -48,6 +48,8 @@ public final class LogStrings {
         public static final String EXPECTED_PLUGIN_CREATE_REJECTED = "expected_plugin_create_rejected";
         public static final String PAYMENT_PLUGINS_LISTED = "payment_plugins_listed";
         public static final String PLUGIN_SYNC_COMPLETED = "plugin_sync_completed";
+        public static final String PLUGIN_SIGNATURE_VERIFIED = "plugin_signature_verified";
+        public static final String PLUGIN_SIGNATURE_REJECTED = "plugin_signature_rejected";
 
         private Action() {
         }

@@ -25,6 +25,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import com.sep.psp.back.feature_plugin.security.PluginSignatureVerificationFilter;
 
 import java.util.List;
 
@@ -33,7 +34,12 @@ import java.util.List;
 @EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfiguration {
 
-    @Autowired UserDetailsService userDetailsService;
+    @Autowired
+    UserDetailsService userDetailsService;
+
+    @Autowired
+    PluginSignatureVerificationFilter pluginSignatureVerificationFilter;
+
     private final JwtTokenUtilImpl jwtTokenUtil;
 
     public SecurityConfiguration(JwtTokenUtilImpl jwtTokenUtil) {
@@ -67,6 +73,8 @@ public class SecurityConfiguration {
                     response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                     response.getOutputStream().println("Unauthorized!");
                 }));
+
+        http.addFilterBefore(pluginSignatureVerificationFilter, UsernamePasswordAuthenticationFilter.class);
 
         http.addFilterBefore(jwtAuthFilter(), UsernamePasswordAuthenticationFilter.class);
 
