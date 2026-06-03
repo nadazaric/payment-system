@@ -38,3 +38,10 @@ PLUGIN_PORT = int(os.getenv(
     "PLUGIN_PORT",
     "8085"
 ))
+
+PLUGIN_SIGNATURE_MAX_TIMESTAMP_AGE_SECONDS = int(
+    os.getenv(
+        "PLUGIN_SIGNATURE_MAX_TIMESTAMP_AGE_SECONDS",
+        "300"
+    )
+)
