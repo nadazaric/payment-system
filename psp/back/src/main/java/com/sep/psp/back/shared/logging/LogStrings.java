@@ -47,6 +47,8 @@ public final class LogStrings {
         public static final String EXPECTED_PLUGIN_CREATE_REJECTED = "EXPECTED PLUGIN CREATE REJECTED";
         public static final String PAYMENT_PLUGINS_LISTED = "PAYMENT PLUGINS LISTED";
         public static final String PLUGIN_SYNC_COMPLETED = "PLUGIN SYNC COMPLETED";
+        public static final String PLUGIN_STATUS_UPDATED = "PLUGIN STATUS UPDATED";
+        public static final String PLUGIN_STATUS_UPDATE_REJECTED = "PLUGIN STATUS UPDATE REJECTED";
 
         private Action() {
         }
@@ -63,6 +65,7 @@ public final class LogStrings {
         public static final String INACTIVE_PAYMENT_METHOD = "inactive_payment_method";
         public static final String INACTIVE_PAYMENT_PLUGIN = "inactive_payment_plugin";
         public static final String PAYMENT_PLUGIN_EXISTS = "payment_plugin_exists";
+        public static final String PAYMENT_PLUGIN_NOT_FOUND = "payment_plugin_not_found";
 
         private Reason() {
         }

@@ -3,6 +3,7 @@ package com.sep.psp.back.feature_superadmin.controller;
 import com.sep.psp.back.feature_superadmin.dto.CreateExpectedPluginRequest;
 import com.sep.psp.back.feature_superadmin.dto.CreateExpectedPluginResponse;
 import com.sep.psp.back.feature_superadmin.dto.SuperAdminPluginResponse;
+import com.sep.psp.back.feature_superadmin.dto.UpdatePluginStatusRequest;
 import com.sep.psp.back.feature_superadmin.service.interf.SuperAdminService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -25,6 +26,7 @@ public class SuperAdminController {
     @Autowired
     SuperAdminService superAdminService;
 
+    // ----------------------------------------------------------------------------------------------------------------- Create Plugin
     @Operation(
             summary = "Create expected payment plugin",
             description = "Creates an expected payment plugin and returns generated plugin secret."
@@ -36,6 +38,7 @@ public class SuperAdminController {
         return superAdminService.createExpectedPlugin(request);
     }
 
+    // ----------------------------------------------------------------------------------------------------------------- Get Plugins
     @Operation(
             summary = "Get payment plugins",
             description = "Returns payment plugins visible to PSP super admin."
@@ -43,6 +46,18 @@ public class SuperAdminController {
     @GetMapping("/plugins")
     public List<SuperAdminPluginResponse> getPlugins() {
         return superAdminService.getPlugins();
+    }
+
+    // ----------------------------------------------------------------------------------------------------------------- Update Plugin Status
+    @Operation(
+            summary = "Update payment plugin status",
+            description = "Enables or disables a payment plugin by PSP super admin."
+    )
+    @PatchMapping("/plugins/status")
+    public SuperAdminPluginResponse updatePluginStatus(
+            @Valid @RequestBody UpdatePluginStatusRequest request
+    ) {
+        return superAdminService.updatePluginStatus(request);
     }
 
 }
