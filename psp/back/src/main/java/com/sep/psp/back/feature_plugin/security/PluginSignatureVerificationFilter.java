@@ -71,14 +71,6 @@ public class PluginSignatureVerificationFilter extends OncePerRequestFilter {
                     response
             );
         } catch (Exception exception) {
-            appLoggerService.warn(
-                    LogStrings.Feature.PAYMENT_PLUGIN,
-                    LogStrings.Action.PLUGIN_SIGNATURE_REJECTED,
-                    "path={} reason={}",
-                    request.getServletPath(),
-                    exception.getMessage()
-            );
-
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             response.setContentType("application/json");
             response.getWriter()
@@ -123,13 +115,6 @@ public class PluginSignatureVerificationFilter extends OncePerRequestFilter {
                 timestamp,
                 requestBody,
                 signature
-        );
-
-        appLoggerService.info(
-                LogStrings.Feature.PAYMENT_PLUGIN,
-                LogStrings.Action.PLUGIN_SIGNATURE_VERIFIED,
-                "pluginCode={}",
-                plugin.getCode()
         );
     }
 

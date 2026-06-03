@@ -47,13 +47,6 @@ public class SuperAdminServiceImpl implements SuperAdminService {
     public CreateExpectedPluginResponse createExpectedPlugin(CreateExpectedPluginRequest request) {
         String pluginCode = normalizePluginCode(request.pluginCode());
 
-        appLoggerService.info(
-                LogStrings.Feature.PAYMENT_PLUGIN,
-                LogStrings.Action.EXPECTED_PLUGIN_CREATE_STARTED,
-                "pluginCode={}",
-                pluginCode
-        );
-
         if (paymentPluginRepository.existsById(pluginCode)) {
             appLoggerService.warn(
                     LogStrings.Feature.PAYMENT_PLUGIN,

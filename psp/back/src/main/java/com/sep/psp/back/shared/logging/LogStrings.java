@@ -43,13 +43,10 @@ public final class LogStrings {
 
         public static final String API_KEY_REGENERATED = "API KEY REGENERATED";
 
-        public static final String EXPECTED_PLUGIN_CREATE_STARTED = "expected_plugin_create_started";
-        public static final String EXPECTED_PLUGIN_CREATED = "expected_plugin_created";
-        public static final String EXPECTED_PLUGIN_CREATE_REJECTED = "expected_plugin_create_rejected";
-        public static final String PAYMENT_PLUGINS_LISTED = "payment_plugins_listed";
-        public static final String PLUGIN_SYNC_COMPLETED = "plugin_sync_completed";
-        public static final String PLUGIN_SIGNATURE_VERIFIED = "plugin_signature_verified";
-        public static final String PLUGIN_SIGNATURE_REJECTED = "plugin_signature_rejected";
+        public static final String EXPECTED_PLUGIN_CREATED = "EXPECTED PLUGIN CREATED";
+        public static final String EXPECTED_PLUGIN_CREATE_REJECTED = "EXPECTED PLUGIN CREATE REJECTED";
+        public static final String PAYMENT_PLUGINS_LISTED = "PAYMENT PLUGINS LISTED";
+        public static final String PLUGIN_SYNC_COMPLETED = "PLUGIN SYNC COMPLETED";
 
         private Action() {
         }
