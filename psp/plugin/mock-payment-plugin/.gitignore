@@ -18,7 +18,6 @@ pip-wheel-metadata/
 
 # Environment and local configuration
 .env
-!.env
 
 # IDE/editor files
 .idea/
