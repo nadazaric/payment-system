@@ -8,7 +8,6 @@ import com.sep.psp.back.feature_merchant.model.MerchantSellerAccount;
 import com.sep.psp.back.feature_merchant.repository.MerchantAdminRepository;
 import com.sep.psp.back.feature_merchant.repository.MerchantRepository;
 import com.sep.psp.back.feature_merchant.repository.MerchantSellerAccountRepository;
-import com.sep.psp.back.feature_merchant.service.interf.MerchantCredentialGenerator;
 import com.sep.psp.back.feature_merchant.service.interf.MerchantService;
 import com.sep.psp.back.feature_merchant.service.interf.SellerPaymentMethodService;
 import com.sep.psp.back.security.jwt.JwtTokenUtil;
@@ -17,13 +16,13 @@ import com.sep.psp.back.shared.logging.LogStrings;
 import com.sep.psp.back.shared.logging.service.interf.AppLoggerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.sep.psp.back.shared.service.interf.ApiKeyGeneratorService;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.util.List;
 
@@ -43,9 +42,6 @@ public class MerchantServiceImpl implements MerchantService {
     MerchantSellerAccountRepository merchantSellerAccountRepository;
 
     @Autowired
-    MerchantCredentialGenerator merchantCredentialGenerator;
-
-    @Autowired
     PasswordEncoder passwordEncoder;
 
     @Autowired
@@ -63,6 +59,27 @@ public class MerchantServiceImpl implements MerchantService {
     @Autowired
     AppLoggerService appLoggerService;
 
+    @Value("${app.merchant-id.prefix}")
+    private String merchantIdPrefix;
+
+    @Value("${app.merchant-id.alphabet}")
+    private String merchantIdAlphabet;
+
+    @Value("${app.merchant-id.length}")
+    private int merchantIdLength;
+
+    @Value("${app.merchant-password.prefix}")
+    private String merchantPasswordPrefix;
+
+    @Value("${app.merchant-password.alphabet}")
+    private String merchantPasswordAlphabet;
+
+    @Value("${app.merchant-password.length}")
+    private int merchantPasswordLength;
+
+    @Autowired
+    ApiKeyGeneratorService apiKeyGeneratorService;
+
     @Override
     @Transactional
     public MerchantRegistrationResponse registerMerchant(MerchantRegistrationRequest request) {
@@ -77,7 +94,11 @@ public class MerchantServiceImpl implements MerchantService {
         validateRegistrationRequest(request);
 
         String merchantId = generateUniqueMerchantId();
-        String merchantPassword = merchantCredentialGenerator.generateMerchantPassword();
+        String merchantPassword = apiKeyGeneratorService.generateApiKey(
+                merchantPasswordPrefix,
+                merchantPasswordAlphabet,
+                merchantPasswordLength
+        );
 
         Merchant merchant = createMerchant(request, merchantId, merchantPassword);
         Merchant savedMerchant = merchantRepository.save(merchant);
@@ -103,6 +124,20 @@ public class MerchantServiceImpl implements MerchantService {
                 savedDefaultSellerAccount,
                 merchantPassword
         );
+    }
+
+    private String generateUniqueMerchantId() {
+        String merchantId;
+
+        do {
+            merchantId = apiKeyGeneratorService.generateApiKey(
+                    merchantIdPrefix,
+                    merchantIdAlphabet,
+                    merchantIdLength
+            );
+        } while (merchantRepository.existsById(merchantId));
+
+        return merchantId;
     }
 
     private void validateRegistrationRequest(MerchantRegistrationRequest request) {
@@ -157,16 +192,6 @@ public class MerchantServiceImpl implements MerchantService {
                 DEFAULT_SELLER_REFERENCE,
                 DEFAULT_SELLER_DISPLAY_NAME
         );
-    }
-
-    private String generateUniqueMerchantId() {
-        String merchantId;
-
-        do {
-            merchantId = merchantCredentialGenerator.generateMerchantId();
-        } while (merchantRepository.existsById(merchantId));
-
-        return merchantId;
     }
 
     @Override
@@ -296,7 +321,11 @@ public class MerchantServiceImpl implements MerchantService {
         MerchantAdmin merchantAdmin = merchantAdminRepository.findByUsername(username)
                 .orElseThrow(() -> new BadRequestException("Authenticated merchant admin not found."));
 
-        String newMerchantPassword = merchantCredentialGenerator.generateMerchantPassword();
+        String newMerchantPassword = apiKeyGeneratorService.generateApiKey(
+                merchantPasswordPrefix,
+                merchantPasswordAlphabet,
+                merchantPasswordLength
+        );
         String newMerchantPasswordHash = passwordEncoder.encode(newMerchantPassword);
 
         Merchant merchant = merchantAdmin.getMerchant();

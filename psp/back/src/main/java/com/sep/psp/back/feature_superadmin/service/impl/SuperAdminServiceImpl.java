@@ -10,20 +10,16 @@ import com.sep.psp.back.feature_superadmin.service.interf.SuperAdminService;
 import com.sep.psp.back.shared.error.exception.BadRequestException;
 import com.sep.psp.back.shared.logging.LogStrings;
 import com.sep.psp.back.shared.logging.service.interf.AppLoggerService;
+import com.sep.psp.back.shared.service.interf.ApiKeyGeneratorService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.security.SecureRandom;
-import java.util.Base64;
 import java.util.List;
 
 @Service
 public class SuperAdminServiceImpl implements SuperAdminService {
-
-    private static final int SECRET_BYTE_LENGTH = 32;
-
-    private final SecureRandom secureRandom = new SecureRandom();
 
     @Autowired
     PaymentPluginRepository paymentPluginRepository;
@@ -32,7 +28,19 @@ public class SuperAdminServiceImpl implements SuperAdminService {
     PluginSecretEncryptionService pluginSecretEncryptionService;
 
     @Autowired
+    ApiKeyGeneratorService apiKeyGeneratorService;
+
+    @Autowired
     AppLoggerService appLoggerService;
+
+    @Value("${app.plugin-secret.prefix}")
+    private String pluginSecretPrefix;
+
+    @Value("${app.plugin-secret.alphabet}")
+    private String pluginSecretAlphabet;
+
+    @Value("${app.plugin-secret.length}")
+    private int pluginSecretLength;
 
     @Override
     @Transactional
@@ -58,7 +66,11 @@ public class SuperAdminServiceImpl implements SuperAdminService {
             throw new BadRequestException("Payment plugin already exists.");
         }
 
-        String pluginSecret = generatePluginSecret();
+        String pluginSecret = apiKeyGeneratorService.generateApiKey(
+                pluginSecretPrefix,
+                pluginSecretAlphabet,
+                pluginSecretLength
+        );
         String encryptedPluginSecret = pluginSecretEncryptionService.encrypt(pluginSecret);
 
         PaymentPlugin paymentPlugin = new PaymentPlugin(
@@ -108,15 +120,6 @@ public class SuperAdminServiceImpl implements SuperAdminService {
 
     private String normalizePluginCode(String pluginCode) {
         return pluginCode.trim().toUpperCase();
-    }
-
-    private String generatePluginSecret() {
-        byte[] secretBytes = new byte[SECRET_BYTE_LENGTH];
-        secureRandom.nextBytes(secretBytes);
-
-        return Base64.getUrlEncoder()
-                .withoutPadding()
-                .encodeToString(secretBytes);
     }
 
     private SuperAdminPluginResponse toSuperAdminPluginResponse(PaymentPlugin paymentPlugin) {
