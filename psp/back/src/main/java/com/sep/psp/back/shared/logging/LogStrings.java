@@ -49,6 +49,7 @@ public final class LogStrings {
         public static final String PLUGIN_SYNC_COMPLETED = "PLUGIN SYNC COMPLETED";
         public static final String PLUGIN_STATUS_UPDATED = "PLUGIN STATUS UPDATED";
         public static final String PLUGIN_STATUS_UPDATE_REJECTED = "PLUGIN STATUS UPDATE REJECTED";
+        public static final String PLUGIN_HEALTH_CHECK_FAILED = "PLUGIN HEALTH CHECK FAILED";
 
         private Action() {
         }

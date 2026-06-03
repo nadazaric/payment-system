@@ -1,9 +1,8 @@
 import json
 import logging
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, Response
 from pydantic import ValidationError
-
 from app.configuration_service import save_plugin_configuration
 from app.log_strings import LogAction, LogFeature, LogReason
 from app.manifest_service import load_manifest
@@ -95,3 +94,11 @@ async def save_configuration(
             status_code=400,
             detail="Invalid configuration request body."
         )
+
+@app.post("/api/plugin/heartbeat")
+async def heartbeat(
+        http_request: Request
+) -> Response:
+    await verify_signed_request(http_request)
+
+    return Response(status_code=204)

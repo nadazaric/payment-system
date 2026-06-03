@@ -11,4 +11,11 @@ public interface PluginHttpClient {
             Class<T> responseType
     );
 
+    void postWithoutResponse(
+            PaymentPlugin plugin,
+            String path,
+            Object request,
+            boolean requireActive
+    );
+
 }
