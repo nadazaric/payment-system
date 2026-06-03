@@ -24,15 +24,15 @@ public record SuperAdminPluginResponse(
         String baseUrl,
 
         @Schema(
+                description = "Shows whether plugin is active by PSP Admin.",
+                example = "true"
+        )
+        boolean activeByAdmin,
+
+        @Schema(
                 description = "Shows whether plugin is active.",
                 example = "true"
         )
-        boolean active,
-
-        @Schema(
-                description = "Shows whether plugin has synchronized its manifest.",
-                example = "true"
-        )
-        boolean registered
+        boolean active
 ) {
 }

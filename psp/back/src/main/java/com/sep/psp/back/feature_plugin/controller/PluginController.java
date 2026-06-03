@@ -1,6 +1,6 @@
 package com.sep.psp.back.feature_plugin.controller;
 
-import com.sep.psp.back.feature_plugin.dto.PluginRegistrationResponse;
+import com.sep.psp.back.feature_plugin.dto.PluginSyncResponse;
 import com.sep.psp.back.feature_plugin.service.interf.PluginSyncService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -26,7 +26,7 @@ public class PluginController {
                     """
     )
     @PostMapping("/sync")
-    public PluginRegistrationResponse syncPlugin(
+    public PluginSyncResponse syncPlugin(
             @RequestHeader("X-Plugin-Code") String pluginCodeHeader,
             @RequestHeader("X-Timestamp") String timestamp,
             @RequestHeader("X-Signature") String signature,

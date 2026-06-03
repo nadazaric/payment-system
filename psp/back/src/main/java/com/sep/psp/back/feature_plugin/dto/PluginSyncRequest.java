@@ -8,7 +8,7 @@ import jakarta.validation.constraints.NotEmpty;
 import java.util.List;
 
 @Schema(description = "Request used by a plugin to synchronize itself and its payment methods on PSP.")
-public record PluginRegistrationRequest(
+public record PluginSyncRequest(
 
         @NotBlank(message = "Plugin code is required.")
         @Schema(

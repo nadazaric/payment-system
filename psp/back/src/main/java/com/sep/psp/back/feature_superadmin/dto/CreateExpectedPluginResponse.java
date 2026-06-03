@@ -23,16 +23,16 @@ public record CreateExpectedPluginResponse(
         String pluginSecret,
 
         @Schema(
+                description = "Shows whether plugin is active by PSP Admin.",
+                example = "true"
+        )
+        boolean activeByAdmin,
+
+        @Schema(
                 description = "Shows whether plugin is active.",
                 example = "true"
         )
         boolean active,
-
-        @Schema(
-                description = "Shows whether plugin has already synchronized its manifest.",
-                example = "false"
-        )
-        boolean registered,
 
         @Schema(
                 description = "Result message.",

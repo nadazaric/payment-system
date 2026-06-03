@@ -10,8 +10,8 @@ import com.sep.psp.back.feature_merchant.repository.MerchantSellerPaymentMethodR
 import com.sep.psp.back.feature_payment.model.PaymentMethod;
 import com.sep.psp.back.feature_payment.repository.PaymentMethodRepository;
 import com.sep.psp.back.feature_plugin.dto.PluginPaymentMethodRegistrationRequest;
-import com.sep.psp.back.feature_plugin.dto.PluginRegistrationRequest;
-import com.sep.psp.back.feature_plugin.dto.PluginRegistrationResponse;
+import com.sep.psp.back.feature_plugin.dto.PluginSyncRequest;
+import com.sep.psp.back.feature_plugin.dto.PluginSyncResponse;
 import com.sep.psp.back.feature_plugin.model.PaymentPlugin;
 import com.sep.psp.back.feature_plugin.repository.PaymentPluginRepository;
 import com.sep.psp.back.feature_plugin.service.interf.PluginHmacService;
@@ -67,13 +67,13 @@ public class PluginSyncServiceImpl implements PluginSyncService {
 
     @Override
     @Transactional
-    public PluginRegistrationResponse syncPlugin(
+    public PluginSyncResponse syncPlugin(
             String pluginCodeHeader,
             String timestamp,
             String signature,
             String requestBody
     ) {
-        PluginRegistrationRequest request = readRegistrationRequest(requestBody);
+        PluginSyncRequest request = readRegistrationRequest(requestBody);
 
         String pluginCode = normalizePluginCode(request.pluginCode());
 
@@ -87,7 +87,7 @@ public class PluginSyncServiceImpl implements PluginSyncService {
         PaymentPlugin plugin = paymentPluginRepository.findById(pluginCode)
                 .orElseThrow(() -> new BadRequestException("Payment plugin is not expected by PSP."));
 
-        if (plugin.isRegistered() && !plugin.isActive()) {
+        if (!plugin.isActiveByAdmin()) {
             throw new BadRequestException("Payment plugin is disabled by PSP super admin.");
         }
 
@@ -102,7 +102,6 @@ public class PluginSyncServiceImpl implements PluginSyncService {
 
         plugin.setDisplayName(request.displayName());
         plugin.setBaseUrl(request.baseUrl());
-        plugin.setRegistered(true);
         plugin.setActive(true);
 
         PaymentPlugin savedPlugin = paymentPluginRepository.save(plugin);
@@ -135,18 +134,18 @@ public class PluginSyncServiceImpl implements PluginSyncService {
                 synchronizedMethodCodes
         );
 
-        return new PluginRegistrationResponse(
+        return new PluginSyncResponse(
                 savedPlugin.getCode(),
                 synchronizedMethodCodes.stream().toList(),
                 "Plugin synchronized successfully."
         );
     }
 
-    private PluginRegistrationRequest readRegistrationRequest(String requestBody) {
+    private PluginSyncRequest readRegistrationRequest(String requestBody) {
         try {
             return objectMapper.readValue(
                     requestBody,
-                    PluginRegistrationRequest.class
+                    PluginSyncRequest.class
             );
         } catch (Exception exception) {
             throw new BadRequestException("Invalid plugin sync request body.");
@@ -206,7 +205,7 @@ public class PluginSyncServiceImpl implements PluginSyncService {
         }
     }
 
-    private void validateUniqueMethodCodes(PluginRegistrationRequest request) {
+    private void validateUniqueMethodCodes(PluginSyncRequest request) {
         Set<String> uniqueMethodCodes = new LinkedHashSet<>();
 
         for (PluginPaymentMethodRegistrationRequest methodRequest : request.methods()) {

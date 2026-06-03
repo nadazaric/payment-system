@@ -72,19 +72,19 @@ public class SuperAdminServiceImpl implements SuperAdminService {
         appLoggerService.info(
                 LogStrings.Feature.PAYMENT_PLUGIN,
                 LogStrings.Action.EXPECTED_PLUGIN_CREATED,
-                "pluginCode={} displayName={} active={} registered={}",
+                "pluginCode={} displayName={} activeByAdmin={} active={}",
                 savedPlugin.getCode(),
                 savedPlugin.getDisplayName(),
-                savedPlugin.isActive(),
-                savedPlugin.isRegistered()
+                savedPlugin.isActiveByAdmin(),
+                savedPlugin.isActive()
         );
 
         return new CreateExpectedPluginResponse(
                 savedPlugin.getCode(),
                 savedPlugin.getDisplayName(),
                 pluginSecret,
+                savedPlugin.isActiveByAdmin(),
                 savedPlugin.isActive(),
-                savedPlugin.isRegistered(),
                 "Expected plugin created successfully."
         );
     }
@@ -124,8 +124,8 @@ public class SuperAdminServiceImpl implements SuperAdminService {
                 paymentPlugin.getCode(),
                 paymentPlugin.getDisplayName(),
                 paymentPlugin.getBaseUrl(),
-                paymentPlugin.isActive(),
-                paymentPlugin.isRegistered()
+                paymentPlugin.isActiveByAdmin(),
+                paymentPlugin.isActive()
         );
     }
 

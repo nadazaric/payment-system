@@ -4,8 +4,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.util.List;
 
-@Schema(description = "Plugin registration result.")
-public record PluginRegistrationResponse(
+@Schema(description = "Plugin sync result.")
+public record PluginSyncResponse(
 
         @Schema(
                 description = "Registered plugin code.",
@@ -14,9 +14,9 @@ public record PluginRegistrationResponse(
         String pluginCode,
 
         @Schema(
-                description = "Codes of registered or updated payment methods."
+                description = "Codes of added or updated payment methods."
         )
-        List<String> registeredMethods,
+        List<String> paymentMethods,
 
         @Schema(
                 description = "Registration result message.",

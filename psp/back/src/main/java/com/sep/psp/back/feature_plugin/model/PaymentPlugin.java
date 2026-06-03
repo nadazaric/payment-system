@@ -23,10 +23,10 @@ public class PaymentPlugin {
     private String baseUrl;
 
     @Column(nullable = false)
-    private boolean active;
+    private boolean activeByAdmin;
 
     @Column(nullable = false)
-    private boolean registered;
+    private boolean active;
 
     @Column(nullable = false, columnDefinition = "TEXT")
     private String encryptedPluginSecret;
@@ -39,8 +39,8 @@ public class PaymentPlugin {
         this.code = code;
         this.displayName = displayName;
         this.encryptedPluginSecret = encryptedPluginSecret;
+        this.activeByAdmin = true;
         this.active = false;
-        this.registered = false;
     }
 
 }
