@@ -8,6 +8,7 @@ import com.sep.psp.back.feature_merchant.model.MerchantSellerAccount;
 import com.sep.psp.back.feature_merchant.repository.MerchantAdminRepository;
 import com.sep.psp.back.feature_merchant.repository.MerchantRepository;
 import com.sep.psp.back.feature_merchant.repository.MerchantSellerAccountRepository;
+import com.sep.psp.back.feature_merchant.service.interf.MerchantSellerService;
 import com.sep.psp.back.feature_merchant.service.interf.MerchantService;
 import com.sep.psp.back.feature_merchant.service.interf.SellerPaymentMethodService;
 import com.sep.psp.back.security.jwt.JwtTokenUtil;
@@ -29,9 +30,6 @@ import java.util.List;
 @Service
 public class MerchantServiceImpl implements MerchantService {
 
-    private static final String DEFAULT_SELLER_REFERENCE = "MAIN_SELLER";
-    private static final String DEFAULT_SELLER_DISPLAY_NAME = "Main seller";
-
     @Autowired
     MerchantRepository merchantRepository;
 
@@ -48,10 +46,7 @@ public class MerchantServiceImpl implements MerchantService {
     MerchantMapper merchantMapper;
 
     @Autowired
-    AuthenticationManager authenticationManager;
-
-    @Autowired
-    JwtTokenUtil jwtTokenUtil;
+    MerchantSellerService merchantSellerService;
 
     @Autowired
     SellerPaymentMethodService sellerPaymentMethodService;
@@ -106,7 +101,7 @@ public class MerchantServiceImpl implements MerchantService {
         MerchantAdmin merchantAdmin = createMerchantAdmin(request, savedMerchant);
         MerchantAdmin savedMerchantAdmin = merchantAdminRepository.save(merchantAdmin);
 
-        MerchantSellerAccount defaultSellerAccount = createDefaultSellerAccount(savedMerchant);
+        MerchantSellerAccount defaultSellerAccount = merchantSellerService.createDefaultSellerAccount(savedMerchant);
         MerchantSellerAccount savedDefaultSellerAccount = merchantSellerAccountRepository.save(defaultSellerAccount);
 
         appLoggerService.info(
@@ -186,14 +181,6 @@ public class MerchantServiceImpl implements MerchantService {
         );
     }
 
-    private MerchantSellerAccount createDefaultSellerAccount(Merchant merchant) {
-        return new MerchantSellerAccount(
-                merchant,
-                DEFAULT_SELLER_REFERENCE,
-                DEFAULT_SELLER_DISPLAY_NAME
-        );
-    }
-
     @Override
     @Transactional(readOnly = true)
     public MerchantProfileResponse getCurrentMerchantProfile() {
@@ -213,64 +200,6 @@ public class MerchantServiceImpl implements MerchantService {
         }
 
         return authentication.getName();
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<MerchantSellerAccountResponse> getCurrentMerchantSellerAccounts() {
-        String username = getAuthenticatedUsername();
-
-        MerchantAdmin merchantAdmin = merchantAdminRepository.findByUsername(username)
-                .orElseThrow(() -> new BadRequestException("Authenticated merchant admin not found."));
-
-        List<MerchantSellerAccount> sellerAccounts = merchantSellerAccountRepository.findByMerchant(
-                merchantAdmin.getMerchant()
-        );
-
-        return merchantMapper.toSellerAccountResponseList(sellerAccounts);
-    }
-
-    @Override
-    @Transactional
-    public MerchantSellerAccountResponse createSellerAccount(CreateMerchantSellerAccountRequest request) {
-        String username = getAuthenticatedUsername();
-
-        MerchantAdmin merchantAdmin = merchantAdminRepository.findByUsername(username)
-                .orElseThrow(() -> new BadRequestException("Authenticated merchant admin not found."));
-
-        Merchant merchant = merchantAdmin.getMerchant();
-
-        if (merchantSellerAccountRepository.existsByMerchantAndSellerReference(merchant, request.sellerReference())) {
-            appLoggerService.warn(
-                    LogStrings.Feature.SELLER,
-                    LogStrings.Action.SELLER_CREATE_REJECTED,
-                    "reason={} merchantId={} sellerReference={}",
-                    LogStrings.Reason.SELLER_REFERENCE_TAKEN,
-                    merchant.getMerchantId(),
-                    request.sellerReference()
-            );
-
-            throw new BadRequestException("Seller reference is already in use for this merchant.");
-        }
-
-        MerchantSellerAccount sellerAccount = new MerchantSellerAccount(
-                merchant,
-                request.sellerReference(),
-                request.displayName()
-        );
-
-        MerchantSellerAccount savedSellerAccount = merchantSellerAccountRepository.save(sellerAccount);
-
-        appLoggerService.info(
-                LogStrings.Feature.SELLER,
-                LogStrings.Action.SELLER_CREATED,
-                "merchantId={} sellerId={} sellerReference={}",
-                merchant.getMerchantId(),
-                savedSellerAccount.getId(),
-                savedSellerAccount.getSellerReference()
-        );
-
-        return merchantMapper.toSellerAccountResponse(savedSellerAccount);
     }
 
     @Override
@@ -342,77 +271,6 @@ public class MerchantServiceImpl implements MerchantService {
         );
 
         return new RegenerateMerchantPasswordResponse(newMerchantPassword);
-    }
-
-    @Override
-    @Transactional
-    public void updateSellerAccount(
-            String sellerId,
-            UpdateMerchantSellerAccountRequest request
-    ) {
-        String username = getAuthenticatedUsername();
-
-        MerchantAdmin merchantAdmin = merchantAdminRepository.findByUsername(username)
-                .orElseThrow(() -> new BadRequestException("Authenticated merchant admin not found."));
-
-        Merchant merchant = merchantAdmin.getMerchant();
-
-        MerchantSellerAccount sellerAccount = merchantSellerAccountRepository.findById(sellerId)
-                .orElseThrow(() -> {
-                    appLoggerService.warn(
-                            LogStrings.Feature.SELLER,
-                            LogStrings.Action.SELLER_UPDATE_REJECTED,
-                            "reason={} merchantId={} sellerId={}",
-                            LogStrings.Reason.SELLER_NOT_FOUND,
-                            merchant.getMerchantId(),
-                            sellerId
-                    );
-
-                    return new BadRequestException("Seller account not found.");
-                });
-
-        if (!sellerAccount.getMerchant().getMerchantId().equals(merchant.getMerchantId())) {
-            appLoggerService.warn(
-                    LogStrings.Feature.SELLER,
-                    LogStrings.Action.SELLER_UPDATE_REJECTED,
-                    "reason={} merchantId={} sellerId={}",
-                    LogStrings.Reason.OWNER_MISMATCH,
-                    merchant.getMerchantId(),
-                    sellerId
-            );
-
-            throw new BadRequestException("Seller account does not belong to the authenticated merchant.");
-        }
-
-        boolean sellerReferenceChanged = !sellerAccount.getSellerReference().equals(request.sellerReference());
-
-        if (sellerReferenceChanged && merchantSellerAccountRepository.existsByMerchantAndSellerReference(merchant, request.sellerReference())) {
-            appLoggerService.warn(
-                    LogStrings.Feature.SELLER,
-                    LogStrings.Action.SELLER_UPDATE_REJECTED,
-                    "reason={} merchantId={} sellerId={} sellerReference={}",
-                    LogStrings.Reason.SELLER_REFERENCE_TAKEN,
-                    merchant.getMerchantId(),
-                    sellerId,
-                    request.sellerReference()
-            );
-
-            throw new BadRequestException("Seller reference is already in use for this merchant.");
-        }
-
-        sellerAccount.setSellerReference(request.sellerReference());
-        sellerAccount.setDisplayName(request.displayName());
-
-        merchantSellerAccountRepository.save(sellerAccount);
-
-        appLoggerService.info(
-                LogStrings.Feature.SELLER,
-                LogStrings.Action.SELLER_UPDATED,
-                "merchantId={} sellerId={} sellerReference={}",
-                merchant.getMerchantId(),
-                sellerAccount.getId(),
-                sellerAccount.getSellerReference()
-        );
     }
 
     @Override

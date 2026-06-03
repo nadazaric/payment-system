@@ -1,6 +1,7 @@
 package com.sep.psp.back.feature_merchant.controller;
 
 import com.sep.psp.back.feature_merchant.dto.*;
+import com.sep.psp.back.feature_merchant.service.interf.MerchantSellerService;
 import com.sep.psp.back.feature_merchant.service.interf.MerchantService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -25,6 +26,9 @@ public class MerchantController {
 
     @Autowired
     MerchantService merchantService;
+
+    @Autowired
+    MerchantSellerService merchantSellerService;
 
     // ----------------------------------------------------------------------------------------------------------------- Register
     @Operation(
@@ -99,7 +103,7 @@ public class MerchantController {
     })
     @GetMapping("/sellers")
     public List<MerchantSellerAccountResponse> getCurrentMerchantSellerAccounts() {
-        return merchantService.getCurrentMerchantSellerAccounts();
+        return merchantSellerService.getCurrentMerchantSellerAccounts();
     }
 
     // ----------------------------------------------------------------------------------------------------------------- Create Seller
@@ -132,7 +136,7 @@ public class MerchantController {
     public MerchantSellerAccountResponse createSellerAccount(
             @Valid @RequestBody CreateMerchantSellerAccountRequest request
     ) {
-        return merchantService.createSellerAccount(request);
+        return merchantSellerService.createSellerAccount(request);
     }
 
     // ----------------------------------------------------------------------------------------------------------------- Update Seller payment methods
@@ -259,7 +263,7 @@ public class MerchantController {
             @PathVariable String sellerId,
             @Valid @RequestBody UpdateMerchantSellerAccountRequest request
     ) {
-        merchantService.updateSellerAccount(sellerId, request);
+        merchantSellerService.updateSellerAccount(sellerId, request);
     }
 
     // ----------------------------------------------------------------------------------------------------------------- Update payment configuration
