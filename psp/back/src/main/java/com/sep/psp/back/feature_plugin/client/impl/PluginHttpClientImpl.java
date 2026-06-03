@@ -81,18 +81,20 @@ public class PluginHttpClientImpl implements PluginHttpClient {
             }
 
             return responseBody;
-        } catch (RestClientException exception) {
+        } catch (ResourceAccessException | HttpServerErrorException exception) {
             pluginAvailabilityService.markPluginInactive(plugin);
 
             appLoggerService.warn(
                     LogStrings.Feature.PAYMENT_PLUGIN,
-                    LogStrings.Action.PLUGIN_HEALTH_CHECK_FAILED,
+                    LogStrings.Action.PLUGIN_REQUEST_FAILED,
                     "pluginCode={} url={} error={}",
                     plugin.getCode(),
                     url,
                     exception.getMessage()
             );
 
+            throw new BadRequestException("Payment plugin is not available.");
+        } catch (RestClientException exception) {
             throw new BadRequestException("Payment plugin request failed.");
         }
     }
