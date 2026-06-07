@@ -1,5 +1,4 @@
 import axiosInstance from "@/api/axiosInstance";
-import { MerchantLoginRequest, MerchantLoginResponse } from "@/types/auth";
 import {
     CreateMerchantSellerAccountRequest,
     MerchantProfile,
@@ -8,8 +7,7 @@ import {
     MerchantSellerAccount,
     RegenerateMerchantPasswordResponse,
     UpdateMerchantProfileRequest,
-    UpdateMerchantSellerAccountRequest,
-    UpdateSellerPaymentMethodsRequest
+    UpdateMerchantSellerAccountRequest
 } from "@/types/merchant";
 
 export const registerMerchant = async (
@@ -17,17 +15,6 @@ export const registerMerchant = async (
 ): Promise<MerchantRegistrationResponse> => {
     const response = await axiosInstance.post<MerchantRegistrationResponse>(
         "/api/merchant/register",
-        request
-    );
-
-    return response.data;
-};
-
-export const loginMerchantAdmin = async (
-    request: MerchantLoginRequest
-): Promise<MerchantLoginResponse> => {
-    const response = await axiosInstance.post<MerchantLoginResponse>(
-        "/api/merchant/login",
         request
     );
 
@@ -67,15 +54,8 @@ export const updateMerchantSeller = async (
     sellerId: string,
     request: UpdateMerchantSellerAccountRequest
 ): Promise<void> => {
-    await axiosInstance.put(`/api/merchant/sellers/${sellerId}`, request);
-};
-
-export const updateSellerPaymentMethods = async (
-    sellerId: string,
-    request: UpdateSellerPaymentMethodsRequest
-): Promise<void> => {
     await axiosInstance.put(
-        `/api/merchant/sellers/${sellerId}/payment-methods`,
+        `/api/merchant/sellers/${sellerId}`,
         request
     );
 };

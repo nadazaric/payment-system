@@ -93,7 +93,7 @@ export default function SellersTable({
                                             spacing={1}
                                             useFlexGap
                                             sx={{ flexWrap: "wrap" }}>
-                                            {seller.availablePaymentMethods.length > 0 ? (
+                                            {seller.availablePaymentMethods?.length > 0 ? (
                                                 seller.availablePaymentMethods.map((method) => (
                                                     <Chip
                                                         key={method.code}

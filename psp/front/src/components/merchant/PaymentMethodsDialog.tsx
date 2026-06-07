@@ -13,7 +13,7 @@ import {
     Stack,
     Typography
 } from "@mui/material";
-import { updateSellerPaymentMethods } from "@/api/merchantApi";
+// import { updateSellerPaymentMethods } from "@/api/merchantApi";
 import { MERCHANT_LABELS } from "@/const/label";
 import { MerchantSellerAccount } from "@/types/merchant";
 import { PaymentMethod } from "@/types/paymentMethod";
@@ -64,7 +64,7 @@ function PaymentMethodsDialogContent({
     onSaved
 }: PaymentMethodsDialogContentProps) {
     const [selectedCodes, setSelectedCodes] = useState<string[]>(
-        () => seller.availablePaymentMethods.map((method) => method.code)
+        () => seller?.availablePaymentMethods?.map((method) => method.code) || []
     );
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
@@ -92,15 +92,15 @@ function PaymentMethodsDialogContent({
         setLoading(true);
         setError("");
 
-        try {
-            await updateSellerPaymentMethods(seller.id, {
-                paymentMethodCodes: selectedCodes,
-            });
+        // try {
+        //     await updateSellerPaymentMethods(seller.id, {
+        //         paymentMethodCodes: selectedCodes,
+        //     });
 
-            onSaved();
-        } finally {
-            setLoading(false);
-        }
+        //     onSaved();
+        // } finally {
+        //     setLoading(false);
+        // }
     };
 
     return (

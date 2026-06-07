@@ -11,17 +11,26 @@ import {
     TextField,
     Typography
 } from "@mui/material";
-import { loginMerchantAdmin } from "@/api/merchantApi";
+import { login } from "@/api/authApi";
 import { AUTH_LABELS } from "@/const/label";
 import { ROUTES } from "@/const/routes";
 import { STORAGE_KEYS } from "@/const/storageKeys";
 import { notifyAuthChange } from "@/hooks/useAuthState";
+import { UserRole } from "@/types/auth";
 
 type MerchantLoginFormProps = {
     onRegisterClick: () => void;
 };
 
-export default function MerchantLoginForm({ onRegisterClick }: MerchantLoginFormProps) {
+const getRouteForRole = (role: UserRole) => {
+    if (role === UserRole.SuperAdmin) {
+        return ROUTES.superAdmin;
+    }
+
+    return ROUTES.merchant;
+};
+
+export default function LoginForm({ onRegisterClick }: MerchantLoginFormProps) {
     const router = useRouter();
 
     const [username, setUsername] = useState("");
@@ -35,11 +44,24 @@ export default function MerchantLoginForm({ onRegisterClick }: MerchantLoginForm
         setLoading(true);
 
         try {
-            const response = await loginMerchantAdmin({ username, password });
+            const response = await login({
+                username,
+                password
+            });
 
-            localStorage.setItem(STORAGE_KEYS.accessToken, response.token);
+            localStorage.setItem(
+                STORAGE_KEYS.accessToken,
+                response.token
+            );
+
+            localStorage.setItem(
+                STORAGE_KEYS.userRole,
+                response.role
+            );
+
             notifyAuthChange();
-            router.push(ROUTES.merchant);
+
+            router.push(getRouteForRole(response.role));
         } catch {
             setError(AUTH_LABELS.invalidCredentials);
         } finally {
@@ -50,7 +72,9 @@ export default function MerchantLoginForm({ onRegisterClick }: MerchantLoginForm
     return (
         <Card sx={{ width: "100%" }}>
             <CardContent sx={{ p: { xs: 3, md: 4 } }}>
-                <Box component="form" onSubmit={handleSubmit}>
+                <Box
+                    component="form"
+                    onSubmit={handleSubmit}>
                     <Typography
                         variant="h4"
                         component="h1"
@@ -122,4 +146,5 @@ export default function MerchantLoginForm({ onRegisterClick }: MerchantLoginForm
             </CardContent>
         </Card>
     );
+
 }

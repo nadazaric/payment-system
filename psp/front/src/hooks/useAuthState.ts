@@ -3,13 +3,13 @@
 import { useMemo, useSyncExternalStore } from "react";
 import { jwtDecode } from "jwt-decode";
 import { STORAGE_KEYS } from "@/const/storageKeys";
-import { JwtPayload } from "@/types/auth";
+import { JwtPayload, UserRole } from "@/types/auth";
 
 export type AuthState = {
     isLoading: boolean;
     isAuthenticated: boolean;
     username: string;
-    role: string;
+    role: UserRole | "";
     merchantId: string;
 };
 
@@ -67,11 +67,13 @@ const getAuthStateFromSnapshot = (snapshot: string): AuthState => {
             return unauthenticatedState;
         }
 
+        const storedRole = localStorage.getItem(STORAGE_KEYS.userRole) as UserRole | null;
+
         return {
             isLoading: false,
             isAuthenticated: true,
             username: decodedToken.sub ?? "",
-            role: decodedToken.role ?? "",
+            role: decodedToken.role ?? storedRole ?? "",
             merchantId: decodedToken.merchantId ?? "",
         };
     } catch {

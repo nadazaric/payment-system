@@ -1,25 +1,56 @@
 "use client";
 
 import { ReactNode, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Box, CircularProgress } from "@mui/material";
 import Navbar from "@/components/common/Navbar";
 import { ROUTES } from "@/const/routes";
 import { useAuthState } from "@/hooks/useAuthState";
+import { UserRole } from "@/types/auth";
 
 type ProtectedLayoutProps = {
     children: ReactNode;
 };
 
+const getAllowedRouteForRole = (role: UserRole | "") => {
+    if (role === UserRole.SuperAdmin) {
+        return ROUTES.superAdmin;
+    }
+
+    if (role === UserRole.MerchantAdmin) {
+        return ROUTES.merchant;
+    }
+
+    return ROUTES.auth;
+};
+
 export default function ProtectedLayout({ children }: ProtectedLayoutProps) {
     const router = useRouter();
+    const pathname = usePathname();
     const authState = useAuthState();
 
     useEffect(() => {
-        if (!authState.isLoading && !authState.isAuthenticated) {
-            router.push(ROUTES.auth);
+        if (authState.isLoading) {
+            return;
         }
-    }, [authState.isLoading, authState.isAuthenticated, router]);
+
+        if (!authState.isAuthenticated) {
+            router.push(ROUTES.auth);
+            return;
+        }
+
+        const allowedRoute = getAllowedRouteForRole(authState.role);
+
+        if (!pathname.startsWith(allowedRoute)) {
+            router.push(allowedRoute);
+        }
+    }, [
+        authState.isLoading,
+        authState.isAuthenticated,
+        authState.role,
+        pathname,
+        router
+    ]);
 
     if (authState.isLoading) {
         return (
@@ -42,8 +73,9 @@ export default function ProtectedLayout({ children }: ProtectedLayoutProps) {
 
     return (
         <Box sx={{ minHeight: "100vh", bgcolor: "background.default", pt: 8 }}>
-            <Navbar
-                merchantId={authState.merchantId} />
+            <Navbar 
+                merchantId={authState.merchantId} 
+                role={authState.role} />
 
             <Box
                 component="main"
