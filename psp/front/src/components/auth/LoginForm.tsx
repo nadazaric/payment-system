@@ -18,7 +18,7 @@ import { STORAGE_KEYS } from "@/const/storageKeys";
 import { notifyAuthChange } from "@/hooks/useAuthState";
 import { UserRole } from "@/types/auth";
 
-type MerchantLoginFormProps = {
+type LoginFormProps = {
     onRegisterClick: () => void;
 };
 
@@ -30,7 +30,7 @@ const getRouteForRole = (role: UserRole) => {
     return ROUTES.merchant;
 };
 
-export default function LoginForm({ onRegisterClick }: MerchantLoginFormProps) {
+export default function LoginForm({ onRegisterClick }: LoginFormProps) {
     const router = useRouter();
 
     const [username, setUsername] = useState("");
