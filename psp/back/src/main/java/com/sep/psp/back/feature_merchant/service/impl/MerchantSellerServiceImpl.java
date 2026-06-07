@@ -7,15 +7,13 @@ import com.sep.psp.back.feature_merchant.mapper.MerchantMapper;
 import com.sep.psp.back.feature_merchant.model.Merchant;
 import com.sep.psp.back.feature_merchant.model.MerchantAdmin;
 import com.sep.psp.back.feature_merchant.model.MerchantSellerAccount;
-import com.sep.psp.back.feature_merchant.repository.MerchantAdminRepository;
 import com.sep.psp.back.feature_merchant.repository.MerchantSellerAccountRepository;
+import com.sep.psp.back.feature_merchant.service.interf.MerchantAdminContextService;
 import com.sep.psp.back.feature_merchant.service.interf.MerchantSellerService;
 import com.sep.psp.back.shared.error.exception.BadRequestException;
 import com.sep.psp.back.shared.logging.LogStrings;
 import com.sep.psp.back.shared.logging.service.interf.AppLoggerService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,10 +29,10 @@ public class MerchantSellerServiceImpl implements MerchantSellerService {
     MerchantSellerAccountRepository merchantSellerAccountRepository;
 
     @Autowired
-    MerchantAdminRepository merchantAdminRepository;
+    MerchantMapper merchantMapper;
 
     @Autowired
-    MerchantMapper merchantMapper;
+    MerchantAdminContextService merchantAdminContextService;
 
     @Autowired
     AppLoggerService appLoggerService;
@@ -51,7 +49,7 @@ public class MerchantSellerServiceImpl implements MerchantSellerService {
     @Override
     @Transactional(readOnly = true)
     public List<MerchantSellerAccountResponse> getCurrentMerchantSellerAccounts() {
-        MerchantAdmin merchantAdmin = getAuthenticatedMerchantAdmin();
+        MerchantAdmin merchantAdmin = merchantAdminContextService.getAuthenticatedMerchantAdmin();
 
         List<MerchantSellerAccount> sellerAccounts = merchantSellerAccountRepository.findByMerchant(
                 merchantAdmin.getMerchant()
@@ -63,7 +61,7 @@ public class MerchantSellerServiceImpl implements MerchantSellerService {
     @Override
     @Transactional
     public MerchantSellerAccountResponse createSellerAccount(CreateMerchantSellerAccountRequest request) {
-        MerchantAdmin merchantAdmin = getAuthenticatedMerchantAdmin();
+        MerchantAdmin merchantAdmin = merchantAdminContextService.getAuthenticatedMerchantAdmin();
 
         Merchant merchant = merchantAdmin.getMerchant();
 
@@ -106,7 +104,7 @@ public class MerchantSellerServiceImpl implements MerchantSellerService {
     @Override
     @Transactional
     public void updateSellerAccount(String sellerId, UpdateMerchantSellerAccountRequest request) {
-        MerchantAdmin merchantAdmin = getAuthenticatedMerchantAdmin();
+        MerchantAdmin merchantAdmin = merchantAdminContextService.getAuthenticatedMerchantAdmin();
 
         Merchant merchant = merchantAdmin.getMerchant();
 
@@ -171,20 +169,4 @@ public class MerchantSellerServiceImpl implements MerchantSellerService {
         );
     }
 
-    private MerchantAdmin getAuthenticatedMerchantAdmin() {
-        String username = getAuthenticatedUsername();
-
-        return merchantAdminRepository.findByUsername(username)
-                .orElseThrow(() -> new BadRequestException("Authenticated merchant admin not found."));
-    }
-
-    private String getAuthenticatedUsername() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        if (authentication == null || authentication.getName() == null) {
-            throw new BadRequestException("Authenticated user not found.");
-        }
-
-        return authentication.getName();
-    }
 }

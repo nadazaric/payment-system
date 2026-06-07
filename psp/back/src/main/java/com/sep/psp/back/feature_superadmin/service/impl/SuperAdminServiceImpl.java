@@ -1,6 +1,5 @@
 package com.sep.psp.back.feature_superadmin.service.impl;
 
-import com.sep.psp.back.feature_merchant.repository.MerchantRepository;
 import com.sep.psp.back.feature_merchant.service.interf.MerchantStatusService;
 import com.sep.psp.back.feature_plugin.model.PaymentPlugin;
 import com.sep.psp.back.feature_plugin.repository.PaymentPluginRepository;
@@ -38,9 +37,6 @@ public class SuperAdminServiceImpl implements SuperAdminService {
 
     @Autowired
     MerchantStatusService merchantStatusService;
-
-    @Autowired
-    MerchantRepository merchantRepository;
 
     @Value("${app.plugin-secret.prefix}")
     private String pluginSecretPrefix;

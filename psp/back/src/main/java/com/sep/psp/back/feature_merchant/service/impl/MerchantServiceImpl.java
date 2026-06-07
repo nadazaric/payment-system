@@ -8,6 +8,7 @@ import com.sep.psp.back.feature_merchant.model.MerchantSellerAccount;
 import com.sep.psp.back.feature_merchant.repository.MerchantAdminRepository;
 import com.sep.psp.back.feature_merchant.repository.MerchantRepository;
 import com.sep.psp.back.feature_merchant.repository.MerchantSellerAccountRepository;
+import com.sep.psp.back.feature_merchant.service.interf.MerchantAdminContextService;
 import com.sep.psp.back.feature_merchant.service.interf.MerchantSellerService;
 import com.sep.psp.back.feature_merchant.service.interf.MerchantService;
 import com.sep.psp.back.shared.error.exception.BadRequestException;
@@ -16,8 +17,6 @@ import com.sep.psp.back.shared.logging.service.interf.AppLoggerService;
 import com.sep.psp.back.shared.service.interf.ApiKeyGeneratorService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,6 +41,9 @@ public class MerchantServiceImpl implements MerchantService {
 
     @Autowired
     MerchantSellerService merchantSellerService;
+
+    @Autowired
+    MerchantAdminContextService merchantAdminContextService;
 
     @Autowired
     AppLoggerService appLoggerService;
@@ -176,31 +178,15 @@ public class MerchantServiceImpl implements MerchantService {
     @Override
     @Transactional(readOnly = true)
     public MerchantProfileResponse getCurrentMerchantProfile() {
-        String username = getAuthenticatedUsername();
-
-        MerchantAdmin merchantAdmin = merchantAdminRepository.findByUsername(username)
-                .orElseThrow(() -> new BadRequestException("Authenticated merchant admin not found."));
+        MerchantAdmin merchantAdmin = merchantAdminContextService.getAuthenticatedMerchantAdmin();
 
         return merchantMapper.toProfileResponse(merchantAdmin);
-    }
-
-    private String getAuthenticatedUsername() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        if (authentication == null || authentication.getName() == null) {
-            throw new BadRequestException("Authenticated user not found.");
-        }
-
-        return authentication.getName();
     }
 
     @Override
     @Transactional
     public void updateCurrentMerchantProfile(UpdateMerchantProfileRequest request) {
-        String username = getAuthenticatedUsername();
-
-        MerchantAdmin merchantAdmin = merchantAdminRepository.findByUsername(username)
-                .orElseThrow(() -> new BadRequestException("Authenticated merchant admin not found."));
+        MerchantAdmin merchantAdmin = merchantAdminContextService.getAuthenticatedMerchantAdmin();
 
         Merchant merchant = merchantAdmin.getMerchant();
 
@@ -217,17 +203,14 @@ public class MerchantServiceImpl implements MerchantService {
                 LogStrings.Action.PROFILE_UPDATED,
                 "merchantId={} username={}",
                 merchant.getMerchantId(),
-                username
+                merchantAdmin.getUsername()
         );
     }
 
     @Override
     @Transactional
     public RegenerateMerchantPasswordResponse regenerateMerchantPassword() {
-        String username = getAuthenticatedUsername();
-
-        MerchantAdmin merchantAdmin = merchantAdminRepository.findByUsername(username)
-                .orElseThrow(() -> new BadRequestException("Authenticated merchant admin not found."));
+        MerchantAdmin merchantAdmin = merchantAdminContextService.getAuthenticatedMerchantAdmin();
 
         String newMerchantPassword = apiKeyGeneratorService.generateApiKey(
                 merchantPasswordPrefix,
@@ -246,7 +229,7 @@ public class MerchantServiceImpl implements MerchantService {
                 LogStrings.Action.API_KEY_REGENERATED,
                 "merchantId={} username={}",
                 merchant.getMerchantId(),
-                username
+                merchantAdmin.getUsername()
         );
 
         return new RegenerateMerchantPasswordResponse(newMerchantPassword);

@@ -8,9 +8,9 @@ import com.sep.psp.back.feature_merchant.model.Merchant;
 import com.sep.psp.back.feature_merchant.model.MerchantAdmin;
 import com.sep.psp.back.feature_merchant.model.MerchantSellerAccount;
 import com.sep.psp.back.feature_merchant.model.MerchantSellerPaymentMethod;
-import com.sep.psp.back.feature_merchant.repository.MerchantAdminRepository;
 import com.sep.psp.back.feature_merchant.repository.MerchantSellerAccountRepository;
 import com.sep.psp.back.feature_merchant.repository.MerchantSellerPaymentMethodRepository;
+import com.sep.psp.back.feature_merchant.service.interf.MerchantAdminContextService;
 import com.sep.psp.back.feature_merchant.service.interf.MerchantStatusService;
 import com.sep.psp.back.feature_merchant.service.interf.SellerPaymentMethodService;
 import com.sep.psp.back.feature_payment.dto.PaymentMethodConfigField;
@@ -34,9 +34,6 @@ import java.util.stream.Collectors;
 public class SellerPaymentMethodServiceImpl implements SellerPaymentMethodService {
 
     @Autowired
-    MerchantAdminRepository merchantAdminRepository;
-
-    @Autowired
     MerchantSellerAccountRepository merchantSellerAccountRepository;
 
     @Autowired
@@ -52,6 +49,9 @@ public class SellerPaymentMethodServiceImpl implements SellerPaymentMethodServic
     MerchantStatusService merchantStatusService;
 
     @Autowired
+    MerchantAdminContextService merchantAdminContextService;
+
+    @Autowired
     AppLoggerService appLoggerService;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -64,7 +64,7 @@ public class SellerPaymentMethodServiceImpl implements SellerPaymentMethodServic
             ConfigureSellerPaymentMethodRequest request,
             String authenticatedUsername
     ) {
-        MerchantAdmin merchantAdmin = getAuthenticatedMerchantAdmin(authenticatedUsername);
+        MerchantAdmin merchantAdmin = merchantAdminContextService.getMerchantAdminByUsername(authenticatedUsername);
         Merchant merchant = merchantAdmin.getMerchant();
 
         MerchantSellerAccount sellerAccount = getSellerAccountForMerchant(
@@ -72,11 +72,15 @@ public class SellerPaymentMethodServiceImpl implements SellerPaymentMethodServic
                 merchant
         );
 
-        PaymentMethod paymentMethod = paymentMethodRepository.findById(paymentMethodCode)
-                .orElseThrow(() -> new BadRequestException("Payment method does not exist."));
+        PaymentMethod paymentMethod = getPaymentMethodOrThrow(paymentMethodCode);
 
-        validateSinglePaymentMethodIsActive(paymentMethod);
-        validateSinglePaymentPluginIsActive(paymentMethod);
+        if (!paymentMethod.isActive()) {
+            throw new BadRequestException("Payment method is not active.");
+        }
+
+        if (!paymentMethod.getPlugin().isActive()) {
+            throw new BadRequestException("Payment method plugin is not active.");
+        }
 
         validateConfigurationValues(
                 paymentMethod,
@@ -107,9 +111,18 @@ public class SellerPaymentMethodServiceImpl implements SellerPaymentMethodServic
 
         sellerPaymentMethod.setConfigured(true);
 
-        merchantSellerPaymentMethodRepository.save(sellerPaymentMethod);
+        merchantSellerPaymentMethodRepository.saveAndFlush(sellerPaymentMethod);
 
         merchantStatusService.refreshSellerAndMerchantStatus(sellerAccount);
+
+        appLoggerService.info(
+                LogStrings.Feature.PAYMENT_METHOD,
+                LogStrings.Action.PAYMENT_METHOD_CONFIGURED,
+                "merchantId={} sellerId={} paymentMethodCode={}",
+                merchant.getMerchantId(),
+                sellerAccount.getId(),
+                paymentMethod.getCode()
+        );
 
         return new ConfigureSellerPaymentMethodResponse(
                 paymentMethod.getCode(),
@@ -118,9 +131,48 @@ public class SellerPaymentMethodServiceImpl implements SellerPaymentMethodServic
         );
     }
 
-    private MerchantAdmin getAuthenticatedMerchantAdmin(String authenticatedUsername) {
-        return merchantAdminRepository.findByUsername(authenticatedUsername)
-                .orElseThrow(() -> new BadRequestException("Authenticated merchant admin not found."));
+    @Override
+    @Transactional
+    public void removeSellerPaymentMethod(
+            String sellerId,
+            String paymentMethodCode,
+            String authenticatedUsername
+    ) {
+        MerchantAdmin merchantAdmin = merchantAdminContextService.getMerchantAdminByUsername(authenticatedUsername);
+        Merchant merchant = merchantAdmin.getMerchant();
+
+        MerchantSellerAccount sellerAccount = getSellerAccountForMerchant(
+                sellerId,
+                merchant
+        );
+
+        PaymentMethod paymentMethod = getPaymentMethodOrThrow(paymentMethodCode);
+
+        MerchantSellerPaymentMethod sellerPaymentMethod = merchantSellerPaymentMethodRepository
+                .findBySellerAccountAndPaymentMethod(
+                        sellerAccount,
+                        paymentMethod
+                )
+                .orElseThrow(() -> new BadRequestException("Seller payment method does not exist."));
+
+        validateMerchantKeepsAtLeastOneAvailablePaymentMethod(
+                merchant,
+                sellerPaymentMethod
+        );
+
+        merchantSellerPaymentMethodRepository.delete(sellerPaymentMethod);
+        merchantSellerPaymentMethodRepository.flush();
+
+        merchantStatusService.refreshSellerAndMerchantStatus(sellerAccount);
+
+        appLoggerService.info(
+                LogStrings.Feature.PAYMENT_METHOD,
+                LogStrings.Action.PAYMENT_METHOD_REMOVED,
+                "merchantId={} sellerId={} paymentMethodCode={}",
+                merchant.getMerchantId(),
+                sellerAccount.getId(),
+                paymentMethod.getCode()
+        );
     }
 
     private MerchantSellerAccount getSellerAccountForMerchant(
@@ -157,16 +209,9 @@ public class SellerPaymentMethodServiceImpl implements SellerPaymentMethodServic
         return sellerAccount;
     }
 
-    private void validateSinglePaymentMethodIsActive(PaymentMethod paymentMethod) {
-        if (!paymentMethod.isActive()) {
-            throw new BadRequestException("Payment method is not active.");
-        }
-    }
-
-    private void validateSinglePaymentPluginIsActive(PaymentMethod paymentMethod) {
-        if (!paymentMethod.getPlugin().isActive()) {
-            throw new BadRequestException("Payment method plugin is not active.");
-        }
+    private PaymentMethod getPaymentMethodOrThrow(String paymentMethodCode) {
+        return paymentMethodRepository.findById(paymentMethodCode)
+                .orElseThrow(() -> new BadRequestException("Payment method does not exist."));
     }
 
     private void validateConfigurationValues(
@@ -208,64 +253,10 @@ public class SellerPaymentMethodServiceImpl implements SellerPaymentMethodServic
         }
     }
 
-    private void logPaymentMethodsUpdated(
+    private void validateMerchantKeepsAtLeastOneAvailablePaymentMethod(
             Merchant merchant,
-            MerchantSellerAccount sellerAccount,
-            Set<String> requestedPaymentMethodCodes
+            MerchantSellerPaymentMethod sellerPaymentMethodToRemove
     ) {
-        appLoggerService.info(
-                LogStrings.Feature.PAYMENT_METHOD,
-                LogStrings.Action.PAYMENT_METHODS_UPDATED,
-                "merchantId={} sellerId={} codes={}",
-                merchant.getMerchantId(),
-                sellerAccount.getId(),
-                requestedPaymentMethodCodes
-        );
-    }
-
-    @Override
-    @Transactional
-    public void removeSellerPaymentMethod(
-            String sellerId,
-            String paymentMethodCode,
-            String authenticatedUsername
-    ) {
-        MerchantAdmin merchantAdmin = getAuthenticatedMerchantAdmin(authenticatedUsername);
-        Merchant merchant = merchantAdmin.getMerchant();
-
-        MerchantSellerAccount sellerAccount = getSellerAccountForMerchant(
-                sellerId,
-                merchant
-        );
-
-        PaymentMethod paymentMethod = paymentMethodRepository.findById(paymentMethodCode)
-                .orElseThrow(() -> new BadRequestException("Payment method does not exist."));
-
-        MerchantSellerPaymentMethod sellerPaymentMethod = merchantSellerPaymentMethodRepository
-                .findBySellerAccountAndPaymentMethod(
-                        sellerAccount,
-                        paymentMethod
-                )
-                .orElseThrow(() -> new BadRequestException("Seller payment method does not exist."));
-
-        validateMerchantKeepsAtLeastOneAvailablePaymentMethod(merchant, sellerPaymentMethod);
-
-        merchantSellerPaymentMethodRepository.delete(sellerPaymentMethod);
-        merchantSellerPaymentMethodRepository.flush();
-
-        merchantStatusService.refreshSellerAndMerchantStatus(sellerAccount);
-
-        appLoggerService.info(
-                LogStrings.Feature.PAYMENT_METHOD,
-                LogStrings.Action.PAYMENT_METHOD_REMOVED,
-                "merchantId={} sellerId={} paymentMethodCode={}",
-                merchant.getMerchantId(),
-                sellerAccount.getId(),
-                paymentMethod.getCode()
-        );
-    }
-
-    private void validateMerchantKeepsAtLeastOneAvailablePaymentMethod(Merchant merchant, MerchantSellerPaymentMethod sellerPaymentMethodToRemove) {
         if (!sellerPaymentMethodToRemove.isAvailableForPayments()) {
             return;
         }

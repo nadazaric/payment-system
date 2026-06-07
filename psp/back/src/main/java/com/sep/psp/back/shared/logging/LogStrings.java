@@ -34,7 +34,6 @@ public final class LogStrings {
         public static final String SELLER_CREATE_REJECTED = "SELLER CREATE REJECTED";
         public static final String SELLER_UPDATE_REJECTED = "SELLER UPDATE REJECTED";
 
-        public static final String PAYMENT_METHODS_UPDATED = "PAYMENT METHODS UPDATED";
         public static final String PAYMENT_METHOD_UPDATE_REJECTED = "PAYMENT METHOD UPDATE REJECTED";
         public static final String PAYMENT_METHOD_CONFIGURED = "PAYMENT METHOD CONFIGURED";
         public static final String PAYMENT_METHOD_REMOVED = "PAYMENT METHOD REMOVED";
