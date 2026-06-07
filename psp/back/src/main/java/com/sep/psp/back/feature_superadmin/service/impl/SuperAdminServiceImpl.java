@@ -1,11 +1,14 @@
 package com.sep.psp.back.feature_superadmin.service.impl;
 
+import com.sep.psp.back.feature_merchant.repository.MerchantRepository;
+import com.sep.psp.back.feature_merchant.service.interf.MerchantStatusService;
 import com.sep.psp.back.feature_plugin.model.PaymentPlugin;
 import com.sep.psp.back.feature_plugin.repository.PaymentPluginRepository;
 import com.sep.psp.back.feature_plugin.service.interf.PluginSecretEncryptionService;
 import com.sep.psp.back.feature_superadmin.dto.CreateExpectedPluginRequest;
 import com.sep.psp.back.feature_superadmin.dto.CreateExpectedPluginResponse;
 import com.sep.psp.back.feature_superadmin.dto.SuperAdminPluginResponse;
+import com.sep.psp.back.feature_superadmin.dto.UpdatePluginStatusRequest;
 import com.sep.psp.back.feature_superadmin.service.interf.SuperAdminService;
 import com.sep.psp.back.shared.error.exception.BadRequestException;
 import com.sep.psp.back.shared.logging.LogStrings;
@@ -15,18 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.sep.psp.back.feature_merchant.model.Merchant;
-import com.sep.psp.back.feature_merchant.model.MerchantSellerAccount;
-import com.sep.psp.back.feature_merchant.model.MerchantSellerPaymentMethod;
-import com.sep.psp.back.feature_merchant.repository.MerchantRepository;
-import com.sep.psp.back.feature_merchant.repository.MerchantSellerAccountRepository;
-import com.sep.psp.back.feature_merchant.repository.MerchantSellerPaymentMethodRepository;
-import com.sep.psp.back.feature_payment.model.PaymentMethod;
-import com.sep.psp.back.feature_payment.repository.PaymentMethodRepository;
-import com.sep.psp.back.feature_superadmin.dto.UpdatePluginStatusRequest;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.List;
 
 @Service
@@ -45,13 +37,7 @@ public class SuperAdminServiceImpl implements SuperAdminService {
     AppLoggerService appLoggerService;
 
     @Autowired
-    PaymentMethodRepository paymentMethodRepository;
-
-    @Autowired
-    MerchantSellerPaymentMethodRepository merchantSellerPaymentMethodRepository;
-
-    @Autowired
-    MerchantSellerAccountRepository merchantSellerAccountRepository;
+    MerchantStatusService merchantStatusService;
 
     @Autowired
     MerchantRepository merchantRepository;
@@ -171,7 +157,7 @@ public class SuperAdminServiceImpl implements SuperAdminService {
 
         PaymentPlugin savedPlugin = paymentPluginRepository.save(paymentPlugin);
 
-        updateAffectedSellerAndMerchantStatuses(savedPlugin);
+        merchantStatusService.refreshStatusesForPlugin(savedPlugin);
 
         appLoggerService.info(
                 LogStrings.Feature.PAYMENT_PLUGIN,
@@ -183,54 +169,6 @@ public class SuperAdminServiceImpl implements SuperAdminService {
         );
 
         return toSuperAdminPluginResponse(savedPlugin);
-    }
-
-    private void updateAffectedSellerAndMerchantStatuses(PaymentPlugin paymentPlugin) {
-        List<PaymentMethod> pluginPaymentMethods = paymentMethodRepository.findByPlugin(paymentPlugin);
-
-        Map<String, MerchantSellerAccount> affectedSellers = new LinkedHashMap<>();
-
-        pluginPaymentMethods.forEach(paymentMethod -> {
-            List<MerchantSellerPaymentMethod> sellerPaymentMethods =
-                    merchantSellerPaymentMethodRepository.findByPaymentMethod(paymentMethod);
-
-            sellerPaymentMethods.forEach(sellerPaymentMethod -> affectedSellers.put(
-                    sellerPaymentMethod.getSellerAccount().getId(),
-                    sellerPaymentMethod.getSellerAccount()
-            ));
-        });
-
-        affectedSellers.values().forEach(this::updateSellerActiveStatus);
-
-        Map<String, Merchant> affectedMerchants = new LinkedHashMap<>();
-
-        affectedSellers.values().forEach(sellerAccount -> affectedMerchants.put(
-                sellerAccount.getMerchant().getMerchantId(),
-                sellerAccount.getMerchant()
-        ));
-
-        affectedMerchants.values().forEach(this::updateMerchantActiveStatus);
-    }
-
-    private void updateSellerActiveStatus(MerchantSellerAccount sellerAccount) {
-        boolean sellerActive = merchantSellerPaymentMethodRepository.findBySellerAccount(sellerAccount)
-                .stream()
-                .anyMatch(MerchantSellerPaymentMethod::isAvailableForPayments);
-
-        sellerAccount.setActive(sellerActive);
-
-        merchantSellerAccountRepository.save(sellerAccount);
-    }
-
-    private void updateMerchantActiveStatus(Merchant merchant) {
-        List<MerchantSellerAccount> sellerAccounts = merchantSellerAccountRepository.findByMerchant(merchant);
-
-        boolean merchantActive = sellerAccounts.stream()
-                .anyMatch(MerchantSellerAccount::isActive);
-
-        merchant.setActive(merchantActive);
-
-        merchantRepository.save(merchant);
     }
 
 }

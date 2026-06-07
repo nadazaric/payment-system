@@ -11,21 +11,17 @@ import com.sep.psp.back.feature_merchant.repository.MerchantSellerAccountReposit
 import com.sep.psp.back.feature_merchant.service.interf.MerchantSellerService;
 import com.sep.psp.back.feature_merchant.service.interf.MerchantService;
 import com.sep.psp.back.feature_merchant.service.interf.SellerPaymentMethodService;
-import com.sep.psp.back.security.jwt.JwtTokenUtil;
 import com.sep.psp.back.shared.error.exception.BadRequestException;
 import com.sep.psp.back.shared.logging.LogStrings;
 import com.sep.psp.back.shared.logging.service.interf.AppLoggerService;
+import com.sep.psp.back.shared.service.interf.ApiKeyGeneratorService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.sep.psp.back.shared.service.interf.ApiKeyGeneratorService;
-import org.springframework.beans.factory.annotation.Value;
-
-import java.util.List;
 
 @Service
 public class MerchantServiceImpl implements MerchantService {

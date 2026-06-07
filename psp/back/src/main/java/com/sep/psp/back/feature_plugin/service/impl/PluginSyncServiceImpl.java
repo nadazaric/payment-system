@@ -1,11 +1,8 @@
 package com.sep.psp.back.feature_plugin.service.impl;
 
-import com.sep.psp.back.feature_merchant.model.Merchant;
-import com.sep.psp.back.feature_merchant.model.MerchantSellerAccount;
 import com.sep.psp.back.feature_merchant.model.MerchantSellerPaymentMethod;
-import com.sep.psp.back.feature_merchant.repository.MerchantRepository;
-import com.sep.psp.back.feature_merchant.repository.MerchantSellerAccountRepository;
 import com.sep.psp.back.feature_merchant.repository.MerchantSellerPaymentMethodRepository;
+import com.sep.psp.back.feature_merchant.service.interf.MerchantStatusService;
 import com.sep.psp.back.feature_payment.model.PaymentMethod;
 import com.sep.psp.back.feature_payment.repository.PaymentMethodRepository;
 import com.sep.psp.back.feature_plugin.dto.PluginPaymentMethodRegistrationRequest;
@@ -13,6 +10,7 @@ import com.sep.psp.back.feature_plugin.dto.PluginSyncRequest;
 import com.sep.psp.back.feature_plugin.dto.PluginSyncResponse;
 import com.sep.psp.back.feature_plugin.model.PaymentPlugin;
 import com.sep.psp.back.feature_plugin.repository.PaymentPluginRepository;
+import com.sep.psp.back.feature_plugin.service.interf.PluginAvailabilityService;
 import com.sep.psp.back.feature_plugin.service.interf.PluginSyncService;
 import com.sep.psp.back.shared.error.exception.BadRequestException;
 import com.sep.psp.back.shared.logging.LogStrings;
@@ -21,10 +19,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 @Service
@@ -40,10 +36,10 @@ public class PluginSyncServiceImpl implements PluginSyncService {
     MerchantSellerPaymentMethodRepository merchantSellerPaymentMethodRepository;
 
     @Autowired
-    MerchantSellerAccountRepository merchantSellerAccountRepository;
+    MerchantStatusService merchantStatusService;
 
     @Autowired
-    MerchantRepository merchantRepository;
+    PluginAvailabilityService pluginAvailabilityService;
 
     @Autowired
     AppLoggerService appLoggerService;
@@ -64,9 +60,8 @@ public class PluginSyncServiceImpl implements PluginSyncService {
 
         plugin.setDisplayName(request.displayName());
         plugin.setBaseUrl(request.baseUrl());
-        plugin.setActive(true);
-
         PaymentPlugin savedPlugin = paymentPluginRepository.save(plugin);
+        pluginAvailabilityService.markPluginActive(savedPlugin);
 
         Set<String> synchronizedMethodCodes = new LinkedHashSet<>();
 
@@ -164,48 +159,7 @@ public class PluginSyncServiceImpl implements PluginSyncService {
 
         merchantSellerPaymentMethodRepository.saveAll(sellerPaymentMethods);
 
-        updateAffectedSellerAndMerchantStatuses(sellerPaymentMethods);
-    }
-
-    private void updateAffectedSellerAndMerchantStatuses(
-            List<MerchantSellerPaymentMethod> sellerPaymentMethods
-    ) {
-        Map<String, MerchantSellerAccount> affectedSellers = new LinkedHashMap<>();
-
-        sellerPaymentMethods.forEach(sellerPaymentMethod -> affectedSellers.put(
-                sellerPaymentMethod.getSellerAccount().getId(),
-                sellerPaymentMethod.getSellerAccount()
-        ));
-
-        affectedSellers.values().forEach(sellerAccount -> {
-            boolean sellerActive = merchantSellerPaymentMethodRepository.findBySellerAccount(sellerAccount)
-                    .stream()
-                    .anyMatch(MerchantSellerPaymentMethod::isAvailableForPayments);
-
-            sellerAccount.setActive(sellerActive);
-
-            merchantSellerAccountRepository.save(sellerAccount);
-        });
-
-        Map<String, Merchant> affectedMerchants = new LinkedHashMap<>();
-
-        affectedSellers.values().forEach(sellerAccount -> affectedMerchants.put(
-                sellerAccount.getMerchant().getMerchantId(),
-                sellerAccount.getMerchant()
-        ));
-
-        affectedMerchants.values().forEach(this::updateMerchantActiveStatus);
-    }
-
-    private void updateMerchantActiveStatus(Merchant merchant) {
-        List<MerchantSellerAccount> sellerAccounts = merchantSellerAccountRepository.findByMerchant(merchant);
-
-        boolean merchantActive = sellerAccounts.stream()
-                .anyMatch(MerchantSellerAccount::isActive);
-
-        merchant.setActive(merchantActive);
-
-        merchantRepository.save(merchant);
+        merchantStatusService.refreshStatusesForSellerPaymentMethods(sellerPaymentMethods);
     }
 
     private String normalizePluginCode(String pluginCode) {

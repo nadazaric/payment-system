@@ -10,9 +10,9 @@ import com.sep.psp.back.feature_merchant.model.MerchantAdmin;
 import com.sep.psp.back.feature_merchant.model.MerchantSellerAccount;
 import com.sep.psp.back.feature_merchant.model.MerchantSellerPaymentMethod;
 import com.sep.psp.back.feature_merchant.repository.MerchantAdminRepository;
-import com.sep.psp.back.feature_merchant.repository.MerchantRepository;
 import com.sep.psp.back.feature_merchant.repository.MerchantSellerAccountRepository;
 import com.sep.psp.back.feature_merchant.repository.MerchantSellerPaymentMethodRepository;
+import com.sep.psp.back.feature_merchant.service.interf.MerchantStatusService;
 import com.sep.psp.back.feature_merchant.service.interf.SellerPaymentMethodService;
 import com.sep.psp.back.feature_payment.dto.PaymentMethodConfigField;
 import com.sep.psp.back.feature_payment.model.PaymentMethod;
@@ -36,9 +36,6 @@ import java.util.stream.Collectors;
 public class SellerPaymentMethodServiceImpl implements SellerPaymentMethodService {
 
     @Autowired
-    MerchantRepository merchantRepository;
-
-    @Autowired
     MerchantAdminRepository merchantAdminRepository;
 
     @Autowired
@@ -52,6 +49,9 @@ public class SellerPaymentMethodServiceImpl implements SellerPaymentMethodServic
 
     @Autowired
     PluginConfigurationService pluginConfigurationService;
+
+    @Autowired
+    MerchantStatusService merchantStatusService;
 
     @Autowired
     AppLoggerService appLoggerService;
@@ -110,8 +110,7 @@ public class SellerPaymentMethodServiceImpl implements SellerPaymentMethodServic
                 paymentMethods
         );
 
-        updateSellerActiveStatus(sellerAccount);
-        updateMerchantActiveStatus(merchant);
+        merchantStatusService.refreshSellerAndMerchantStatus(sellerAccount);
 
         logPaymentMethodsUpdated(
                 merchant,
@@ -173,8 +172,7 @@ public class SellerPaymentMethodServiceImpl implements SellerPaymentMethodServic
 
         merchantSellerPaymentMethodRepository.save(sellerPaymentMethod);
 
-        updateSellerActiveStatus(sellerAccount);
-        updateMerchantActiveStatus(merchant);
+        merchantStatusService.refreshSellerAndMerchantStatus(sellerAccount);
 
         return new ConfigureSellerPaymentMethodResponse(
                 paymentMethod.getCode(),
@@ -402,39 +400,6 @@ public class SellerPaymentMethodServiceImpl implements SellerPaymentMethodServic
         }
     }
 
-    private void updateSellerActiveStatus(MerchantSellerAccount sellerAccount) {
-        boolean sellerActive = merchantSellerPaymentMethodRepository.findBySellerAccount(sellerAccount)
-                .stream()
-                .anyMatch(MerchantSellerPaymentMethod::isAvailableForPayments);
-
-        sellerAccount.setActive(sellerActive);
-
-        merchantSellerAccountRepository.save(sellerAccount);
-    }
-
-    private void updateMerchantActiveStatus(Merchant merchant) {
-        boolean previousMerchantActive = merchant.isActive();
-
-        List<MerchantSellerAccount> sellerAccounts = merchantSellerAccountRepository.findByMerchant(merchant);
-
-        boolean hasActiveSeller = sellerAccounts.stream()
-                .anyMatch(MerchantSellerAccount::isActive);
-
-        merchant.setActive(hasActiveSeller);
-
-        merchantRepository.save(merchant);
-
-        if (previousMerchantActive != merchant.isActive()) {
-            appLoggerService.info(
-                    LogStrings.Feature.MERCHANT,
-                    LogStrings.Action.ACTIVE_STATUS_CHANGED,
-                    "merchantId={} active={}",
-                    merchant.getMerchantId(),
-                    merchant.isActive()
-            );
-        }
-    }
-
     private void logPaymentMethodsUpdated(
             Merchant merchant,
             MerchantSellerAccount sellerAccount,
@@ -449,4 +414,5 @@ public class SellerPaymentMethodServiceImpl implements SellerPaymentMethodServic
                 requestedPaymentMethodCodes
         );
     }
+
 }
