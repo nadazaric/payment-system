@@ -155,10 +155,7 @@ public class SellerPaymentMethodServiceImpl implements SellerPaymentMethodServic
                 )
                 .orElseThrow(() -> new BadRequestException("Seller payment method does not exist."));
 
-        validateMerchantKeepsAtLeastOneAvailablePaymentMethod(
-                merchant,
-                sellerPaymentMethod
-        );
+        validateSellerKeepsAtLeastOneAvailablePaymentMethod(sellerAccount, sellerPaymentMethod);
 
         merchantSellerPaymentMethodRepository.delete(sellerPaymentMethod);
         merchantSellerPaymentMethodRepository.flush();
@@ -253,22 +250,22 @@ public class SellerPaymentMethodServiceImpl implements SellerPaymentMethodServic
         }
     }
 
-    private void validateMerchantKeepsAtLeastOneAvailablePaymentMethod(
-            Merchant merchant,
+    private void validateSellerKeepsAtLeastOneAvailablePaymentMethod(
+            MerchantSellerAccount sellerAccount,
             MerchantSellerPaymentMethod sellerPaymentMethodToRemove
     ) {
         if (!sellerPaymentMethodToRemove.isAvailableForPayments()) {
             return;
         }
 
-        boolean hasAnotherAvailablePaymentMethod = merchantSellerPaymentMethodRepository.findBySellerAccount_Merchant(merchant)
+        boolean hasAnotherAvailablePaymentMethod = merchantSellerPaymentMethodRepository.findBySellerAccount(sellerAccount)
                 .stream()
                 .filter(sellerPaymentMethod -> !sellerPaymentMethod.getId()
                         .equals(sellerPaymentMethodToRemove.getId()))
                 .anyMatch(MerchantSellerPaymentMethod::isAvailableForPayments);
 
         if (!hasAnotherAvailablePaymentMethod) {
-            throw new BadRequestException("Merchant must have at least one active payment method.");
+            throw new BadRequestException("Seller must have at least one active payment method.");
         }
     }
 
