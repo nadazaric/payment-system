@@ -1,5 +1,6 @@
 package com.sep.psp.back.feature_merchant.repository;
 
+import com.sep.psp.back.feature_merchant.model.Merchant;
 import com.sep.psp.back.feature_merchant.model.MerchantSellerAccount;
 import com.sep.psp.back.feature_merchant.model.MerchantSellerPaymentMethod;
 import com.sep.psp.back.feature_payment.model.PaymentMethod;
@@ -18,5 +19,7 @@ public interface MerchantSellerPaymentMethodRepository extends JpaRepository<Mer
     );
 
     List<MerchantSellerPaymentMethod> findByPaymentMethod(PaymentMethod paymentMethod);
+
+    List<MerchantSellerPaymentMethod> findBySellerAccount_Merchant(Merchant merchant);
 
 }

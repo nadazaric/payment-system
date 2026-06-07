@@ -10,7 +10,6 @@ import com.sep.psp.back.feature_merchant.repository.MerchantRepository;
 import com.sep.psp.back.feature_merchant.repository.MerchantSellerAccountRepository;
 import com.sep.psp.back.feature_merchant.service.interf.MerchantSellerService;
 import com.sep.psp.back.feature_merchant.service.interf.MerchantService;
-import com.sep.psp.back.feature_merchant.service.interf.SellerPaymentMethodService;
 import com.sep.psp.back.shared.error.exception.BadRequestException;
 import com.sep.psp.back.shared.logging.LogStrings;
 import com.sep.psp.back.shared.logging.service.interf.AppLoggerService;
@@ -43,9 +42,6 @@ public class MerchantServiceImpl implements MerchantService {
 
     @Autowired
     MerchantSellerService merchantSellerService;
-
-    @Autowired
-    SellerPaymentMethodService sellerPaymentMethodService;
 
     @Autowired
     AppLoggerService appLoggerService;
@@ -200,19 +196,6 @@ public class MerchantServiceImpl implements MerchantService {
 
     @Override
     @Transactional
-    public void updateSellerPaymentMethods(
-            String sellerId,
-            UpdateSellerPaymentMethodsRequest request
-    ) {
-        sellerPaymentMethodService.updateSellerPaymentMethods(
-                sellerId,
-                request,
-                getAuthenticatedUsername()
-        );
-    }
-
-    @Override
-    @Transactional
     public void updateCurrentMerchantProfile(UpdateMerchantProfileRequest request) {
         String username = getAuthenticatedUsername();
 
@@ -267,21 +250,6 @@ public class MerchantServiceImpl implements MerchantService {
         );
 
         return new RegenerateMerchantPasswordResponse(newMerchantPassword);
-    }
-
-    @Override
-    @Transactional
-    public ConfigureSellerPaymentMethodResponse configureSellerPaymentMethod(
-            String sellerId,
-            String paymentMethodCode,
-            ConfigureSellerPaymentMethodRequest request
-    ) {
-        return sellerPaymentMethodService.configureSellerPaymentMethod(
-                sellerId,
-                paymentMethodCode,
-                request,
-                getAuthenticatedUsername()
-        );
     }
 
 }

@@ -67,3 +67,35 @@ VALUES (
            'Main seller',
            false
        );
+
+INSERT INTO merchant_seller_account (
+    id,
+    merchant_id,
+    seller_reference,
+    display_name,
+    active
+)
+VALUES (
+           'seller-test-002',
+           'MER-TEST0001',
+           'SELLER_TWO',
+           'Seller Two',
+           false
+       );
+
+INSERT INTO payment_plugin (
+    code,
+    display_name,
+    base_url,
+    active_by_admin,
+    active,
+    encrypted_plugin_secret
+)
+VALUES (
+           'MOCK_PLUGIN',
+           'Mock Payment Plugin',
+           NULL,
+           true,
+           false,
+           'LluElvujwjREXdPz1Z0ClqafYEEdUbzE8R1MqTRB0mbxix6R611K5wx/OGLh/vi5RuPImKjKjwYTgMtTx8FIbegjh38Aew=='
+       );

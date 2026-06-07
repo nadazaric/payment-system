@@ -3,6 +3,7 @@ package com.sep.psp.back.feature_merchant.controller;
 import com.sep.psp.back.feature_merchant.dto.*;
 import com.sep.psp.back.feature_merchant.service.interf.MerchantSellerService;
 import com.sep.psp.back.feature_merchant.service.interf.MerchantService;
+import com.sep.psp.back.feature_merchant.service.interf.SellerPaymentMethodService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -12,6 +13,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -29,6 +31,9 @@ public class MerchantController {
 
     @Autowired
     MerchantSellerService merchantSellerService;
+
+    @Autowired
+    SellerPaymentMethodService sellerPaymentMethodService;
 
     // ----------------------------------------------------------------------------------------------------------------- Register
     @Operation(
@@ -139,40 +144,6 @@ public class MerchantController {
         return merchantSellerService.createSellerAccount(request);
     }
 
-    // ----------------------------------------------------------------------------------------------------------------- Update Seller payment methods
-    @Operation(
-            summary = "Update seller payment methods",
-            description = """
-                Updates payment methods available for a seller account.
-                The seller account must belong to the currently authenticated merchant.
-                At least one active payment method must be selected.
-                """
-    )
-    @ApiResponses(value = {
-            @ApiResponse(
-                    responseCode = "204",
-                    description = "Seller payment methods updated successfully."
-            ),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "Invalid request, seller does not belong to merchant, or payment method is invalid.",
-                    content = @Content
-            ),
-            @ApiResponse(
-                    responseCode = "401",
-                    description = "Missing or invalid JWT token.",
-                    content = @Content
-            )
-    })
-    @PutMapping("/sellers/{sellerId}/payment-methods")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void updateSellerPaymentMethods(
-            @PathVariable String sellerId,
-            @Valid @RequestBody UpdateSellerPaymentMethodsRequest request
-    ) {
-        merchantService.updateSellerPaymentMethods(sellerId, request);
-    }
-
     // ----------------------------------------------------------------------------------------------------------------- Update profile
     @Operation(
             summary = "Update current merchant profile",
@@ -266,23 +237,46 @@ public class MerchantController {
         merchantSellerService.updateSellerAccount(sellerId, request);
     }
 
-    // ----------------------------------------------------------------------------------------------------------------- Update payment configuration
+    // ----------------------------------------------------------------------------------------------------------------- Payment Method Configuration
     @Operation(
             summary = "Configure seller payment method",
-            description = "Configures a payment method for a seller account by sending configuration values to the payment plugin."
+            description = """
+                Configures, adds or updates a payment method for a seller account.
+                The configuration is sent to the payment plugin and stored by the plugin.
+                """
     )
     @PostMapping("/sellers/{sellerId}/payment-methods/{paymentMethodCode}/configuration")
     public ConfigureSellerPaymentMethodResponse configureSellerPaymentMethod(
             @PathVariable String sellerId,
             @PathVariable String paymentMethodCode,
-            @Valid @RequestBody ConfigureSellerPaymentMethodRequest request
+            @Valid @RequestBody ConfigureSellerPaymentMethodRequest request,
+            Authentication authentication
     ) {
-        return merchantService.configureSellerPaymentMethod(
+        return sellerPaymentMethodService.configureSellerPaymentMethod(
                 sellerId,
                 paymentMethodCode,
-                request
+                request,
+                authentication.getName()
         );
     }
 
+    // ----------------------------------------------------------------------------------------------------------------- Delete Payment Method
+    @Operation(
+            summary = "Remove seller payment method",
+            description = "Removes a configured payment method from a seller account in PSP."
+    )
+    @DeleteMapping("/sellers/{sellerId}/payment-methods/{paymentMethodCode}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void removeSellerPaymentMethod(
+            @PathVariable String sellerId,
+            @PathVariable String paymentMethodCode,
+            Authentication authentication
+    ) {
+        sellerPaymentMethodService.removeSellerPaymentMethod(
+                sellerId,
+                paymentMethodCode,
+                authentication.getName()
+        );
+    }
 
 }

@@ -10,6 +10,8 @@ import com.sep.psp.back.feature_merchant.service.interf.MerchantStatusService;
 import com.sep.psp.back.feature_payment.model.PaymentMethod;
 import com.sep.psp.back.feature_payment.repository.PaymentMethodRepository;
 import com.sep.psp.back.feature_plugin.model.PaymentPlugin;
+import com.sep.psp.back.shared.logging.LogStrings;
+import com.sep.psp.back.shared.logging.service.interf.AppLoggerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,6 +35,9 @@ public class MerchantStatusServiceImpl implements MerchantStatusService {
 
     @Autowired
     PaymentMethodRepository paymentMethodRepository;
+
+    @Autowired
+    AppLoggerService appLoggerService;
 
     @Override
     @Transactional
@@ -110,10 +115,12 @@ public class MerchantStatusServiceImpl implements MerchantStatusService {
 
         sellerAccount.setActive(sellerActive);
 
-        merchantSellerAccountRepository.save(sellerAccount);
+        merchantSellerAccountRepository.saveAndFlush(sellerAccount);
     }
 
     private void updateMerchantActiveStatus(Merchant merchant) {
+        boolean previousMerchantActive = merchant.isActive();
+
         List<MerchantSellerAccount> sellerAccounts = merchantSellerAccountRepository.findByMerchant(merchant);
 
         boolean merchantActive = sellerAccounts.stream()
@@ -121,7 +128,17 @@ public class MerchantStatusServiceImpl implements MerchantStatusService {
 
         merchant.setActive(merchantActive);
 
-        merchantRepository.save(merchant);
+        merchantRepository.saveAndFlush(merchant);
+
+        if (previousMerchantActive != merchant.isActive()) {
+            appLoggerService.info(
+                    LogStrings.Feature.MERCHANT,
+                    LogStrings.Action.ACTIVE_STATUS_CHANGED,
+                    "merchantId={} active={}",
+                    merchant.getMerchantId(),
+                    merchant.isActive()
+            );
+        }
     }
 
 }

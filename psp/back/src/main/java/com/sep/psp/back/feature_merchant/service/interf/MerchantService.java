@@ -1,8 +1,10 @@
 package com.sep.psp.back.feature_merchant.service.interf;
 
-import com.sep.psp.back.feature_merchant.dto.*;
-
-import java.util.List;
+import com.sep.psp.back.feature_merchant.dto.MerchantProfileResponse;
+import com.sep.psp.back.feature_merchant.dto.MerchantRegistrationRequest;
+import com.sep.psp.back.feature_merchant.dto.MerchantRegistrationResponse;
+import com.sep.psp.back.feature_merchant.dto.RegenerateMerchantPasswordResponse;
+import com.sep.psp.back.feature_merchant.dto.UpdateMerchantProfileRequest;
 
 public interface MerchantService {
 
@@ -10,12 +12,8 @@ public interface MerchantService {
 
     MerchantProfileResponse getCurrentMerchantProfile();
 
-    void updateSellerPaymentMethods(String sellerId, UpdateSellerPaymentMethodsRequest request);
-
     void updateCurrentMerchantProfile(UpdateMerchantProfileRequest request);
 
     RegenerateMerchantPasswordResponse regenerateMerchantPassword();
-
-    ConfigureSellerPaymentMethodResponse configureSellerPaymentMethod(String sellerId, String paymentMethodCode, ConfigureSellerPaymentMethodRequest request);
 
 }
