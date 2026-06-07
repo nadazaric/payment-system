@@ -1,22 +1,30 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import axios from "axios";
 import {
     Alert,
     Button,
-    Checkbox,
     Dialog,
     DialogActions,
     DialogContent,
-    DialogTitle,
-    FormControlLabel,
-    Stack,
-    Typography
+    DialogTitle
 } from "@mui/material";
-import { updateSellerPaymentMethods } from "@/api/merchantApi";
+import {
+    configureSellerPaymentMethod,
+    removeSellerPaymentMethod
+} from "@/api/merchantApi";
+import PaymentMethodConfigurationForm from "@/components/merchant/PaymentMethodConfigurationForm";
+import PaymentMethodsList from "@/components/merchant/PaymentMethodsList";
 import { MERCHANT_LABELS } from "@/const/label";
-import { MerchantSellerAccount } from "@/types/merchant";
-import { PaymentMethod } from "@/types/paymentMethod";
+import {
+    MerchantSellerAccount,
+    SellerPaymentMethod
+} from "@/types/merchant";
+import {
+    PaymentMethod,
+    PaymentMethodConfigField
+} from "@/types/paymentMethod";
 
 type PaymentMethodsDialogProps = {
     open: boolean;
@@ -32,6 +40,32 @@ type PaymentMethodsDialogContentProps = {
     paymentMethods: PaymentMethod[];
     onClose: () => void;
     onSaved: () => void;
+};
+
+const parseConfigFields = (configSchemaJson: string): PaymentMethodConfigField[] => {
+    if (!configSchemaJson) {
+        return [];
+    }
+
+    try {
+        const parsedValue = JSON.parse(configSchemaJson);
+
+        if (!Array.isArray(parsedValue)) {
+            return [];
+        }
+
+        return parsedValue.filter((field) => Boolean(field.fieldName));
+    } catch {
+        return [];
+    }
+};
+
+const getErrorMessage = (error: unknown) => {
+    if (axios.isAxiosError(error)) {
+        return error.response?.data?.message || MERCHANT_LABELS.saveFailed;
+    }
+
+    return MERCHANT_LABELS.saveFailed;
 };
 
 export default function PaymentMethodsDialog({
@@ -63,29 +97,91 @@ function PaymentMethodsDialogContent({
     onClose,
     onSaved
 }: PaymentMethodsDialogContentProps) {
-    const [selectedCodes, setSelectedCodes] = useState<string[]>(
-        () => seller.availablePaymentMethods.map((method) => method.code)
-    );
+    const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | null>(null);
+    const [configurationValues, setConfigurationValues] = useState<Record<string, string>>({});
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
+    const [loadingCode, setLoadingCode] = useState("");
 
-    const sellerTitle = useMemo(() => {
-        return `${seller.displayName} (${seller.sellerReference})`;
-    }, [seller.displayName, seller.sellerReference]);
+    const sellerPaymentMethods = useMemo(() => {
+        return seller.paymentMethods ?? [];
+    }, [seller.paymentMethods]);
 
-    const handleToggle = (code: string) => {
-        setSelectedCodes((current) => {
-            if (current.includes(code)) {
-                return current.filter((item) => item !== code);
-            }
+    const selectedConfigFields = useMemo(() => {
+        if (!selectedMethod) {
+            return [];
+        }
 
-            return [...current, code];
+        return parseConfigFields(selectedMethod.configSchemaJson);
+    }, [selectedMethod]);
+
+    const handleClose = () => {
+        if (loading || loadingCode) {
+            return;
+        }
+
+        setSelectedMethod(null);
+        setConfigurationValues({});
+        setError("");
+        onClose();
+    };
+
+    const openConfigurationView = (paymentMethod: PaymentMethod) => {
+        const configFields = parseConfigFields(paymentMethod.configSchemaJson);
+
+        const initialValues = configFields.reduce<Record<string, string>>(
+            (values, field) => ({
+                ...values,
+                [field.fieldName]: "",
+            }),
+            {}
+        );
+
+        setSelectedMethod(paymentMethod);
+        setConfigurationValues(initialValues);
+        setError("");
+    };
+
+    const closeConfigurationView = () => {
+        if (loading) {
+            return;
+        }
+
+        setSelectedMethod(null);
+        setConfigurationValues({});
+        setError("");
+    };
+
+    const updateConfigurationValue = (
+        fieldName: string,
+        value: string
+    ) => {
+        setConfigurationValues((current) => ({
+            ...current,
+            [fieldName]: value,
+        }));
+    };
+
+    const validateConfigurationValues = () => {
+        return selectedConfigFields.every((field) => {
+            const value = configurationValues[field.fieldName];
+
+            return value !== undefined && value.trim() !== "";
         });
     };
 
-    const handleSave = async () => {
-        if (selectedCodes.length === 0) {
-            setError(MERCHANT_LABELS.configurePaymentMethodsDescription);
+    const handleConfigure = async () => {
+        if (!selectedMethod) {
+            return;
+        }
+
+        if (selectedConfigFields.length === 0) {
+            setError(MERCHANT_LABELS.noConfigurationFields);
+            return;
+        }
+
+        if (!validateConfigurationValues()) {
+            setError(MERCHANT_LABELS.missingConfigurationValues);
             return;
         }
 
@@ -93,50 +189,67 @@ function PaymentMethodsDialogContent({
         setError("");
 
         try {
-            await updateSellerPaymentMethods(seller.id, {
-                paymentMethodCodes: selectedCodes,
-            });
+            await configureSellerPaymentMethod(
+                seller.id,
+                selectedMethod.code,
+                {
+                    values: configurationValues,
+                }
+            );
 
             onSaved();
+        } catch (error) {
+            setError(getErrorMessage(error));
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleRemove = async (paymentMethodCode: string) => {
+        setLoadingCode(paymentMethodCode);
+        setError("");
+
+        try {
+            await removeSellerPaymentMethod(
+                seller.id,
+                paymentMethodCode
+            );
+
+            onSaved();
+        } catch (error) {
+            setError(getErrorMessage(error));
+        } finally {
+            setLoadingCode("");
         }
     };
 
     return (
         <Dialog
             open={open}
-            onClose={loading ? undefined : onClose}
-            maxWidth="sm"
+            onClose={handleClose}
+            maxWidth="md"
             fullWidth>
-            <DialogTitle>{MERCHANT_LABELS.configurePaymentMethodsTitle}</DialogTitle>
+            <DialogTitle>
+                {`${selectedMethod
+                    ? MERCHANT_LABELS.paymentMethodConfigurationTitle
+                    : MERCHANT_LABELS.configurePaymentMethodsTitle} • ${seller.displayName}`}
+            </DialogTitle>
 
             <DialogContent>
-                <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    sx={{ mb: 2 }}>
-                    {sellerTitle}
-                </Typography>
-
-                <Alert
-                    severity="info"
-                    sx={{ mb: 2 }}>
-                    {MERCHANT_LABELS.configurePaymentMethodsDescription}
-                </Alert>
-
-                <Stack spacing={1}>
-                    {paymentMethods.map((method) => (
-                        <FormControlLabel
-                            key={method.code}
-                            control={
-                                <Checkbox
-                                    checked={selectedCodes.includes(method.code)}
-                                    onChange={() => handleToggle(method.code)} />
-                            }
-                            label={method.displayName} />
-                    ))}
-                </Stack>
+                {selectedMethod ? (
+                    <PaymentMethodConfigurationForm
+                        paymentMethod={selectedMethod}
+                        configFields={selectedConfigFields}
+                        values={configurationValues}
+                        onValueChange={updateConfigurationValue} />
+                ) : (
+                    <PaymentMethodsList
+                        paymentMethods={paymentMethods}
+                        sellerPaymentMethods={sellerPaymentMethods}
+                        loadingCode={loadingCode}
+                        onConfigureClick={openConfigurationView}
+                        onRemoveClick={handleRemove} />
+                )}
 
                 {error && (
                     <Alert
@@ -148,20 +261,31 @@ function PaymentMethodsDialogContent({
             </DialogContent>
 
             <DialogActions>
-                <Button
-                    type="button"
-                    onClick={onClose}
-                    disabled={loading}>
-                    {MERCHANT_LABELS.cancel}
-                </Button>
+                {selectedMethod ? (
+                    <>
+                        <Button
+                            type="button"
+                            onClick={closeConfigurationView}
+                            disabled={loading}>
+                            {MERCHANT_LABELS.back}
+                        </Button>
 
-                <Button
-                    type="button"
-                    variant="contained"
-                    onClick={handleSave}
-                    disabled={loading}>
-                    {loading ? MERCHANT_LABELS.saving : MERCHANT_LABELS.save}
-                </Button>
+                        <Button
+                            type="button"
+                            variant="contained"
+                            onClick={handleConfigure}
+                            disabled={loading || selectedConfigFields.length === 0}>
+                            {loading ? MERCHANT_LABELS.saving : MERCHANT_LABELS.save}
+                        </Button>
+                    </>
+                ) : (
+                    <Button
+                        type="button"
+                        onClick={handleClose}
+                        disabled={Boolean(loadingCode)}>
+                        {MERCHANT_LABELS.close}
+                    </Button>
+                )}
             </DialogActions>
         </Dialog>
     );

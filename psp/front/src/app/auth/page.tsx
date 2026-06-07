@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Box, Container } from "@mui/material";
-import MerchantLoginForm from "@/components/auth/MerchantLoginForm";
+import LoginForm from "@/components/auth/LoginForm";
 import MerchantRegisterForm from "@/components/auth/MerchantRegisterForm";
 
 export default function AuthPage() {
@@ -41,7 +41,7 @@ export default function AuthPage() {
                                 width: "100%",
                                 maxWidth: 560,
                             }}>
-                            <MerchantLoginForm
+                            <LoginForm
                                 onRegisterClick={() => setIsRegisterMode(true)} />
                         </Box>
                     )}

@@ -1,6 +1,7 @@
 import axiosInstance from "@/api/axiosInstance";
-import { MerchantLoginRequest, MerchantLoginResponse } from "@/types/auth";
 import {
+    ConfigureSellerPaymentMethodRequest,
+    ConfigureSellerPaymentMethodResponse,
     CreateMerchantSellerAccountRequest,
     MerchantProfile,
     MerchantRegistrationRequest,
@@ -8,8 +9,7 @@ import {
     MerchantSellerAccount,
     RegenerateMerchantPasswordResponse,
     UpdateMerchantProfileRequest,
-    UpdateMerchantSellerAccountRequest,
-    UpdateSellerPaymentMethodsRequest
+    UpdateMerchantSellerAccountRequest
 } from "@/types/merchant";
 
 export const registerMerchant = async (
@@ -17,17 +17,6 @@ export const registerMerchant = async (
 ): Promise<MerchantRegistrationResponse> => {
     const response = await axiosInstance.post<MerchantRegistrationResponse>(
         "/api/merchant/register",
-        request
-    );
-
-    return response.data;
-};
-
-export const loginMerchantAdmin = async (
-    request: MerchantLoginRequest
-): Promise<MerchantLoginResponse> => {
-    const response = await axiosInstance.post<MerchantLoginResponse>(
-        "/api/merchant/login",
         request
     );
 
@@ -67,16 +56,31 @@ export const updateMerchantSeller = async (
     sellerId: string,
     request: UpdateMerchantSellerAccountRequest
 ): Promise<void> => {
-    await axiosInstance.put(`/api/merchant/sellers/${sellerId}`, request);
+    await axiosInstance.put(
+        `/api/merchant/sellers/${sellerId}`,
+        request
+    );
 };
 
-export const updateSellerPaymentMethods = async (
+export const configureSellerPaymentMethod = async (
     sellerId: string,
-    request: UpdateSellerPaymentMethodsRequest
-): Promise<void> => {
-    await axiosInstance.put(
-        `/api/merchant/sellers/${sellerId}/payment-methods`,
+    paymentMethodCode: string,
+    request: ConfigureSellerPaymentMethodRequest
+): Promise<ConfigureSellerPaymentMethodResponse> => {
+    const response = await axiosInstance.post<ConfigureSellerPaymentMethodResponse>(
+        `/api/merchant/sellers/${sellerId}/payment-methods/${paymentMethodCode}/configuration`,
         request
+    );
+
+    return response.data;
+};
+
+export const removeSellerPaymentMethod = async (
+    sellerId: string,
+    paymentMethodCode: string
+): Promise<void> => {
+    await axiosInstance.delete(
+        `/api/merchant/sellers/${sellerId}/payment-methods/${paymentMethodCode}`
     );
 };
 

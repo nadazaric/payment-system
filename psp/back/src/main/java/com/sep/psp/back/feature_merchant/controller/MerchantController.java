@@ -1,7 +1,9 @@
 package com.sep.psp.back.feature_merchant.controller;
 
 import com.sep.psp.back.feature_merchant.dto.*;
+import com.sep.psp.back.feature_merchant.service.interf.MerchantSellerService;
 import com.sep.psp.back.feature_merchant.service.interf.MerchantService;
+import com.sep.psp.back.feature_merchant.service.interf.SellerPaymentMethodService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -11,6 +13,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -25,6 +28,12 @@ public class MerchantController {
 
     @Autowired
     MerchantService merchantService;
+
+    @Autowired
+    MerchantSellerService merchantSellerService;
+
+    @Autowired
+    SellerPaymentMethodService sellerPaymentMethodService;
 
     // ----------------------------------------------------------------------------------------------------------------- Register
     @Operation(
@@ -53,33 +62,6 @@ public class MerchantController {
             @Valid @RequestBody MerchantRegistrationRequest request
     ) {
         return merchantService.registerMerchant(request);
-    }
-
-    // ----------------------------------------------------------------------------------------------------------------- Login
-    @Operation(
-            summary = "Log in merchant admin",
-            description = """
-                Authenticates a merchant admin using username and password.
-                Returns a JWT token that must be used as Bearer token for protected merchant endpoints.
-                """
-    )
-    @ApiResponses(value = {
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "Merchant admin logged in successfully.",
-                    content = @Content(schema = @Schema(implementation = MerchantLoginResponse.class))
-            ),
-            @ApiResponse(
-                    responseCode = "401",
-                    description = "Invalid username or password.",
-                    content = @Content
-            )
-    })
-    @PostMapping("/login")
-    public MerchantLoginResponse loginMerchantAdmin(
-            @Valid @RequestBody MerchantLoginRequest request
-    ) {
-        return merchantService.loginMerchantAdmin(request);
     }
 
     // ----------------------------------------------------------------------------------------------------------------- Get Profile
@@ -126,7 +108,7 @@ public class MerchantController {
     })
     @GetMapping("/sellers")
     public List<MerchantSellerAccountResponse> getCurrentMerchantSellerAccounts() {
-        return merchantService.getCurrentMerchantSellerAccounts();
+        return merchantSellerService.getCurrentMerchantSellerAccounts();
     }
 
     // ----------------------------------------------------------------------------------------------------------------- Create Seller
@@ -159,41 +141,7 @@ public class MerchantController {
     public MerchantSellerAccountResponse createSellerAccount(
             @Valid @RequestBody CreateMerchantSellerAccountRequest request
     ) {
-        return merchantService.createSellerAccount(request);
-    }
-
-    // ----------------------------------------------------------------------------------------------------------------- Update Seller payment methods
-    @Operation(
-            summary = "Update seller payment methods",
-            description = """
-                Updates payment methods available for a seller account.
-                The seller account must belong to the currently authenticated merchant.
-                At least one active payment method must be selected.
-                """
-    )
-    @ApiResponses(value = {
-            @ApiResponse(
-                    responseCode = "204",
-                    description = "Seller payment methods updated successfully."
-            ),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "Invalid request, seller does not belong to merchant, or payment method is invalid.",
-                    content = @Content
-            ),
-            @ApiResponse(
-                    responseCode = "401",
-                    description = "Missing or invalid JWT token.",
-                    content = @Content
-            )
-    })
-    @PutMapping("/sellers/{sellerId}/payment-methods")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void updateSellerPaymentMethods(
-            @PathVariable String sellerId,
-            @Valid @RequestBody UpdateSellerPaymentMethodsRequest request
-    ) {
-        merchantService.updateSellerPaymentMethods(sellerId, request);
+        return merchantSellerService.createSellerAccount(request);
     }
 
     // ----------------------------------------------------------------------------------------------------------------- Update profile
@@ -286,7 +234,49 @@ public class MerchantController {
             @PathVariable String sellerId,
             @Valid @RequestBody UpdateMerchantSellerAccountRequest request
     ) {
-        merchantService.updateSellerAccount(sellerId, request);
+        merchantSellerService.updateSellerAccount(sellerId, request);
+    }
+
+    // ----------------------------------------------------------------------------------------------------------------- Payment Method Configuration
+    @Operation(
+            summary = "Configure seller payment method",
+            description = """
+                Configures, adds or updates a payment method for a seller account.
+                The configuration is sent to the payment plugin and stored by the plugin.
+                """
+    )
+    @PostMapping("/sellers/{sellerId}/payment-methods/{paymentMethodCode}/configuration")
+    public ConfigureSellerPaymentMethodResponse configureSellerPaymentMethod(
+            @PathVariable String sellerId,
+            @PathVariable String paymentMethodCode,
+            @Valid @RequestBody ConfigureSellerPaymentMethodRequest request,
+            Authentication authentication
+    ) {
+        return sellerPaymentMethodService.configureSellerPaymentMethod(
+                sellerId,
+                paymentMethodCode,
+                request,
+                authentication.getName()
+        );
+    }
+
+    // ----------------------------------------------------------------------------------------------------------------- Delete Payment Method
+    @Operation(
+            summary = "Remove seller payment method",
+            description = "Removes a configured payment method from a seller account in PSP."
+    )
+    @DeleteMapping("/sellers/{sellerId}/payment-methods/{paymentMethodCode}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void removeSellerPaymentMethod(
+            @PathVariable String sellerId,
+            @PathVariable String paymentMethodCode,
+            Authentication authentication
+    ) {
+        sellerPaymentMethodService.removeSellerPaymentMethod(
+                sellerId,
+                paymentMethodCode,
+                authentication.getName()
+        );
     }
 
 }

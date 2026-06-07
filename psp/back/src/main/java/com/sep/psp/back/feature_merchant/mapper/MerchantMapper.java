@@ -3,19 +3,17 @@ package com.sep.psp.back.feature_merchant.mapper;
 import com.sep.psp.back.feature_merchant.dto.MerchantProfileResponse;
 import com.sep.psp.back.feature_merchant.dto.MerchantRegistrationResponse;
 import com.sep.psp.back.feature_merchant.dto.MerchantSellerAccountResponse;
+import com.sep.psp.back.feature_merchant.dto.SellerPaymentMethodResponse;
 import com.sep.psp.back.feature_merchant.model.Merchant;
 import com.sep.psp.back.feature_merchant.model.MerchantAdmin;
 import com.sep.psp.back.feature_merchant.model.MerchantSellerAccount;
-import com.sep.psp.back.feature_payment.mapper.PaymentMethodMapper;
+import com.sep.psp.back.feature_merchant.model.MerchantSellerPaymentMethod;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
 import java.util.List;
 
-@Mapper(
-        componentModel = "spring",
-        uses = PaymentMethodMapper.class
-)
+@Mapper(componentModel = "spring")
 public interface MerchantMapper {
 
     @Mapping(source = "merchantAdmin.username", target = "adminUsername")
@@ -39,8 +37,50 @@ public interface MerchantMapper {
     @Mapping(source = "name", target = "adminName")
     MerchantProfileResponse toProfileResponse(MerchantAdmin merchantAdmin);
 
-    MerchantSellerAccountResponse toSellerAccountResponse(MerchantSellerAccount sellerAccount);
+    default MerchantSellerAccountResponse toSellerAccountResponse(
+            MerchantSellerAccount sellerAccount
+    ) {
+        return new MerchantSellerAccountResponse(
+                sellerAccount.getId(),
+                sellerAccount.getSellerReference(),
+                sellerAccount.getDisplayName(),
+                sellerAccount.isActive(),
+                toSellerPaymentMethodResponseList(sellerAccount.getPaymentMethods())
+        );
+    }
 
-    List<MerchantSellerAccountResponse> toSellerAccountResponseList(List<MerchantSellerAccount> sellerAccounts);
+    default List<MerchantSellerAccountResponse> toSellerAccountResponseList(
+            List<MerchantSellerAccount> sellerAccounts
+    ) {
+        return sellerAccounts.stream()
+                .map(this::toSellerAccountResponse)
+                .toList();
+    }
 
+    default List<SellerPaymentMethodResponse> toSellerPaymentMethodResponseList(
+            List<MerchantSellerPaymentMethod> paymentMethods
+    ) {
+        return paymentMethods.stream()
+                .filter(this::shouldShowSellerPaymentMethod)
+                .map(this::toSellerPaymentMethodResponse)
+                .toList();
+    }
+
+    default SellerPaymentMethodResponse toSellerPaymentMethodResponse(
+            MerchantSellerPaymentMethod sellerPaymentMethod
+    ) {
+        return new SellerPaymentMethodResponse(
+                sellerPaymentMethod.getPaymentMethod().getCode(),
+                sellerPaymentMethod.getPaymentMethod().getDisplayName(),
+                sellerPaymentMethod.getPaymentMethod().getPlugin().getCode(),
+                !sellerPaymentMethod.isConfigured()
+        );
+    }
+
+    default boolean shouldShowSellerPaymentMethod(
+            MerchantSellerPaymentMethod sellerPaymentMethod
+    ) {
+        return sellerPaymentMethod.getPaymentMethod().isActive()
+                && sellerPaymentMethod.getPaymentMethod().getPlugin().isActive();
+    }
 }

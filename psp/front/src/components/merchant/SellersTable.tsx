@@ -25,6 +25,10 @@ type SellersTableProps = {
     onConfigureClick: (seller: MerchantSellerAccount) => void;
 };
 
+const getSellerPaymentMethods = (seller: MerchantSellerAccount) => {
+    return seller.paymentMethods ?? [];
+};
+
 export default function SellersTable({
     sellers,
     onAddClick,
@@ -44,7 +48,9 @@ export default function SellersTable({
                         mb: 3
                     }}>
                     <Box>
-                        <Typography variant="h6">
+                        <Typography
+                            variant="h5"
+                            sx={{ fontWeight: 800 }}>
                             {MERCHANT_LABELS.sellersTitle}
                         </Typography>
 
@@ -67,90 +73,109 @@ export default function SellersTable({
                     <Table>
                         <TableHead>
                             <TableRow>
-                                <TableCell>{MERCHANT_LABELS.sellerReference}</TableCell>
-                                <TableCell>{MERCHANT_LABELS.displayName}</TableCell>
-                                <TableCell>{MERCHANT_LABELS.status}</TableCell>
-                                <TableCell>{MERCHANT_LABELS.paymentMethods}</TableCell>
-                                <TableCell align="right">{MERCHANT_LABELS.actions}</TableCell>
+                                <TableCell>
+                                    {MERCHANT_LABELS.sellerReference}
+                                </TableCell>
+
+                                <TableCell>
+                                    {MERCHANT_LABELS.displayName}
+                                </TableCell>
+
+                                <TableCell>
+                                    {MERCHANT_LABELS.status}
+                                </TableCell>
+
+                                <TableCell>
+                                    {MERCHANT_LABELS.paymentMethods}
+                                </TableCell>
+
+                                <TableCell align="right">
+                                    {MERCHANT_LABELS.actions}
+                                </TableCell>
                             </TableRow>
                         </TableHead>
+
                         <TableBody>
-                            {sellers.map((seller) => (
-                                <TableRow key={seller.id} hover>
-                                    <TableCell sx={{ fontWeight: 700 }}>
-                                        {seller.sellerReference}
-                                    </TableCell>
-                                    <TableCell>{seller.displayName}</TableCell>
-                                    <TableCell>
-                                        <Chip
-                                            label={seller.active ? MERCHANT_LABELS.active : MERCHANT_LABELS.inactive}
-                                            color={seller.active ? "success" : "warning"}
-                                            variant="outlined" />
-                                    </TableCell>
-                                    <TableCell>
-                                        <Stack
-                                            direction="row"
-                                            spacing={1}
-                                            useFlexGap
-                                            sx={{ flexWrap: "wrap" }}>
-                                            {seller.availablePaymentMethods.length > 0 ? (
-                                                seller.availablePaymentMethods.map((method) => (
-                                                    <Chip
-                                                        key={method.code}
-                                                        label={method.displayName}
-                                                        color="primary"
-                                                        variant="outlined" />
-                                                ))
-                                            ) : (
+                            {sellers.map((seller) => {
+                                const sellerPaymentMethods = getSellerPaymentMethods(seller);
+
+                                return (
+                                    <TableRow
+                                        key={seller.id}
+                                        hover>
+                                        <TableCell sx={{ fontWeight: 700 }}>
+                                            {seller.sellerReference}
+                                        </TableCell>
+
+                                        <TableCell>
+                                            {seller.displayName}
+                                        </TableCell>
+
+                                        <TableCell>
+                                            <Chip
+                                                label={
+                                                    seller.active
+                                                        ? MERCHANT_LABELS.active
+                                                        : MERCHANT_LABELS.inactive
+                                                }
+                                                color={seller.active ? "success" : "warning"}
+                                                variant="outlined" />
+                                        </TableCell>
+
+                                        <TableCell>
+                                            {sellerPaymentMethods.length === 0 ? (
                                                 <Typography
                                                     variant="body2"
                                                     color="text.secondary">
-                                                    {MERCHANT_LABELS.noPaymentMethods}
+                                                    {MERCHANT_LABELS.noPaymentMethodsConfigured}
                                                 </Typography>
+                                            ) : (
+                                                <Stack
+                                                    direction="row"
+                                                    spacing={1}
+                                                    useFlexGap
+                                                    sx={{ flexWrap: "wrap" }}>
+                                                    {sellerPaymentMethods.map((paymentMethod) => (
+                                                        <Chip
+                                                            key={paymentMethod.code}
+                                                            label={paymentMethod.displayName}
+                                                            color={paymentMethod.configurationRequired ? "warning" : "success"}
+                                                            variant="outlined" />
+                                                    ))}
+                                                </Stack>
                                             )}
-                                        </Stack>
-                                    </TableCell>
-                                    <TableCell align="right">
-                                        <Stack
-                                            direction="row"
-                                            spacing={1}
-                                            sx={{ justifyContent: "flex-end" }}>
-                                            <Button
-                                                type="button"
-                                                variant="outlined"
-                                                size="small"
-                                                onClick={() => onEditClick(seller)}>
-                                                {MERCHANT_LABELS.edit}
-                                            </Button>
+                                        </TableCell>
 
-                                            <Button
-                                                type="button"
-                                                variant="contained"
-                                                size="small"
-                                                onClick={() => onConfigureClick(seller)}>
-                                                {MERCHANT_LABELS.configure}
-                                            </Button>
-                                        </Stack>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
+                                        <TableCell align="right">
+                                            <Stack
+                                                direction="row"
+                                                spacing={1}
+                                                sx={{ justifyContent: "flex-end" }}>
+                                                <Button
+                                                    type="button"
+                                                    variant="outlined"
+                                                    size="small"
+                                                    onClick={() => onEditClick(seller)}>
+                                                    {MERCHANT_LABELS.edit}
+                                                </Button>
 
-                            {sellers.length === 0 && (
-                                <TableRow>
-                                    <TableCell colSpan={5}>
-                                        <Typography
-                                            variant="body2"
-                                            color="text.secondary"
-                                            sx={{ py: 3, textAlign: "center" }}>
-                                            {MERCHANT_LABELS.noSellers}
-                                        </Typography>
-                                    </TableCell>
-                                </TableRow>
-                            )}
+                                                <Button
+                                                    type="button"
+                                                    variant="contained"
+                                                    size="small"
+                                                    onClick={() => onConfigureClick(seller)}>
+                                                    {MERCHANT_LABELS.configure}
+                                                </Button>
+                                            </Stack>
+                                        </TableCell>
+                                    </TableRow>
+                                );
+                            })}
                         </TableBody>
                     </Table>
                 </TableContainer>
             </CardContent>
         </Card>
     );
+
 }

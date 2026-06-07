@@ -21,6 +21,18 @@ public record PaymentMethodResponse(
                 description = "Shows whether the payment method is globally active in PSP.",
                 example = "true"
         )
-        boolean active
+        boolean active,
+
+        @Schema(
+                description = "Code of the plugin that provides this payment method.",
+                example = "BANK_PLUGIN"
+        )
+        String pluginCode,
+
+        @Schema(
+                description = "JSON schema-like configuration metadata required by the plugin. PSP stores only field metadata, not configuration values.",
+                example = "[{\"fieldKey\":\"bankMerchantId\",\"label\":\"Bank merchant ID\",\"fieldType\":\"TEXT\",\"required\":true,\"sensitive\":false}]"
+        )
+        String configSchemaJson
 ) {
 }

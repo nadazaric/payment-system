@@ -16,13 +16,15 @@ import { notifyAuthChange } from "@/hooks/useAuthState";
 
 type NavbarProps = {
     merchantId: string;
+    role: string;
 };
 
-export default function Navbar({ merchantId }: NavbarProps) {
+export default function Navbar({ merchantId, role }: NavbarProps) {
     const router = useRouter();
 
     const handleLogout = () => {
         localStorage.removeItem(STORAGE_KEYS.accessToken);
+        localStorage.removeItem(STORAGE_KEYS.userRole);
         notifyAuthChange();
         router.push(ROUTES.auth);
     };
@@ -59,7 +61,7 @@ export default function Navbar({ merchantId }: NavbarProps) {
                         alignItems: "center",
                         gap: 1.5
                     }}>
-                    {merchantId && (
+                    {merchantId && role != "SUPER_ADMIN" &&  (
                         <Chip
                             label={merchantId}
                             color="primary"

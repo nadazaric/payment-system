@@ -21,7 +21,7 @@ public class PaymentMethodServiceImpl implements PaymentMethodService {
 
     @Override
     public List<PaymentMethodResponse> getActivePaymentMethods() {
-        List<PaymentMethod> paymentMethods = paymentMethodRepository.findByActiveTrue();
+        List<PaymentMethod> paymentMethods = paymentMethodRepository.findByActiveTrueAndPlugin_ActiveTrue();
 
         return paymentMethodMapper.toPaymentMethodResponseList(paymentMethods);
     }

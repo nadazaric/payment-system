@@ -1,3 +1,16 @@
+INSERT INTO super_admin (
+    username,
+    password_hash,
+    name,
+    active
+)
+VALUES (
+           'superadmin',
+           '$2y$10$r6nKsSEwhdNgT741zO1njufAy8JCTd1txS70JWvqMFecmEysf9yMK',
+           'PSP Super Admin',
+           true
+       );
+
 INSERT INTO merchant (
     merchant_id,
     merchant_name,
@@ -55,11 +68,34 @@ VALUES (
            false
        );
 
-INSERT INTO payment_method (
-    code,
+INSERT INTO merchant_seller_account (
+    id,
+    merchant_id,
+    seller_reference,
     display_name,
     active
 )
-VALUES
-    ('CARD', 'Payment card', true),
-    ('QR_CODE', 'QR code', true);
+VALUES (
+           'seller-test-002',
+           'MER-TEST0001',
+           'SELLER_TWO',
+           'Seller Two',
+           false
+       );
+
+INSERT INTO payment_plugin (
+    code,
+    display_name,
+    base_url,
+    active_by_admin,
+    active,
+    encrypted_plugin_secret
+)
+VALUES (
+           'MOCK_PLUGIN',
+           'Mock Payment Plugin',
+           NULL,
+           true,
+           false,
+           'LluElvujwjREXdPz1Z0ClqafYEEdUbzE8R1MqTRB0mbxix6R611K5wx/OGLh/vi5RuPImKjKjwYTgMtTx8FIbegjh38Aew=='
+       );

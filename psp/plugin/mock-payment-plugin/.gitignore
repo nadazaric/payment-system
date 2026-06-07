@@ -1,0 +1,48 @@
+# Python virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Python build/distribution
+build/
+dist/
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
+
+# Environment and local configuration
+.env
+
+# IDE/editor files
+.idea/
+.vscode/
+*.iml
+
+# Logs
+logs/
+*.log
+
+# Test/coverage/cache
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Local runtime files
+*.pid
+*.tmp
+*.bak
+
+# Local plugin storage
+plugin-configurations.json

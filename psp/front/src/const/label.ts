@@ -35,8 +35,6 @@ export const NAVBAR_LABELS = {
 };
 
 export const MERCHANT_LABELS = {
-    title: "Merchant administration",
-    subtitle: "Manage shop profile, API credentials, sellers and payment methods.",
     setupRequired: "Setup required",
     active: "Active",
     inactive: "Inactive",
@@ -48,13 +46,16 @@ export const MERCHANT_LABELS = {
     edit: "Edit",
     configure: "Configure",
     addSeller: "Add seller",
+
     profileTitle: "Shop profile",
     profileDescription: "Basic shop settings used during payment processing.",
+
     apiKeyTitle: "API credentials",
     apiKeyDescription: "Merchant password is hidden and can only be regenerated.",
     regenerateApiKey: "Regenerate API key",
     regenerateWarning: "The old merchant password will stop working. The new value will be shown only once.",
     newApiKeyTitle: "New merchant password",
+
     merchantId: "Merchant ID",
     merchantName: "Shop name",
     currency: "Currency",
@@ -64,25 +65,74 @@ export const MERCHANT_LABELS = {
     adminUsername: "Admin username",
     adminName: "Admin name",
     status: "Status",
+
     sellersTitle: "Seller accounts",
     sellersDescription: "Configure sellers and payment methods available for each seller.",
     sellerReference: "Seller reference",
     displayName: "Display name",
     paymentMethods: "Payment methods",
     actions: "Actions",
-    noPaymentMethods: "No payment methods configured",
-    noSellers: "No sellers found.",
+    noPaymentMethodsConfigured: "No payment methods configured",
+
     createSellerTitle: "Add seller",
     editSellerTitle: "Edit seller",
     editProfileTitle: "Edit shop profile",
-    configurePaymentMethodsTitle: "Configure payment methods",
-    configurePaymentMethodsDescription: "Select at least one payment method for this seller.",
+
     sellerCreated: "Seller account created.",
     sellerUpdated: "Seller account updated.",
-    paymentMethodsUpdated: "Payment methods updated.",
     profileUpdated: "Merchant profile updated.",
     apiKeyRegenerated: "Merchant password regenerated.",
-    genericError: "Something went wrong. Please try again.",
     savedSuccessfully: "Changes saved successfully.",
+    saveFailed: "Action failed. Please check the entered data.",
+
+    configurePaymentMethodsTitle: "Payment method configuration",
+    configurePaymentMethod: "Configure",
+    reconfigurePaymentMethod: "Reconfigure",
+    removePaymentMethod: "Remove",
+
+    paymentMethodConfigurationTitle: "Payment method configuration",
+    reconfigurationRequired: "Reconfiguration required",
+    noConfigurationFields: "No configuration fields available for this payment method.",
+    missingConfigurationValues: "Please fill in all configuration values.",
+    back: "Back",
+    selectedForSeller: "Selected for this seller",
+};
+
+export const SUPER_ADMIN_LABELS = {
+    pluginsTitle: "Payment plugins",
+    createPlugin: "Create plugin",
+    pluginCode: "Plugin code",
+    displayName: "Display name",
+    baseUrl: "Base URL",
+    adminStatus: "Admin status",
+    operationalStatus: "Operational status",
+    actions: "Actions",
+
+    enabledByAdmin: "Enabled by admin",
+    disabledByAdmin: "Disabled by admin",
+    active: "Active",
+    inactive: "Inactive",
+    noBaseUrl: "Not synchronized",
+    noPlugins: "No plugins found.",
+
+    createPluginTitle: "Create expected plugin",
+    createPluginDescription: "After creation, plugin secret will be shown only once.",
+
+    pluginSecretTitle: "Plugin secret generated",
+    pluginSecretDescription: "Save this value now. It will not be shown again.",
+    pluginSecret: "Plugin secret",
+
+    copy: "Copy",
+    copied: "Copied to clipboard.",
+    create: "Create",
+    creating: "Creating...",
+    cancel: "Cancel",
+    close: "Close",
+    enable: "Enable",
+    disable: "Disable",
+
+    loadingError: "Failed to load plugins.",
+    pluginCreated: "Expected plugin created.",
+    pluginStatusUpdated: "Plugin status updated.",
     saveFailed: "Action failed. Please check the entered data.",
 };
