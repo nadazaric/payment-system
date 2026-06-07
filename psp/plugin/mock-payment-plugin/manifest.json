@@ -11,6 +11,10 @@
         {
           "fieldName": "mockApiKey",
           "fieldType": "PASSWORD"
+        },
+        {
+          "fieldName": "mockText",
+          "fieldType": "TEXT"
         }
       ]
     }

@@ -1,5 +1,7 @@
 import axiosInstance from "@/api/axiosInstance";
 import {
+    ConfigureSellerPaymentMethodRequest,
+    ConfigureSellerPaymentMethodResponse,
     CreateMerchantSellerAccountRequest,
     MerchantProfile,
     MerchantRegistrationRequest,
@@ -57,6 +59,28 @@ export const updateMerchantSeller = async (
     await axiosInstance.put(
         `/api/merchant/sellers/${sellerId}`,
         request
+    );
+};
+
+export const configureSellerPaymentMethod = async (
+    sellerId: string,
+    paymentMethodCode: string,
+    request: ConfigureSellerPaymentMethodRequest
+): Promise<ConfigureSellerPaymentMethodResponse> => {
+    const response = await axiosInstance.post<ConfigureSellerPaymentMethodResponse>(
+        `/api/merchant/sellers/${sellerId}/payment-methods/${paymentMethodCode}/configuration`,
+        request
+    );
+
+    return response.data;
+};
+
+export const removeSellerPaymentMethod = async (
+    sellerId: string,
+    paymentMethodCode: string
+): Promise<void> => {
+    await axiosInstance.delete(
+        `/api/merchant/sellers/${sellerId}/payment-methods/${paymentMethodCode}`
     );
 };
 

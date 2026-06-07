@@ -131,6 +131,28 @@ const theme = createTheme({
                 },
             },
         },
+        MuiDialogTitle: {
+            styleOverrides: {
+                root: {
+                    fontWeight: 600,
+                    padding: "24px 32px 8px"
+                }
+            }
+        },
+        MuiDialogContent: {
+            styleOverrides: {
+                root: {
+                    padding: "8px 32px 16px"
+                }
+            }
+        },
+        MuiDialogActions: {
+            styleOverrides: {
+                root: {
+                    padding: "8px 32px 24px"
+                }
+            }
+        }
     },
 });
 

@@ -58,11 +58,6 @@ public class MerchantSellerAccount {
         this.active = false;
     }
 
-    public boolean hasAvailablePaymentMethods() {
-        return this.paymentMethods.stream()
-                .anyMatch(MerchantSellerPaymentMethod::isAvailableForPayments);
-    }
-
     @PrePersist
     protected void onCreate() {
         if (this.id == null) {

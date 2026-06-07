@@ -41,12 +41,19 @@ export type UpdateMerchantProfileRequest = {
     errorUrl: string;
 };
 
+export type SellerPaymentMethod = {
+    code: string;
+    displayName: string;
+    pluginCode: string;
+    configurationRequired: boolean;
+};
+
 export type MerchantSellerAccount = {
     id: string;
     sellerReference: string;
     displayName: string;
     active: boolean;
-    availablePaymentMethods: PaymentMethod[];
+    paymentMethods: SellerPaymentMethod[];
 };
 
 export type CreateMerchantSellerAccountRequest = {
@@ -59,8 +66,14 @@ export type UpdateMerchantSellerAccountRequest = {
     displayName: string;
 };
 
-export type UpdateSellerPaymentMethodsRequest = {
-    paymentMethodCodes: string[];
+export type ConfigureSellerPaymentMethodRequest = {
+    values: Record<string, string>;
+};
+
+export type ConfigureSellerPaymentMethodResponse = {
+    paymentMethodCode: string;
+    configured: boolean;
+    message: string;
 };
 
 export type RegenerateMerchantPasswordResponse = {

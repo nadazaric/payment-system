@@ -4,12 +4,12 @@ import { useEffect, useState } from "react";
 import {
     Alert,
     Box,
-    CircularProgress,
-    Chip,
-    Stack,
-    Typography
+    CircularProgress
 } from "@mui/material";
-import { getMerchantProfile, getMerchantSellers } from "@/api/merchantApi";
+import {
+    getMerchantProfile,
+    getMerchantSellers
+} from "@/api/merchantApi";
 import { getPaymentMethods } from "@/api/paymentMethodApi";
 import { useNotification } from "@/components/common/NotificationProvider";
 import ApiKeyCard from "@/components/merchant/ApiKeyCard";
@@ -21,7 +21,10 @@ import SellerDialog from "@/components/merchant/SellerDialog";
 import SellersTable from "@/components/merchant/SellersTable";
 import { Severity } from "@/const/enums";
 import { MERCHANT_LABELS } from "@/const/label";
-import { MerchantProfile, MerchantSellerAccount } from "@/types/merchant";
+import {
+    MerchantProfile,
+    MerchantSellerAccount
+} from "@/types/merchant";
 import { PaymentMethod } from "@/types/paymentMethod";
 
 export default function MerchantAdminPage() {
@@ -39,47 +42,56 @@ export default function MerchantAdminPage() {
     const [paymentMethodsDialogOpen, setPaymentMethodsDialogOpen] = useState(false);
     const [apiKeyDialogOpen, setApiKeyDialogOpen] = useState(false);
 
-    const loadData = async () => {
-        setError("");
+    const refreshData = async () => {
+        try {
+            const [profileData, sellersData, paymentMethodsData] = await Promise.all([
+                getMerchantProfile(),
+                getMerchantSellers(),
+                getPaymentMethods(),
+            ]);
 
-        const [profileData, sellersData, paymentMethodsData] = await Promise.all([
-            getMerchantProfile(),
-            getMerchantSellers(),
-            getPaymentMethods(),
-        ]);
-
-        setProfile(profileData);
-        setSellers(sellersData);
-        setPaymentMethods(paymentMethodsData);
+            setProfile(profileData);
+            setSellers(sellersData);
+            setPaymentMethods(paymentMethodsData);
+            setError("");
+        } catch {
+            showNotification(MERCHANT_LABELS.loadingError, Severity.Error);
+        }
     };
 
     useEffect(() => {
         let ignore = false;
 
-        loadData()
-            .catch(() => {
+        const fetchInitialData = async () => {
+            try {
+                const [profileData, sellersData, paymentMethodsData] = await Promise.all([
+                    getMerchantProfile(),
+                    getMerchantSellers(),
+                    getPaymentMethods(),
+                ]);
+
+                if (!ignore) {
+                    setProfile(profileData);
+                    setSellers(sellersData);
+                    setPaymentMethods(paymentMethodsData);
+                }
+            } catch {
                 if (!ignore) {
                     setError(MERCHANT_LABELS.loadingError);
                 }
-            })
-            .finally(() => {
+            } finally {
                 if (!ignore) {
                     setLoading(false);
                 }
-            });
+            }
+        };
+
+        void fetchInitialData();
 
         return () => {
             ignore = true;
         };
     }, []);
-
-    const refreshData = async () => {
-        try {
-            await loadData();
-        } catch {
-            showNotification(MERCHANT_LABELS.loadingError, Severity.Error);
-        }
-    };
 
     const handleProfileSaved = async () => {
         setProfileDialogOpen(false);
@@ -101,7 +113,7 @@ export default function MerchantAdminPage() {
         setPaymentMethodsDialogOpen(false);
         setSelectedSeller(null);
         await refreshData();
-        showNotification(MERCHANT_LABELS.paymentMethodsUpdated, Severity.Success);
+        showNotification(MERCHANT_LABELS.savedSuccessfully, Severity.Success);
     };
 
     const openAddSellerDialog = () => {
@@ -194,4 +206,5 @@ export default function MerchantAdminPage() {
                 onClose={() => setApiKeyDialogOpen(false)} />
         </Box>
     );
+    
 }
