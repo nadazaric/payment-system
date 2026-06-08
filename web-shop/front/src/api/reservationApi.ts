@@ -1,15 +1,16 @@
 import axiosInstance from "@/api/axiosInstance";
-import { CreateReservationRequest, ReservationDetails, ReservationHistory, UnavailablePeriod } from "@/types/reservation";
+import { CreateReservationRequest, CreateReservationResponse, ReservationHistory, UnavailablePeriod } from "@/types/reservation";
 
-const ROOT_PATH = "/reservations"
+const ROOT_PATH = "/reservations";
+
 export const getUnavailablePeriods = async (vehicleId: number): Promise<UnavailablePeriod[]> => {
     const response = await axiosInstance.get<UnavailablePeriod[]>(`${ROOT_PATH}/unavailable-periods/vehicles/${vehicleId}`);
 
     return response.data;
 };
 
-export const createReservation = async (request: CreateReservationRequest): Promise<ReservationDetails> => {
-    const response = await axiosInstance.post<ReservationDetails>(`${ROOT_PATH}`, request);
+export const createReservation = async (request: CreateReservationRequest): Promise<CreateReservationResponse> => {
+    const response = await axiosInstance.post<CreateReservationResponse>(`${ROOT_PATH}`, request);
 
     return response.data;
 };

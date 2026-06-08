@@ -31,7 +31,7 @@ VALUES (
            'http://localhost:3000/payment/success',
            'http://localhost:3000/payment/failed',
            'http://localhost:3000/payment/error',
-           false,
+           true,
            CURRENT_TIMESTAMP,
            CURRENT_TIMESTAMP
        );
@@ -65,7 +65,7 @@ VALUES (
            'MER-TEST0001',
            'MAIN_SELLER',
            'Main seller',
-           false
+           true
        );
 
 INSERT INTO payment_plugin (
