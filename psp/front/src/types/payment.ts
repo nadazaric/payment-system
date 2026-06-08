@@ -1,12 +1,16 @@
-export enum PaymentStatus {
-    Created = "CREATED",
-    Initiated = "INITIATED",
-    Success = "SUCCESS",
-    Failed = "FAILED",
-    Error = "ERROR",
-    Expired = "EXPIRED",
-    Cancelled = "CANCELLED",
-}
+export type PaymentStatus =
+    | "CREATED"
+    | "INITIATED"
+    | "SUCCESS"
+    | "FAILED"
+    | "ERROR"
+    | "EXPIRED"
+    | "CANCELLED";
+
+export type PaymentMethodOption = {
+    code: string;
+    displayName: string;
+};
 
 export type PaymentTransaction = {
     paymentId: string;
@@ -16,4 +20,5 @@ export type PaymentTransaction = {
     amount: number;
     currency: string;
     status: PaymentStatus;
+    paymentMethods: PaymentMethodOption[];
 };

@@ -28,9 +28,9 @@ VALUES (
            'Vehicle Rental Agency',
            '$2y$10$VVUV..VIlKxpt6Gf5kQI4ezeohwiA7x6.WMufSFqJkUDyKiKtHYuO',
            'EUR',
-           'http://localhost:3000/payment/success',
-           'http://localhost:3000/payment/failed',
-           'http://localhost:3000/payment/error',
+           'http://localhost:3001/payment/success',
+           'http://localhost:3001/payment/failed',
+           'http://localhost:3001/payment/error',
            true,
            CURRENT_TIMESTAMP,
            CURRENT_TIMESTAMP
@@ -79,8 +79,64 @@ INSERT INTO payment_plugin (
 VALUES (
            'MOCK_PLUGIN',
            'Mock Payment Plugin',
-           NULL,
+           'http://localhost:8085',
            true,
-           false,
+           true,
            'LluElvujwjREXdPz1Z0ClqafYEEdUbzE8R1MqTRB0mbxix6R611K5wx/OGLh/vi5RuPImKjKjwYTgMtTx8FIbegjh38Aew=='
+       );
+
+INSERT INTO payment_method (
+    code,
+    display_name,
+    active,
+    plugin_code,
+    config_schema_json
+)
+VALUES (
+           'MOCK_PAY',
+           'Mock payment',
+           true,
+           'MOCK_PLUGIN',
+           '[{"fieldName":"mockApiKey","fieldType":"PASSWORD"}]'
+       );
+
+INSERT INTO payment_method (
+    code,
+    display_name,
+    active,
+    plugin_code,
+    config_schema_json
+)
+VALUES (
+           'MOCK_PAY_TWO',
+           'Mock payment 2',
+           true,
+           'MOCK_PLUGIN',
+           '[{"fieldName":"mockApiKey","fieldType":"PASSWORD"},{"fieldName":"mockText","fieldType":"TEXT"},{"fieldName":"mockNumber","fieldType":"NUMBER"}]'
+       );
+
+INSERT INTO merchant_seller_payment_method (
+    id,
+    seller_account_id,
+    payment_method_code,
+    configured
+)
+VALUES (
+           'seller-method-test-001',
+           'seller-test-001',
+           'MOCK_PAY',
+           true
+       );
+
+INSERT INTO merchant_seller_payment_method (
+    id,
+    seller_account_id,
+    payment_method_code,
+    configured
+)
+VALUES (
+           'seller-method-test-002',
+           'seller-test-001',
+           'MOCK_PAY_TWO',
+           true
        );

@@ -4,23 +4,87 @@ import { useEffect, useState } from "react";
 import {
     Alert,
     Box,
+    Button,
     Card,
     CardContent,
     CircularProgress,
+    Divider,
+    Snackbar,
     Stack,
-    Typography
+    Typography,
+    useMediaQuery,
+    useTheme
 } from "@mui/material";
 import { getPayment } from "@/api/paymentApi";
-import { PaymentTransaction } from "@/types/payment";
+import { PAYMENT_LABELS } from "@/const/label";
+import {
+    PaymentMethodOption,
+    PaymentTransaction
+} from "@/types/payment";
 
 type PaymentPageProps = {
     paymentId: string;
 };
 
-export default function PaymentPage({ paymentId }: PaymentPageProps) {
+type InfoItemProps = {
+    label: string;
+    value: string;
+    highlight?: boolean;
+};
+
+function InfoItem({
+    label,
+    value,
+    highlight = false
+}: InfoItemProps) {
+    return (
+        <Box
+            sx={{
+                flex: 1,
+                minWidth: 0,
+                px: {
+                    xs: 0,
+                    sm: 3
+                },
+                py: {
+                    xs: 1.5,
+                    sm: 0.5
+                }
+            }}>
+            <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{
+                    display: "block",
+                    mb: 0.75,
+                    fontWeight: 600,
+                    letterSpacing: "0.02em"
+                }}>
+                {label}
+            </Typography>
+
+            <Typography
+                sx={{
+                    fontWeight: highlight ? 700 : 600,
+                    fontSize: highlight ? "1.1rem" : "1rem"
+                }}>
+                {value}
+            </Typography>
+        </Box>
+    );
+}
+
+export default function PaymentPage({
+    paymentId
+}: PaymentPageProps) {
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
     const [payment, setPayment] = useState<PaymentTransaction | null>(null);
+    const [selectedMethodCode, setSelectedMethodCode] = useState("");
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
+    const [messageOpen, setMessageOpen] = useState(false);
 
     useEffect(() => {
         let ignore = false;
@@ -34,7 +98,7 @@ export default function PaymentPage({ paymentId }: PaymentPageProps) {
                 }
             } catch {
                 if (!ignore) {
-                    setError("Failed to load payment.");
+                    setError(PAYMENT_LABELS.loadingError);
                 }
             } finally {
                 if (!ignore) {
@@ -49,6 +113,11 @@ export default function PaymentPage({ paymentId }: PaymentPageProps) {
             ignore = true;
         };
     }, [paymentId]);
+
+    const handleMethodSelect = (paymentMethod: PaymentMethodOption) => {
+        setSelectedMethodCode(paymentMethod.code);
+        setMessageOpen(true);
+    };
 
     if (loading) {
         return (
@@ -77,7 +146,7 @@ export default function PaymentPage({ paymentId }: PaymentPageProps) {
                     p: 2
                 }}>
                 <Alert severity="error">
-                    {error || "Payment not found."}
+                    {error || PAYMENT_LABELS.notFound}
                 </Alert>
             </Box>
         );
@@ -91,45 +160,142 @@ export default function PaymentPage({ paymentId }: PaymentPageProps) {
                 alignItems: "center",
                 justifyContent: "center",
                 bgcolor: "background.default",
-                p: 2
+                p: {
+                    xs: 2,
+                    sm: 3
+                }
             }}>
-            <Card sx={{ width: "100%", maxWidth: 560 }}>
-                <CardContent sx={{ p: 4 }}>
-                    <Typography
-                        variant="h4"
-                        sx={{
-                            fontWeight: 700,
-                            mb: 1
-                        }}>
-                        Payment
-                    </Typography>
+            <Card
+                sx={{
+                    width: "100%",
+                    maxWidth: 760
+                }}>
+                <CardContent
+                    sx={{
+                        p: {
+                            xs: 3,
+                            sm: 4
+                        }
+                    }}>
+                    <Stack spacing={4}>
+                        <Box>
+                            <Typography
+                                variant="h4"
+                                sx={{
+                                    fontWeight: 800,
+                                    mb: 1
+                                }}>
+                                {PAYMENT_LABELS.title}
+                            </Typography>
 
-                    <Typography
-                        variant="body2"
-                        color="text.secondary"
-                        sx={{ mb: 3 }}>
-                        Payment method selection will be implemented in the next step.
-                    </Typography>
+                            <Typography
+                                variant="body1"
+                                color="text.secondary">
+                                {PAYMENT_LABELS.subtitle}
+                            </Typography>
+                        </Box>
 
-                    <Stack spacing={1.5}>
-                        <Typography>
-                            <strong>Merchant:</strong> {payment.merchantName}
-                        </Typography>
+                        <Stack
+                            direction={{
+                                xs: "column",
+                                sm: "row"
+                            }}
+                            spacing={0}
+                            sx={{
+                                mx: {
+                                    xs: 0,
+                                    sm: -3
+                                }
+                            }}
+                            divider={
+                                <Divider
+                                    flexItem
+                                    orientation={isMobile ? "horizontal" : "vertical"} />
+                            }>
+                            <InfoItem
+                                label={PAYMENT_LABELS.merchant}
+                                value={payment.merchantName} />
 
-                        <Typography>
-                            <strong>Seller:</strong> {payment.sellerDisplayName}
-                        </Typography>
+                            <InfoItem
+                                label={PAYMENT_LABELS.seller}
+                                value={payment.sellerDisplayName} />
 
-                        <Typography>
-                            <strong>Amount:</strong> {payment.amount} {payment.currency}
-                        </Typography>
+                            <InfoItem
+                                label={PAYMENT_LABELS.amount}
+                                value={`${payment.amount} ${payment.currency}`}
+                                highlight />
+                        </Stack>
 
-                        <Typography>
-                            <strong>Status:</strong> {payment.status}
-                        </Typography>
+                        <Box>
+                            {payment.paymentMethods.length === 0 ? (
+                                <Alert severity="warning">
+                                    {PAYMENT_LABELS.noPaymentMethods}
+                                </Alert>
+                            ) : (
+                                <Stack spacing={1.5}>
+                                    {payment.paymentMethods.map((paymentMethod) => {
+                                        const selected = selectedMethodCode === paymentMethod.code;
+
+                                        return (
+                                            <Box
+                                                key={paymentMethod.code}
+                                                sx={{
+                                                    border: "1px solid",
+                                                    borderColor: selected ? "primary.main" : "divider",
+                                                    bgcolor: selected ? "rgba(99, 91, 255, 0.04)" : "background.paper",
+                                                    borderRadius: 1,
+                                                    px: 2.5,
+                                                    py: 2,
+                                                    transition: "all 0.2s ease"
+                                                }}>
+                                                <Box
+                                                    sx={{
+                                                        display: "flex",
+                                                        alignItems: {
+                                                            xs: "flex-start",
+                                                            sm: "center"
+                                                        },
+                                                        justifyContent: "space-between",
+                                                        flexDirection: {
+                                                            xs: "column",
+                                                            sm: "row"
+                                                        },
+                                                        gap: 1.5
+                                                    }}>
+                                                    <Typography
+                                                        sx={{
+                                                            fontWeight: 700,
+                                                            fontSize: "1.05rem"
+                                                        }}>
+                                                        {paymentMethod.displayName}
+                                                    </Typography>
+
+                                                    <Button
+                                                        type="button"
+                                                        variant={selected ? "contained" : "outlined"}
+                                                        onClick={() => handleMethodSelect(paymentMethod)}
+                                                        sx={{
+                                                            minWidth: 132,
+                                                            px: 3
+                                                        }}>
+                                                        {PAYMENT_LABELS.continue}
+                                                    </Button>
+                                                </Box>
+                                            </Box>
+                                        );
+                                    })}
+                                </Stack>
+                            )}
+                        </Box>
                     </Stack>
                 </CardContent>
             </Card>
+
+            <Snackbar
+                open={messageOpen}
+                autoHideDuration={3000}
+                onClose={() => setMessageOpen(false)}
+                message={PAYMENT_LABELS.methodSelected} />
         </Box>
     );
 }

@@ -3,6 +3,7 @@ package com.sep.psp.back.feature_payment.dto;
 import com.sep.psp.back.feature_payment.enumeration.PaymentStatus;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 public record PaymentTransactionResponse(
         String paymentId,
@@ -11,6 +12,7 @@ public record PaymentTransactionResponse(
         String sellerDisplayName,
         BigDecimal amount,
         String currency,
-        PaymentStatus status
+        PaymentStatus status,
+        List<PaymentOptionResponse> paymentMethods
 ) {
 }

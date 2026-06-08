@@ -1,17 +1,45 @@
 package com.sep.psp.back.feature_payment.mapper;
 
+import com.sep.psp.back.feature_merchant.model.MerchantSellerPaymentMethod;
+import com.sep.psp.back.feature_payment.dto.PaymentOptionResponse;
 import com.sep.psp.back.feature_payment.dto.PaymentTransactionResponse;
 import com.sep.psp.back.feature_payment.model.PaymentTransaction;
 import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
+
+import java.util.List;
 
 @Mapper(componentModel = "spring")
 public interface PaymentTransactionMapper {
 
-    @Mapping(source = "id", target = "paymentId")
-    @Mapping(source = "merchant.merchantName", target = "merchantName")
-    @Mapping(source = "sellerAccount.sellerReference", target = "sellerReference")
-    @Mapping(source = "sellerAccount.displayName", target = "sellerDisplayName")
-    PaymentTransactionResponse toResponse(PaymentTransaction paymentTransaction);
+    default PaymentTransactionResponse toResponse(PaymentTransaction paymentTransaction) {
+        return new PaymentTransactionResponse(
+                paymentTransaction.getId(),
+                paymentTransaction.getMerchant().getMerchantName(),
+                paymentTransaction.getSellerAccount().getSellerReference(),
+                paymentTransaction.getSellerAccount().getDisplayName(),
+                paymentTransaction.getAmount(),
+                paymentTransaction.getCurrency(),
+                paymentTransaction.getStatus(),
+                toPaymentOptionResponseList(paymentTransaction.getSellerAccount().getPaymentMethods())
+        );
+    }
+
+    default List<PaymentOptionResponse> toPaymentOptionResponseList(
+            List<MerchantSellerPaymentMethod> sellerPaymentMethods
+    ) {
+        return sellerPaymentMethods.stream()
+                .filter(MerchantSellerPaymentMethod::isAvailableForPayments)
+                .map(this::toPaymentOptionResponse)
+                .toList();
+    }
+
+    default PaymentOptionResponse toPaymentOptionResponse(
+            MerchantSellerPaymentMethod sellerPaymentMethod
+    ) {
+        return new PaymentOptionResponse(
+                sellerPaymentMethod.getPaymentMethod().getCode(),
+                sellerPaymentMethod.getPaymentMethod().getDisplayName()
+        );
+    }
 
 }

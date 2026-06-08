@@ -109,11 +109,7 @@ public class ReservationServiceImpl implements ReservationService {
         Optional<User> userOptional = userRepository.findByUsername(username);
         Optional<InsurancePackage> insurancePackageOptional = insurancePackageRepository.findById(createReservationDTO.insurancePackageId());
 
-        if (
-                vehicleOptional.isEmpty()
-                        || userOptional.isEmpty()
-                        || insurancePackageOptional.isEmpty()
-        ) {
+        if (vehicleOptional.isEmpty() || userOptional.isEmpty() || insurancePackageOptional.isEmpty()) {
             return Optional.empty();
         }
 
