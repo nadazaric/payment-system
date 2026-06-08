@@ -53,6 +53,8 @@ public class SecurityConfiguration {
                         .requestMatchers("/api/auth/login").permitAll()
                         .requestMatchers("/api/merchant/register").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/plugins/sync").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/payments").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/payments/**").permitAll()
                         .requestMatchers("/api/super-admin/**").hasAuthority(UserRole.SUPER_ADMIN.authority())
                         .anyRequest().authenticated() )
                 .csrf(AbstractHttpConfigurer::disable)

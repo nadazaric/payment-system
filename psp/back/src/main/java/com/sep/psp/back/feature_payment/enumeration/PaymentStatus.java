@@ -1,4 +1,4 @@
-package com.sep.web_shop.back.feature_reservation.enumeration;
+package com.sep.psp.back.feature_payment.enumeration;
 
 public enum PaymentStatus {
     CREATED,

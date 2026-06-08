@@ -41,19 +41,19 @@ INSERT INTO VEHICLE(name, description, type, price_per_day, image_path)
 VALUES ('Mercedes-Benz Vito', 'Large van with plenty of space, ideal for group travel or extra luggage.', 'VAN', 95.00, '/images/vehicles/4.jpg');
 
 INSERT INTO RESERVATION(vehicle_id, user_id, insurance_package_id, start_date, end_date, total_price, payment_status)
-VALUES (1, 3, 1, '2026-05-01', '2026-05-05', 180.00, 'PAID');
+VALUES (1, 3, 1, '2026-05-01', '2026-05-05', 180.00, 'SUCCESS');
 
 INSERT INTO RESERVATION(vehicle_id, user_id, insurance_package_id, start_date, end_date, total_price, payment_status)
-VALUES (2, 2, 1, '2026-05-10', '2026-05-14', 140.00, 'PAID');
+VALUES (2, 2, 1, '2026-05-10', '2026-05-14', 140.00, 'SUCCESS');
 
 INSERT INTO RESERVATION(vehicle_id, user_id, insurance_package_id, start_date, end_date, total_price, payment_status)
-VALUES (3, 3, 1, '2026-06-01', '2026-06-05', 372.00, 'PAID');
+VALUES (3, 3, 1, '2026-06-01', '2026-06-05', 372.00, 'SUCCESS');
 
 INSERT INTO RESERVATION(vehicle_id, user_id, insurance_package_id, start_date, end_date, total_price, payment_status)
-VALUES (4, 2, 1, '2026-06-10', '2026-06-13', 303.00, 'PENDING');
+VALUES (4, 2, 1, '2026-06-10', '2026-06-13', 303.00, 'CREATED');
 
 INSERT INTO RESERVATION(vehicle_id, user_id, insurance_package_id, start_date, end_date, total_price, payment_status)
-VALUES (1, 2, 1, '2026-05-11', '2026-05-15', 180.00, 'PENDING');
+VALUES (1, 2, 1, '2026-05-11', '2026-05-15', 180.00, 'CREATED');
 
 INSERT INTO RESERVATION(vehicle_id, user_id, insurance_package_id, start_date, end_date, total_price, payment_status)
 VALUES (2, 2, 1, '2026-05-02', '2026-05-06', 140.00, 'FAILED');
@@ -62,10 +62,10 @@ INSERT INTO RESERVATION(vehicle_id, user_id, insurance_package_id, start_date, e
 VALUES (3, 2, 1, '2026-06-20', '2026-06-24', 340.00, 'FAILED');
 
 INSERT INTO RESERVATION(vehicle_id, user_id, insurance_package_id, start_date, end_date, total_price, payment_status)
-VALUES (4, 2, 2, '2026-04-20', '2026-04-25', 525.00, 'PAID');
+VALUES (4, 2, 2, '2026-04-20', '2026-04-25', 525.00, 'SUCCESS');
 
 INSERT INTO RESERVATION(vehicle_id, user_id, insurance_package_id, start_date, end_date, total_price, payment_status)
-VALUES (1, 2, 3, '2026-07-01', '2026-07-04', 216.00, 'PAID');
+VALUES (1, 2, 3, '2026-07-01', '2026-07-04', 216.00, 'SUCCESS');
 
 INSERT INTO RESERVATION_ADDITIONAL_SERVICES(reservation_id, additional_service_id)
 VALUES (3, 4);

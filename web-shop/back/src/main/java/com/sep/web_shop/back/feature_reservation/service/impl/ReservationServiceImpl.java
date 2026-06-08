@@ -2,8 +2,11 @@ package com.sep.web_shop.back.feature_reservation.service.impl;
 
 import com.sep.web_shop.back.feature_auth.model.User;
 import com.sep.web_shop.back.feature_auth.repository.UserRepository;
+import com.sep.web_shop.back.feature_reservation.client.PspPaymentClient;
 import com.sep.web_shop.back.feature_reservation.dto.CreateReservationDTO;
-import com.sep.web_shop.back.feature_reservation.dto.ReservationDetailsDTO;
+import com.sep.web_shop.back.feature_reservation.dto.CreateReservationResponse;
+import com.sep.web_shop.back.feature_reservation.dto.PspCreatePaymentRequest;
+import com.sep.web_shop.back.feature_reservation.dto.PspCreatePaymentResponse;
 import com.sep.web_shop.back.feature_reservation.dto.ReservationHistoryDTO;
 import com.sep.web_shop.back.feature_reservation.dto.UnavailablePeriodDTO;
 import com.sep.web_shop.back.feature_reservation.enumeration.PaymentStatus;
@@ -19,25 +22,56 @@ import com.sep.web_shop.back.feature_vehicle.repository.InsurancePackageReposito
 import com.sep.web_shop.back.feature_vehicle.repository.VehicleRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestClientException;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 public class ReservationServiceImpl implements ReservationService {
 
-    @Autowired ReservationRepository reservationRepository;
-    @Autowired VehicleRepository vehicleRepository;
-    @Autowired UserRepository userRepository;
-    @Autowired InsurancePackageRepository insurancePackageRepository;
-    @Autowired AdditionalServiceRepository additionalServiceRepository;
-    @Autowired ReservationMapper reservationMapper;
+    @Autowired
+    ReservationRepository reservationRepository;
+
+    @Autowired
+    VehicleRepository vehicleRepository;
+
+    @Autowired
+    UserRepository userRepository;
+
+    @Autowired
+    InsurancePackageRepository insurancePackageRepository;
+
+    @Autowired
+    AdditionalServiceRepository additionalServiceRepository;
+
+    @Autowired
+    ReservationMapper reservationMapper;
+
+    @Autowired
+    PspPaymentClient pspPaymentClient;
+
+    @Value("${app.psp.merchant-id}")
+    String pspMerchantId;
+
+    @Value("${app.psp.merchant-password}")
+    String pspMerchantPassword;
+
+    @Value("${app.psp.seller-reference}")
+    String pspSellerReference;
+
+    @Value("${app.psp.currency}")
+    String pspCurrency;
 
     @Override
     public List<UnavailablePeriodDTO> getUnavailablePeriods(Long vehicleId) {
@@ -47,7 +81,8 @@ public class ReservationServiceImpl implements ReservationService {
     }
 
     @Override
-    public Optional<ReservationDetailsDTO> createReservation(
+    @Transactional
+    public Optional<CreateReservationResponse> createReservation(
             CreateReservationDTO createReservationDTO,
             String username
     ) {
@@ -98,19 +133,28 @@ public class ReservationServiceImpl implements ReservationService {
             return Optional.empty();
         }
 
-        long numberOfDays = ChronoUnit.DAYS.between(createReservationDTO.startDate(), createReservationDTO.endDate()) + 1;
+        BigDecimal totalPrice = calculateTotalPrice(
+                createReservationDTO,
+                vehicle,
+                insurancePackage,
+                additionalServices
+        );
 
-        BigDecimal additionalServicesPricePerDay = additionalServices.stream()
-                .map(AdditionalService::getPricePerDay)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        String merchantOrderId = buildMerchantOrderId();
 
-        BigDecimal totalPerDay = vehicle.getPricePerDay()
-                .add(insurancePackage.getPricePerDay())
-                .add(additionalServicesPricePerDay);
+        PspCreatePaymentResponse pspResponse;
 
-        BigDecimal totalPrice = totalPerDay.multiply(BigDecimal.valueOf(numberOfDays));
+        try {
+            pspResponse = createPspPayment(
+                    totalPrice,
+                    merchantOrderId
+            );
+        } catch (RestClientException exception) {
+            return Optional.empty();
+        }
 
         Reservation reservation = new Reservation();
+
         reservation.setVehicle(vehicle);
         reservation.setUser(user);
         reservation.setInsurancePackage(insurancePackage);
@@ -118,11 +162,18 @@ public class ReservationServiceImpl implements ReservationService {
         reservation.setStartDate(createReservationDTO.startDate());
         reservation.setEndDate(createReservationDTO.endDate());
         reservation.setTotalPrice(totalPrice);
-        reservation.setPaymentStatus(PaymentStatus.PENDING);
+        reservation.setPaymentStatus(PaymentStatus.INITIATED);
+        reservation.setMerchantOrderId(merchantOrderId);
+        reservation.setPspPaymentId(pspResponse.paymentId());
+        reservation.setPaymentRedirectUrl(pspResponse.redirectUrl());
 
         Reservation savedReservation = reservationRepository.save(reservation);
 
-        return Optional.of(reservationMapper.toDetailsDTO(savedReservation));
+        return Optional.of(new CreateReservationResponse(
+                savedReservation.getId(),
+                savedReservation.getPaymentRedirectUrl(),
+                savedReservation.getPaymentStatus()
+        ));
     }
 
     @Override
@@ -137,6 +188,49 @@ public class ReservationServiceImpl implements ReservationService {
         return reservationMapper.toHistoryDtoList(
                 reservationRepository.findByVehicleIdOrderByStartDateDesc(vehicleId)
         );
+    }
+
+    private BigDecimal calculateTotalPrice(
+            CreateReservationDTO createReservationDTO,
+            Vehicle vehicle,
+            InsurancePackage insurancePackage,
+            Set<AdditionalService> additionalServices
+    ) {
+        long numberOfDays = ChronoUnit.DAYS.between(
+                createReservationDTO.startDate(),
+                createReservationDTO.endDate()
+        ) + 1;
+
+        BigDecimal additionalServicesPricePerDay = additionalServices.stream()
+                .map(AdditionalService::getPricePerDay)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal totalPerDay = vehicle.getPricePerDay()
+                .add(insurancePackage.getPricePerDay())
+                .add(additionalServicesPricePerDay);
+
+        return totalPerDay.multiply(BigDecimal.valueOf(numberOfDays));
+    }
+
+    private PspCreatePaymentResponse createPspPayment(
+            BigDecimal totalPrice,
+            String merchantOrderId
+    ) {
+        PspCreatePaymentRequest pspRequest = new PspCreatePaymentRequest(
+                pspMerchantId,
+                pspMerchantPassword,
+                pspSellerReference,
+                totalPrice,
+                pspCurrency,
+                merchantOrderId,
+                LocalDateTime.now()
+        );
+
+        return pspPaymentClient.createPayment(pspRequest);
+    }
+
+    private String buildMerchantOrderId() {
+        return "RES-" + UUID.randomUUID();
     }
 
 }

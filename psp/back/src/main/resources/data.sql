@@ -26,7 +26,7 @@ INSERT INTO merchant (
 VALUES (
            'MER-TEST0001',
            'Vehicle Rental Agency',
-           '$2y$10$GTRDoOGd27/Md.qaGZ/SReN5oSIVBtTVuIJDYspHwM5AeC9O3LsyK',
+           '$2y$10$VVUV..VIlKxpt6Gf5kQI4ezeohwiA7x6.WMufSFqJkUDyKiKtHYuO',
            'EUR',
            'http://localhost:3000/payment/success',
            'http://localhost:3000/payment/failed',
@@ -65,21 +65,6 @@ VALUES (
            'MER-TEST0001',
            'MAIN_SELLER',
            'Main seller',
-           false
-       );
-
-INSERT INTO merchant_seller_account (
-    id,
-    merchant_id,
-    seller_reference,
-    display_name,
-    active
-)
-VALUES (
-           'seller-test-002',
-           'MER-TEST0001',
-           'SELLER_TWO',
-           'Seller Two',
            false
        );
 

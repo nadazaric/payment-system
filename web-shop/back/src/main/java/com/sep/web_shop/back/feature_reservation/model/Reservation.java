@@ -34,16 +34,26 @@ public class Reservation {
     @Enumerated(EnumType.STRING)
     private PaymentStatus paymentStatus;
 
+    private String merchantOrderId;
+
+    private String pspPaymentId;
+
+    private String paymentRedirectUrl;
+
+    private String paymentMethodCode;
+
+    private String globalTransactionId;
+
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "vehicle_id", nullable = false)
+    @JoinColumn(nullable = false)
     private Vehicle vehicle;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(nullable = false)
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "insurance_package_id", nullable = false)
+    @JoinColumn(nullable = false)
     private InsurancePackage insurancePackage;
 
     @ManyToMany
