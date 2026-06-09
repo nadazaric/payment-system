@@ -15,7 +15,10 @@ import {
     useMediaQuery,
     useTheme
 } from "@mui/material";
-import { getPayment } from "@/api/paymentApi";
+import {
+    getPayment,
+    initiatePayment
+} from "@/api/paymentApi";
 import { PAYMENT_LABELS } from "@/const/label";
 import {
     PaymentMethodOption,
@@ -82,6 +85,7 @@ export default function PaymentPage({
 
     const [payment, setPayment] = useState<PaymentTransaction | null>(null);
     const [selectedMethodCode, setSelectedMethodCode] = useState("");
+    const [initiatingMethodCode, setInitiatingMethodCode] = useState("");
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const [messageOpen, setMessageOpen] = useState(false);
@@ -95,6 +99,7 @@ export default function PaymentPage({
 
                 if (!ignore) {
                     setPayment(data);
+                    setSelectedMethodCode(data.selectedPaymentMethodCode || "");
                 }
             } catch {
                 if (!ignore) {
@@ -114,9 +119,49 @@ export default function PaymentPage({
         };
     }, [paymentId]);
 
-    const handleMethodSelect = (paymentMethod: PaymentMethodOption) => {
-        setSelectedMethodCode(paymentMethod.code);
-        setMessageOpen(true);
+    const paymentAlreadyInitiated = payment?.status === "INITIATED";
+
+    const handleMethodSelect = async (paymentMethod: PaymentMethodOption) => {
+        if (!payment || payment.status !== "CREATED") {
+            return;
+        }
+
+        setInitiatingMethodCode(paymentMethod.code);
+        setError("");
+
+        try {
+            const response = await initiatePayment(
+                paymentId,
+                {
+                    paymentMethodCode: paymentMethod.code
+                }
+            );
+
+            setSelectedMethodCode(response.selectedPaymentMethodCode);
+
+            setPayment((currentPayment) => {
+                if (!currentPayment) {
+                    return currentPayment;
+                }
+
+                return {
+                    ...currentPayment,
+                    status: response.status,
+                    selectedPaymentMethodCode: response.selectedPaymentMethodCode
+                };
+            });
+
+            if (response.redirectUrl) {
+                window.location.assign(response.redirectUrl);
+                return;
+            }
+
+            setMessageOpen(true);
+        } catch {
+            setError("Failed to initiate payment.");
+        } finally {
+            setInitiatingMethodCode("");
+        }
     };
 
     if (loading) {
@@ -134,7 +179,7 @@ export default function PaymentPage({
         );
     }
 
-    if (error || !payment) {
+    if (error && !payment) {
         return (
             <Box
                 sx={{
@@ -147,6 +192,24 @@ export default function PaymentPage({
                 }}>
                 <Alert severity="error">
                     {error || PAYMENT_LABELS.notFound}
+                </Alert>
+            </Box>
+        );
+    }
+
+    if (!payment) {
+        return (
+            <Box
+                sx={{
+                    minHeight: "100vh",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    bgcolor: "background.default",
+                    p: 2
+                }}>
+                <Alert severity="error">
+                    {PAYMENT_LABELS.notFound}
                 </Alert>
             </Box>
         );
@@ -226,6 +289,12 @@ export default function PaymentPage({
                                 highlight />
                         </Stack>
 
+                        {error && (
+                            <Alert severity="error">
+                                {error}
+                            </Alert>
+                        )}
+
                         <Box>
                             {payment.paymentMethods.length === 0 ? (
                                 <Alert severity="warning">
@@ -235,6 +304,10 @@ export default function PaymentPage({
                                 <Stack spacing={1.5}>
                                     {payment.paymentMethods.map((paymentMethod) => {
                                         const selected = selectedMethodCode === paymentMethod.code;
+                                        const currentMethodInitiating = initiatingMethodCode === paymentMethod.code;
+                                        const showProcessing = currentMethodInitiating || (
+                                            paymentAlreadyInitiated && selected
+                                        );
 
                                         return (
                                             <Box
@@ -243,7 +316,7 @@ export default function PaymentPage({
                                                     border: "1px solid",
                                                     borderColor: selected ? "primary.main" : "divider",
                                                     bgcolor: selected ? "rgba(99, 91, 255, 0.04)" : "background.paper",
-                                                    borderRadius: 1,
+                                                    borderRadius: 3,
                                                     px: 2.5,
                                                     py: 2,
                                                     transition: "all 0.2s ease"
@@ -273,12 +346,25 @@ export default function PaymentPage({
                                                     <Button
                                                         type="button"
                                                         variant={selected ? "contained" : "outlined"}
+                                                        disabled={
+                                                            Boolean(initiatingMethodCode)
+                                                            || paymentAlreadyInitiated
+                                                        }
                                                         onClick={() => handleMethodSelect(paymentMethod)}
+                                                        startIcon={
+                                                            showProcessing ? (
+                                                                <CircularProgress
+                                                                    size={16}
+                                                                    color="inherit" />
+                                                            ) : undefined
+                                                        }
                                                         sx={{
                                                             minWidth: 132,
                                                             px: 3
                                                         }}>
-                                                        {PAYMENT_LABELS.continue}
+                                                        {showProcessing
+                                                            ? PAYMENT_LABELS.processing
+                                                            : PAYMENT_LABELS.continue}
                                                     </Button>
                                                 </Box>
                                             </Box>

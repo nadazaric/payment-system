@@ -2,11 +2,11 @@ package com.sep.psp.back.feature_payment.service.impl;
 
 import com.sep.psp.back.feature_merchant.model.Merchant;
 import com.sep.psp.back.feature_merchant.model.MerchantSellerAccount;
+import com.sep.psp.back.feature_merchant.model.MerchantSellerPaymentMethod;
 import com.sep.psp.back.feature_merchant.repository.MerchantRepository;
 import com.sep.psp.back.feature_merchant.repository.MerchantSellerAccountRepository;
-import com.sep.psp.back.feature_payment.dto.CreatePaymentRequest;
-import com.sep.psp.back.feature_payment.dto.CreatePaymentResponse;
-import com.sep.psp.back.feature_payment.dto.PaymentTransactionResponse;
+import com.sep.psp.back.feature_payment.dto.*;
+import com.sep.psp.back.feature_payment.enumeration.PaymentStatus;
 import com.sep.psp.back.feature_payment.mapper.PaymentTransactionMapper;
 import com.sep.psp.back.feature_payment.model.PaymentTransaction;
 import com.sep.psp.back.feature_payment.repository.PaymentTransactionRepository;
@@ -97,11 +97,52 @@ public class PaymentTransactionServiceImpl implements PaymentTransactionService 
 
     @Override
     @Transactional(readOnly = true)
-    public PaymentTransactionResponse getPayment(String paymentId) {
+    public PaymentDetailsResponse getPayment(String paymentId) {
         PaymentTransaction paymentTransaction = paymentTransactionRepository.findById(paymentId)
                 .orElseThrow(() -> new BadRequestException("Payment transaction not found."));
 
         return paymentTransactionMapper.toResponse(paymentTransaction);
+    }
+
+    @Override
+    @Transactional
+    public InitiatePaymentResponse initiatePayment(String paymentId, InitiatePaymentRequest request) {
+        PaymentTransaction paymentTransaction = paymentTransactionRepository.findById(paymentId)
+                .orElseThrow(() -> new BadRequestException("Payment transaction not found."));
+
+        validatePaymentCanBeInitiated(
+                paymentTransaction,
+                request.paymentMethodCode()
+        );
+
+        MerchantSellerPaymentMethod sellerPaymentMethod = getAvailableSellerPaymentMethodOrThrow(
+                paymentTransaction,
+                request.paymentMethodCode()
+        );
+
+        paymentTransaction.setSelectedPaymentMethodCode(
+                sellerPaymentMethod.getPaymentMethod().getCode()
+        );
+        paymentTransaction.setStatus(PaymentStatus.INITIATED);
+
+        PaymentTransaction savedPaymentTransaction = paymentTransactionRepository.save(paymentTransaction);
+
+        appLoggerService.info(
+                LogStrings.Feature.PAYMENT,
+                LogStrings.Action.PAYMENT_INITIATED,
+                "paymentId={} merchantId={} sellerReference={} selectedPaymentMethodCode={}",
+                savedPaymentTransaction.getId(),
+                savedPaymentTransaction.getMerchant().getMerchantId(),
+                savedPaymentTransaction.getSellerAccount().getSellerReference(),
+                savedPaymentTransaction.getSelectedPaymentMethodCode()
+        );
+
+        return new InitiatePaymentResponse(
+                savedPaymentTransaction.getId(),
+                savedPaymentTransaction.getSelectedPaymentMethodCode(),
+                savedPaymentTransaction.getStatus(),
+                null
+        );
     }
 
     private Merchant getMerchantOrThrow(String merchantId) {
@@ -240,6 +281,51 @@ public class PaymentTransactionServiceImpl implements PaymentTransactionService 
 
     private String buildPaymentRedirectUrl(String paymentId) {
         return paymentPageBaseUrl + "/" + paymentId;
+    }
+
+    private void validatePaymentCanBeInitiated(
+            PaymentTransaction paymentTransaction,
+            String paymentMethodCode
+    ) {
+        if (paymentTransaction.getStatus() == PaymentStatus.CREATED) {
+            return;
+        }
+
+        appLoggerService.warn(
+                LogStrings.Feature.PAYMENT,
+                LogStrings.Action.PAYMENT_INITIATE_REJECTED,
+                "reason={} paymentId={} currentStatus={} requestedPaymentMethodCode={}",
+                LogStrings.Reason.PAYMENT_ALREADY_INITIATED,
+                paymentTransaction.getId(),
+                paymentTransaction.getStatus(),
+                paymentMethodCode
+        );
+
+        throw new BadRequestException("Payment cannot be initiated.");
+    }
+
+    private MerchantSellerPaymentMethod getAvailableSellerPaymentMethodOrThrow(PaymentTransaction paymentTransaction, String paymentMethodCode) {
+        return paymentTransaction.getSellerAccount()
+                .getPaymentMethods()
+                .stream()
+                .filter(MerchantSellerPaymentMethod::isAvailableForPayments)
+                .filter(sellerPaymentMethod -> sellerPaymentMethod.getPaymentMethod()
+                        .getCode()
+                        .equals(paymentMethodCode))
+                .findFirst()
+                .orElseThrow(() -> {
+                    appLoggerService.warn(
+                            LogStrings.Feature.PAYMENT,
+                            LogStrings.Action.PAYMENT_INITIATE_REJECTED,
+                            "reason={} paymentId={} sellerReference={} selectedPaymentMethodCode={}",
+                            LogStrings.Reason.PAYMENT_METHOD_NOT_AVAILABLE,
+                            paymentTransaction.getId(),
+                            paymentTransaction.getSellerAccount().getSellerReference(),
+                            paymentMethodCode
+                    );
+
+                    return new BadRequestException("Payment method is not available.");
+                });
     }
 
 }

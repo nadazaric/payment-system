@@ -149,4 +149,5 @@ export const PAYMENT_LABELS = {
     notFound: "Payment not found.",
     continue: "Continue",
     methodSelected: "Payment method selected.",
+    processing: "Processing...",
 };

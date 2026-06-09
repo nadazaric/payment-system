@@ -1,8 +1,6 @@
 package com.sep.psp.back.feature_payment.controller;
 
-import com.sep.psp.back.feature_payment.dto.CreatePaymentRequest;
-import com.sep.psp.back.feature_payment.dto.CreatePaymentResponse;
-import com.sep.psp.back.feature_payment.dto.PaymentTransactionResponse;
+import com.sep.psp.back.feature_payment.dto.*;
 import com.sep.psp.back.feature_payment.service.interf.PaymentTransactionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -44,10 +42,28 @@ public class PaymentTransactionController {
                     """
     )
     @GetMapping("/{paymentId}")
-    public PaymentTransactionResponse getPayment(
+    public PaymentDetailsResponse getPayment(
             @PathVariable String paymentId
     ) {
         return paymentTransactionService.getPayment(paymentId);
+    }
+
+    @Operation(
+            summary = "Initiate PSP payment",
+            description = """
+                Initiates a PSP payment using the selected payment method.
+                In the next step, this endpoint will call the corresponding payment plugin.
+                """
+    )
+    @PostMapping("/{paymentId}/initiate")
+    public InitiatePaymentResponse initiatePayment(
+            @PathVariable String paymentId,
+            @Valid @RequestBody InitiatePaymentRequest request
+    ) {
+        return paymentTransactionService.initiatePayment(
+                paymentId,
+                request
+        );
     }
 
 }

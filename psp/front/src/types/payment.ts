@@ -20,5 +20,17 @@ export type PaymentTransaction = {
     amount: number;
     currency: string;
     status: PaymentStatus;
+    selectedPaymentMethodCode: string | null;
     paymentMethods: PaymentMethodOption[];
+};
+
+export type InitiatePaymentRequest = {
+    paymentMethodCode: string;
+};
+
+export type InitiatePaymentResponse = {
+    paymentId: string;
+    selectedPaymentMethodCode: string;
+    status: PaymentStatus;
+    redirectUrl: string | null;
 };

@@ -56,42 +56,29 @@ public class PaymentTransaction {
     )
     private MerchantSellerAccount sellerAccount;
 
-    @Column(
-            nullable = false,
-            precision = 19,
-            scale = 2
-    )
+    @Column(nullable = false)
     private BigDecimal amount;
 
     @Column(nullable = false)
     private String currency;
 
-    @Column(
-            name = "merchant_order_id",
-            nullable = false
-    )
+    @Column(nullable = false)
     private String merchantOrderId;
 
-    @Column(
-            name = "merchant_timestamp",
-            nullable = false
-    )
+    @Column(nullable = false)
     private LocalDateTime merchantTimestamp;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private PaymentStatus status;
 
-    @Column(
-            name = "created_at",
-            nullable = false
-    )
+    @Column
+    private String selectedPaymentMethodCode;
+
+    @Column(nullable = false)
     private LocalDateTime createdAt;
 
-    @Column(
-            name = "updated_at",
-            nullable = false
-    )
+    @Column(nullable = false)
     private LocalDateTime updatedAt;
 
     public PaymentTransaction(

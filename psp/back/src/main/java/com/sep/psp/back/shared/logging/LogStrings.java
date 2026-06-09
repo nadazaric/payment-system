@@ -54,6 +54,8 @@ public final class LogStrings {
 
         public static final String PAYMENT_CREATED = "PAYMENT CREATED";
         public static final String PAYMENT_CREATE_REJECTED = "PAYMENT CREATE REJECTED";
+        public static final String PAYMENT_INITIATED = "PAYMENT INITIATED";
+        public static final String PAYMENT_INITIATE_REJECTED = "PAYMENT INITIATE REJECTED";
 
         private Action() {
         }
@@ -78,6 +80,8 @@ public final class LogStrings {
         public static final String INACTIVE_SELLER = "inactive_seller";
         public static final String INVALID_CURRENCY = "invalid_currency";
         public static final String DUPLICATE_MERCHANT_ORDER = "duplicate_merchant_order";
+        public static final String PAYMENT_ALREADY_INITIATED = "payment_already_initiated";
+        public static final String PAYMENT_METHOD_NOT_AVAILABLE = "payment_method_not_available";
 
         private Reason() {
         }
