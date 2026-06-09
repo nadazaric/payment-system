@@ -1,4 +1,5 @@
 from decimal import Decimal
+
 from pydantic import BaseModel
 
 
@@ -25,5 +26,4 @@ class PluginPaymentInitiationRequest(BaseModel):
 
 
 class PluginPaymentInitiationResponse(BaseModel):
-    pluginPaymentId: str
     redirectUrl: str

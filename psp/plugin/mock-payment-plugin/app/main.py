@@ -132,11 +132,10 @@ async def initiate_payment(
         response = initiate_plugin_payment(request)
 
         logger.info(
-            "%s action=%s paymentId=%s pluginPaymentId=%s redirectUrl=%s",
+            "%s action=%s paymentId=%s redirectUrl=%s",
             LogFeature.PLUGIN_PAYMENT,
             LogAction.PAYMENT_INITIATED,
             request.paymentId,
-            response.pluginPaymentId,
             response.redirectUrl
         )
 
@@ -175,7 +174,6 @@ async def initiate_payment(
 @app.get("/mock-payment")
 def mock_payment_page(
         paymentId: str,
-        pluginPaymentId: str,
         paymentMethodCode: str,
         amount: str,
         currency: str
@@ -221,6 +219,7 @@ def mock_payment_page(
 
                 .value {{
                     font-weight: 700;
+                    word-break: break-word;
                 }}
 
                 .note {{
@@ -241,11 +240,6 @@ def mock_payment_page(
                 </div>
 
                 <div class="row">
-                    <div class="label">Plugin payment ID</div>
-                    <div class="value">{pluginPaymentId}</div>
-                </div>
-
-                <div class="row">
                     <div class="label">Payment method</div>
                     <div class="value">{paymentMethodCode}</div>
                 </div>
@@ -253,10 +247,6 @@ def mock_payment_page(
                 <div class="row">
                     <div class="label">Amount</div>
                     <div class="value">{amount} {currency}</div>
-                </div>
-
-                <div class="note">
-                    This page is only a mock payment page.
                 </div>
             </div>
         </body>

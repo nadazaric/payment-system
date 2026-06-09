@@ -19,6 +19,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.sep.psp.back.feature_payment.dto.PluginPaymentInitiationResponse;
+import com.sep.psp.back.feature_payment.service.interf.PaymentPluginInitiationService;
 
 import java.math.BigDecimal;
 
@@ -42,6 +44,9 @@ public class PaymentTransactionServiceImpl implements PaymentTransactionService 
 
     @Autowired
     PaymentTransactionMapper paymentTransactionMapper;
+
+    @Autowired
+    PaymentPluginInitiationService paymentPluginInitiationService;
 
     @Value("${app.psp.payment-page-base-url}")
     String paymentPageBaseUrl;
@@ -120,9 +125,16 @@ public class PaymentTransactionServiceImpl implements PaymentTransactionService 
                 request.paymentMethodCode()
         );
 
-        paymentTransaction.setSelectedPaymentMethodCode(
-                sellerPaymentMethod.getPaymentMethod().getCode()
+        PluginPaymentInitiationResponse pluginResponse = paymentPluginInitiationService.initiatePayment(
+                paymentTransaction,
+                sellerPaymentMethod
         );
+
+        if (pluginResponse.redirectUrl() == null || pluginResponse.redirectUrl().isBlank()) {
+            throw new BadRequestException("Payment plugin did not return redirect URL.");
+        }
+
+        paymentTransaction.setSelectedPaymentMethodCode(sellerPaymentMethod.getPaymentMethod().getCode());
         paymentTransaction.setStatus(PaymentStatus.INITIATED);
 
         PaymentTransaction savedPaymentTransaction = paymentTransactionRepository.save(paymentTransaction);
@@ -130,18 +142,19 @@ public class PaymentTransactionServiceImpl implements PaymentTransactionService 
         appLoggerService.info(
                 LogStrings.Feature.PAYMENT,
                 LogStrings.Action.PAYMENT_INITIATED,
-                "paymentId={} merchantId={} sellerReference={} selectedPaymentMethodCode={}",
+                "paymentId={} merchantId={} sellerReference={} selectedPaymentMethodCode={} redirectUrl={}",
                 savedPaymentTransaction.getId(),
                 savedPaymentTransaction.getMerchant().getMerchantId(),
                 savedPaymentTransaction.getSellerAccount().getSellerReference(),
-                savedPaymentTransaction.getSelectedPaymentMethodCode()
+                savedPaymentTransaction.getSelectedPaymentMethodCode(),
+                pluginResponse.redirectUrl()
         );
 
         return new InitiatePaymentResponse(
                 savedPaymentTransaction.getId(),
                 savedPaymentTransaction.getSelectedPaymentMethodCode(),
                 savedPaymentTransaction.getStatus(),
-                null
+                pluginResponse.redirectUrl()
         );
     }
 

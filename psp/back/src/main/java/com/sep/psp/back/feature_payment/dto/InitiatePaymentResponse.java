@@ -25,9 +25,8 @@ public record InitiatePaymentResponse(
         PaymentStatus status,
 
         @Schema(
-                description = "Redirect URL returned by payment plugin. Currently null until plugin payment initiation is implemented.",
-                example = "http://localhost:8085/payment/123",
-                nullable = true
+                description = "Redirect URL returned by payment plugin.",
+                example = "http://localhost:8085/mock-payment?paymentId=0422dcd4-1c87-41a2-8e71-d3176d41eedd"
         )
         String redirectUrl
 ) {

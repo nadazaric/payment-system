@@ -51,9 +51,9 @@ public class PaymentTransactionController {
     @Operation(
             summary = "Initiate PSP payment",
             description = """
-                Initiates a PSP payment using the selected payment method.
-                In the next step, this endpoint will call the corresponding payment plugin.
-                """
+            Initiates a PSP payment using the selected payment method.
+            PSP calls the corresponding payment plugin and returns the redirect URL to the PSP frontend.
+            """
     )
     @PostMapping("/{paymentId}/initiate")
     public InitiatePaymentResponse initiatePayment(

@@ -1,4 +1,3 @@
-import uuid
 from urllib.parse import urlencode
 
 from fastapi import HTTPException
@@ -21,15 +20,9 @@ def initiate_plugin_payment(
     validate_payment_method_is_supported(request.paymentMethodCode)
     validate_seller_payment_method_is_configured(request)
 
-    plugin_payment_id = str(uuid.uuid4())
-
-    redirect_url = build_mock_payment_redirect_url(
-        request,
-        plugin_payment_id
-    )
+    redirect_url = build_mock_payment_redirect_url(request)
 
     return PluginPaymentInitiationResponse(
-        pluginPaymentId=plugin_payment_id,
         redirectUrl=redirect_url
     )
 
@@ -65,12 +58,10 @@ def validate_seller_payment_method_is_configured(
 
 
 def build_mock_payment_redirect_url(
-        request: PluginPaymentInitiationRequest,
-        plugin_payment_id: str
+        request: PluginPaymentInitiationRequest
 ) -> str:
     query_params = urlencode({
         "paymentId": request.paymentId,
-        "pluginPaymentId": plugin_payment_id,
         "paymentMethodCode": request.paymentMethodCode,
         "amount": str(request.amount),
         "currency": request.currency
