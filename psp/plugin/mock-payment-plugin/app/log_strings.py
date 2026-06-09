@@ -1,6 +1,7 @@
 class LogFeature:
     PLUGIN_SYNC = "plugin_sync"
     PLUGIN_CONFIGURATION = "plugin_configuration"
+    PLUGIN_PAYMENT = "plugin_payment"
     PLUGIN_SERVER = "plugin_server"
 
 
@@ -14,6 +15,10 @@ class LogAction:
     CONFIGURATION_SAVED = "configuration_saved"
     CONFIGURATION_REJECTED = "configuration_rejected"
 
+    PAYMENT_INITIATE_REQUEST_RECEIVED = "payment_initiate_request_received"
+    PAYMENT_INITIATED = "payment_initiated"
+    PAYMENT_INITIATE_REJECTED = "payment_initiate_rejected"
+
     SERVER_STARTED = "==================== SERVER STARTED ===================="
     SERVER_STOPPED = "==================== SERVER STOPPED ===================="
 
@@ -23,4 +28,6 @@ class LogReason:
     PSP_REQUEST_FAILED = "psp_request_failed"
     PLUGIN_SECRET_MISSING = "plugin_secret_missing"
     CONFIGURATION_INVALID = "configuration_invalid"
+    CONFIGURATION_NOT_FOUND = "configuration_not_found"
+    PAYMENT_METHOD_NOT_SUPPORTED = "payment_method_not_supported"
     SYNCHRONIZATION_WITH_PSP_FAILED = "synchronization_with_psp_failed"
