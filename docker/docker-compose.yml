@@ -60,10 +60,26 @@ services:
       - app-network
     restart: unless-stopped
 
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: sep-rabbitmq
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USERNAME}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD}
+    ports:
+      - ${RABBITMQ_PORT}:5672
+      - ${RABBITMQ_MANAGEMENT_PORT}:15672
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    networks:
+      - app-network
+    restart: unless-stopped
+
 volumes:
   ws-postgres-data:
   psp-postgres-data:
   pgadmin-data:
+  rabbitmq-data:
 
 networks:
   app-network:

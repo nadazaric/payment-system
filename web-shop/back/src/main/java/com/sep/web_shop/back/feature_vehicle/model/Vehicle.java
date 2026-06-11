@@ -7,10 +7,10 @@ import lombok.*;
 import java.math.BigDecimal;
 
 @Entity
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
+//@Getter
+//@Setter
+//@NoArgsConstructor
+//@AllArgsConstructor
 //@Builder
 public class Vehicle {
 
@@ -30,4 +30,51 @@ public class Vehicle {
 
     private String imagePath;
 
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public VehicleType getType() {
+        return type;
+    }
+
+    public void setType(VehicleType type) {
+        this.type = type;
+    }
+
+    public BigDecimal getPricePerDay() {
+        return pricePerDay;
+    }
+
+    public void setPricePerDay(BigDecimal pricePerDay) {
+        this.pricePerDay = pricePerDay;
+    }
+
+    public String getImagePath() {
+        return imagePath;
+    }
+
+    public void setImagePath(String imagePath) {
+        this.imagePath = imagePath;
+    }
 }

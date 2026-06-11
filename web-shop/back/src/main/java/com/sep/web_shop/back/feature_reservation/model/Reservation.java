@@ -14,11 +14,11 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Entity
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
+//@Getter
+//@Setter
+//@NoArgsConstructor
+//@AllArgsConstructor
+//@Builder
 public class Reservation {
 
     @Id
@@ -63,4 +63,115 @@ public class Reservation {
     )
     private Set<AdditionalService> additionalServices = new HashSet<>();
 
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public LocalDate getStartDate() {
+        return startDate;
+    }
+
+    public void setStartDate(LocalDate startDate) {
+        this.startDate = startDate;
+    }
+
+    public LocalDate getEndDate() {
+        return endDate;
+    }
+
+    public void setEndDate(LocalDate endDate) {
+        this.endDate = endDate;
+    }
+
+    public BigDecimal getTotalPrice() {
+        return totalPrice;
+    }
+
+    public void setTotalPrice(BigDecimal totalPrice) {
+        this.totalPrice = totalPrice;
+    }
+
+    public PaymentStatus getPaymentStatus() {
+        return paymentStatus;
+    }
+
+    public void setPaymentStatus(PaymentStatus paymentStatus) {
+        this.paymentStatus = paymentStatus;
+    }
+
+    public String getMerchantOrderId() {
+        return merchantOrderId;
+    }
+
+    public void setMerchantOrderId(String merchantOrderId) {
+        this.merchantOrderId = merchantOrderId;
+    }
+
+    public String getPspPaymentId() {
+        return pspPaymentId;
+    }
+
+    public void setPspPaymentId(String pspPaymentId) {
+        this.pspPaymentId = pspPaymentId;
+    }
+
+    public String getPaymentRedirectUrl() {
+        return paymentRedirectUrl;
+    }
+
+    public void setPaymentRedirectUrl(String paymentRedirectUrl) {
+        this.paymentRedirectUrl = paymentRedirectUrl;
+    }
+
+    public String getPaymentMethodCode() {
+        return paymentMethodCode;
+    }
+
+    public void setPaymentMethodCode(String paymentMethodCode) {
+        this.paymentMethodCode = paymentMethodCode;
+    }
+
+    public String getGlobalTransactionId() {
+        return globalTransactionId;
+    }
+
+    public void setGlobalTransactionId(String globalTransactionId) {
+        this.globalTransactionId = globalTransactionId;
+    }
+
+    public Vehicle getVehicle() {
+        return vehicle;
+    }
+
+    public void setVehicle(Vehicle vehicle) {
+        this.vehicle = vehicle;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+    public InsurancePackage getInsurancePackage() {
+        return insurancePackage;
+    }
+
+    public void setInsurancePackage(InsurancePackage insurancePackage) {
+        this.insurancePackage = insurancePackage;
+    }
+
+    public Set<AdditionalService> getAdditionalServices() {
+        return additionalServices;
+    }
+
+    public void setAdditionalServices(Set<AdditionalService> additionalServices) {
+        this.additionalServices = additionalServices;
+    }
 }
