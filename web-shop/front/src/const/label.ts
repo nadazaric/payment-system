@@ -90,3 +90,17 @@ export const RENTAL_HISTORY_PAGE_LABELS = {
     loadingVehiclesError: "Failed to load vehicles.",
     noVehicles: "No vehicles are currently available."
 };
+
+export const PAYMENT_RESULT_PAGE_LABELS = {
+    successTitle: "Payment successful",
+    successDescription: "Your payment has been processed successfully. You can view your reservation in rental history.",
+
+    failedTitle: "Payment failed",
+    failedDescription: "Unfortunately, your payment could not be completed. Please try again later.",
+
+    errorTitle: "Payment error",
+    errorDescription: "An error occurred while processing your payment. Please try again later.",
+
+    viewHistoryButton: "View rental history",
+    vehiclesButton: "Back to vehicles"
+};

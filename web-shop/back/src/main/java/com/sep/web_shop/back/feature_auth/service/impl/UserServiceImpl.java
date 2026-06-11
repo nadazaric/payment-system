@@ -8,6 +8,8 @@ import com.sep.web_shop.back.feature_auth.mapper.UserMapper;
 import com.sep.web_shop.back.feature_auth.model.User;
 import com.sep.web_shop.back.feature_auth.repository.UserRepository;
 import com.sep.web_shop.back.security.jwt.JwtTokenUtil;
+import com.sep.web_shop.back.shared.logging.LogStrings;
+import com.sep.web_shop.back.shared.logging.service.interf.AppLoggerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.http.HttpStatus;
@@ -26,11 +28,23 @@ import java.util.Optional;
 @Service
 public class UserServiceImpl implements com.sep.web_shop.back.feature_auth.service.interf.UserService {
 
-    @Autowired UserRepository userRepository;
-    @Autowired PasswordEncoder passwordEncoder;
-    @Autowired AuthenticationManager authenticationManager;
-    @Autowired JwtTokenUtil jwtService;
-    @Autowired UserMapper userMapper;
+    @Autowired
+    UserRepository userRepository;
+
+    @Autowired
+    PasswordEncoder passwordEncoder;
+
+    @Autowired
+    AuthenticationManager authenticationManager;
+
+    @Autowired
+    JwtTokenUtil jwtService;
+
+    @Autowired
+    UserMapper userMapper;
+
+    @Autowired
+    AppLoggerService appLoggerService;
 
     @Override
     public User getByUsername(String username) {
@@ -64,9 +78,26 @@ public class UserServiceImpl implements com.sep.web_shop.back.feature_auth.servi
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, String.format("User not found: %s", username)));
 
             String token = jwtService.generateToken(user.getRole().toString());
+
+            appLoggerService.info(
+                    LogStrings.Feature.AUTH,
+                    LogStrings.Action.USER_LOGGED_IN,
+                    "username={} role={}",
+                    user.getUsername(),
+                    user.getRole()
+            );
+
             return new LoginUserDTO(user.getId(), user.getUsername(), token);
         } catch (AuthenticationException e) {
-            System.err.printf("Login failed - Username: %s, Reason: %s%n", dto.username(), e.getClass().getSimpleName());
+            appLoggerService.warn(
+                    LogStrings.Feature.AUTH,
+                    LogStrings.Action.USER_LOGIN_REJECTED,
+                    "reason={} username={} error={}",
+                    LogStrings.Reason.INVALID_CREDENTIALS,
+                    dto.username(),
+                    e.getClass().getSimpleName()
+            );
+
             throw e;
         }
     }

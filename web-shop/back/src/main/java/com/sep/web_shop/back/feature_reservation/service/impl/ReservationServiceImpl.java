@@ -20,6 +20,8 @@ import com.sep.web_shop.back.feature_vehicle.model.Vehicle;
 import com.sep.web_shop.back.feature_vehicle.repository.AdditionalServiceRepository;
 import com.sep.web_shop.back.feature_vehicle.repository.InsurancePackageRepository;
 import com.sep.web_shop.back.feature_vehicle.repository.VehicleRepository;
+import com.sep.web_shop.back.shared.logging.LogStrings;
+import com.sep.web_shop.back.shared.logging.service.interf.AppLoggerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -73,35 +75,70 @@ public class ReservationServiceImpl implements ReservationService {
     @Value("${app.psp.currency}")
     String pspCurrency;
 
+    @Autowired
+    AppLoggerService appLoggerService;
+
     @Override
+    @Transactional(readOnly = true)
     public List<UnavailablePeriodDTO> getUnavailablePeriods(Long vehicleId) {
         return reservationMapper.toUnavailablePeriodDtoList(
-                reservationRepository.findByVehicleId(vehicleId)
+                reservationRepository.findByVehicleIdAndPaymentStatusIn(
+                        vehicleId,
+                        getVehicleBlockingPaymentStatuses()
+                )
         );
     }
 
     @Override
     @Transactional
-    public Optional<CreateReservationResponse> createReservation(
-            CreateReservationDTO createReservationDTO,
-            String username
-    ) {
-        if (
-                createReservationDTO.startDate() == null
-                        || createReservationDTO.endDate() == null
-                        || !createReservationDTO.endDate().isAfter(createReservationDTO.startDate())
-        ) {
+    public Optional<CreateReservationResponse> createReservation(CreateReservationDTO createReservationDTO, String username) {
+        appLoggerService.info(
+                LogStrings.Feature.PAYMENT,
+                LogStrings.Action.PAYMENT_REQUEST_RECEIVED,
+                "username={} vehicleId={} startDate={} endDate={} insurancePackageId={} additionalServiceIds={}",
+                username,
+                createReservationDTO.vehicleId(),
+                createReservationDTO.startDate(),
+                createReservationDTO.endDate(),
+                createReservationDTO.insurancePackageId(),
+                createReservationDTO.additionalServiceIds()
+        );
+
+        if (createReservationDTO.startDate() == null || createReservationDTO.endDate() == null || !createReservationDTO.endDate().isAfter(createReservationDTO.startDate())) {
+            appLoggerService.warn(
+                    LogStrings.Feature.PAYMENT,
+                    LogStrings.Action.PAYMENT_CREATE_REJECTED,
+                    "reason={} username={} vehicleId={} startDate={} endDate={}",
+                    LogStrings.Reason.INVALID_RESERVATION_PERIOD,
+                    username,
+                    createReservationDTO.vehicleId(),
+                    createReservationDTO.startDate(),
+                    createReservationDTO.endDate()
+            );
+
             return Optional.empty();
         }
 
         boolean vehicleUnavailable = reservationRepository
-                .existsByVehicleIdAndStartDateLessThanEqualAndEndDateGreaterThanEqual(
+                .existsByVehicleIdAndStartDateLessThanEqualAndEndDateGreaterThanEqualAndPaymentStatusIn(
                         createReservationDTO.vehicleId(),
                         createReservationDTO.endDate(),
-                        createReservationDTO.startDate()
+                        createReservationDTO.startDate(),
+                        getVehicleBlockingPaymentStatuses()
                 );
 
         if (vehicleUnavailable) {
+            appLoggerService.warn(
+                    LogStrings.Feature.PAYMENT,
+                    LogStrings.Action.PAYMENT_CREATE_REJECTED,
+                    "reason={} username={} vehicleId={} startDate={} endDate={}",
+                    LogStrings.Reason.VEHICLE_UNAVAILABLE,
+                    username,
+                    createReservationDTO.vehicleId(),
+                    createReservationDTO.startDate(),
+                    createReservationDTO.endDate()
+            );
+
             return Optional.empty();
         }
 
@@ -110,6 +147,19 @@ public class ReservationServiceImpl implements ReservationService {
         Optional<InsurancePackage> insurancePackageOptional = insurancePackageRepository.findById(createReservationDTO.insurancePackageId());
 
         if (vehicleOptional.isEmpty() || userOptional.isEmpty() || insurancePackageOptional.isEmpty()) {
+            appLoggerService.warn(
+                    LogStrings.Feature.PAYMENT,
+                    LogStrings.Action.PAYMENT_CREATE_REJECTED,
+                    "reason={} username={} vehicleId={} insurancePackageId={} vehicleFound={} userFound={} insurancePackageFound={}",
+                    LogStrings.Reason.MISSING_REQUIRED_RESERVATION_DATA,
+                    username,
+                    createReservationDTO.vehicleId(),
+                    createReservationDTO.insurancePackageId(),
+                    vehicleOptional.isPresent(),
+                    userOptional.isPresent(),
+                    insurancePackageOptional.isPresent()
+            );
+
             return Optional.empty();
         }
 
@@ -126,6 +176,15 @@ public class ReservationServiceImpl implements ReservationService {
         );
 
         if (additionalServices.size() != additionalServiceIds.size()) {
+            appLoggerService.warn(
+                    LogStrings.Feature.PAYMENT,
+                    LogStrings.Action.PAYMENT_CREATE_REJECTED,
+                    "reason={} username={} additionalServiceIds={}",
+                    LogStrings.Reason.ADDITIONAL_SERVICE_NOT_FOUND,
+                    username,
+                    additionalServiceIds
+            );
+
             return Optional.empty();
         }
 
@@ -146,6 +205,18 @@ public class ReservationServiceImpl implements ReservationService {
                     merchantOrderId
             );
         } catch (RestClientException exception) {
+            appLoggerService.warn(
+                    LogStrings.Feature.PAYMENT,
+                    LogStrings.Action.PAYMENT_CREATE_REJECTED,
+                    "reason={} username={} merchantOrderId={} amount={} currency={} error={}",
+                    LogStrings.Reason.PSP_PAYMENT_CREATE_FAILED,
+                    username,
+                    merchantOrderId,
+                    totalPrice,
+                    pspCurrency,
+                    exception.getMessage()
+            );
+
             return Optional.empty();
         }
 
@@ -165,6 +236,21 @@ public class ReservationServiceImpl implements ReservationService {
 
         Reservation savedReservation = reservationRepository.save(reservation);
 
+        appLoggerService.info(
+                LogStrings.Feature.PAYMENT,
+                LogStrings.Action.RESERVATION_PAYMENT_INITIATED,
+                "reservationId={} username={} vehicleId={} merchantOrderId={} pspPaymentId={} amount={} currency={} paymentStatus={} redirectUrl={}",
+                savedReservation.getId(),
+                savedReservation.getUser().getUsername(),
+                savedReservation.getVehicle().getId(),
+                savedReservation.getMerchantOrderId(),
+                savedReservation.getPspPaymentId(),
+                savedReservation.getTotalPrice(),
+                pspCurrency,
+                savedReservation.getPaymentStatus(),
+                savedReservation.getPaymentRedirectUrl()
+        );
+
         return Optional.of(new CreateReservationResponse(
                 savedReservation.getId(),
                 savedReservation.getPaymentRedirectUrl(),
@@ -173,6 +259,7 @@ public class ReservationServiceImpl implements ReservationService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ReservationHistoryDTO> getReservations(String username) {
         return reservationMapper.toHistoryDtoList(
                 reservationRepository.findByUserUsernameOrderByStartDateDesc(username)
@@ -180,9 +267,17 @@ public class ReservationServiceImpl implements ReservationService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ReservationHistoryDTO> getReservationsByVehicle(Long vehicleId) {
         return reservationMapper.toHistoryDtoList(
                 reservationRepository.findByVehicleIdOrderByStartDateDesc(vehicleId)
+        );
+    }
+
+    private List<PaymentStatus> getVehicleBlockingPaymentStatuses() {
+        return List.of(
+                PaymentStatus.INITIATED,
+                PaymentStatus.SUCCESS
         );
     }
 

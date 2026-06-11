@@ -32,19 +32,21 @@ const getPaymentStatusStyles = (
     status: PaymentStatus
 ) => {
     switch (status) {
-        case "PAID":
+        case "SUCCESS":
             return {
                 bgcolor: "rgba(34, 197, 94, 0.12)",
                 color: "#15803D",
                 borderColor: "rgba(34, 197, 94, 0.28)"
             };
-        case "PENDING":
+        case "CREATED":
+        case "INITIATED":
             return {
                 bgcolor: "rgba(245, 158, 11, 0.12)",
                 color: "#B45309",
                 borderColor: "rgba(245, 158, 11, 0.28)"
             };
         case "FAILED":
+        case "ERROR":
             return {
                 bgcolor: "rgba(239, 68, 68, 0.12)",
                 color: "#B91C1C",

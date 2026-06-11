@@ -29,6 +29,6 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
     "**/*.mts"
-  ],
+, "src/app/(protected)/payment/success/k"  ],
   "exclude": ["node_modules"]
 }
