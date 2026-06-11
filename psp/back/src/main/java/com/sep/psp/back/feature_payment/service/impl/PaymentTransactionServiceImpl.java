@@ -6,10 +6,12 @@ import com.sep.psp.back.feature_merchant.model.MerchantSellerPaymentMethod;
 import com.sep.psp.back.feature_merchant.repository.MerchantRepository;
 import com.sep.psp.back.feature_merchant.repository.MerchantSellerAccountRepository;
 import com.sep.psp.back.feature_payment.dto.*;
+import com.sep.psp.back.feature_payment.dto.plugin.PaymentPluginInitiationResponse;
 import com.sep.psp.back.feature_payment.enumeration.PaymentStatus;
 import com.sep.psp.back.feature_payment.mapper.PaymentTransactionMapper;
 import com.sep.psp.back.feature_payment.model.PaymentTransaction;
 import com.sep.psp.back.feature_payment.repository.PaymentTransactionRepository;
+import com.sep.psp.back.feature_payment.service.interf.PaymentPluginInitiationService;
 import com.sep.psp.back.feature_payment.service.interf.PaymentTransactionService;
 import com.sep.psp.back.shared.error.exception.BadRequestException;
 import com.sep.psp.back.shared.logging.LogStrings;
@@ -19,8 +21,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.sep.psp.back.feature_payment.dto.PluginPaymentInitiationResponse;
-import com.sep.psp.back.feature_payment.service.interf.PaymentPluginInitiationService;
 
 import java.math.BigDecimal;
 
@@ -115,24 +115,11 @@ public class PaymentTransactionServiceImpl implements PaymentTransactionService 
         PaymentTransaction paymentTransaction = paymentTransactionRepository.findById(paymentId)
                 .orElseThrow(() -> new BadRequestException("Payment transaction not found."));
 
-        validatePaymentCanBeInitiated(
-                paymentTransaction,
-                request.paymentMethodCode()
-        );
+        validatePaymentCanBeInitiated(paymentTransaction, request.paymentMethodCode());
 
-        MerchantSellerPaymentMethod sellerPaymentMethod = getAvailableSellerPaymentMethodOrThrow(
-                paymentTransaction,
-                request.paymentMethodCode()
-        );
+        MerchantSellerPaymentMethod sellerPaymentMethod = getAvailableSellerPaymentMethodOrThrow(paymentTransaction, request.paymentMethodCode());
 
-        PluginPaymentInitiationResponse pluginResponse = paymentPluginInitiationService.initiatePayment(
-                paymentTransaction,
-                sellerPaymentMethod
-        );
-
-        if (pluginResponse.redirectUrl() == null || pluginResponse.redirectUrl().isBlank()) {
-            throw new BadRequestException("Payment plugin did not return redirect URL.");
-        }
+        PaymentPluginInitiationResponse pluginResponse = paymentPluginInitiationService.initiatePayment(paymentTransaction, sellerPaymentMethod);
 
         paymentTransaction.setSelectedPaymentMethodCode(sellerPaymentMethod.getPaymentMethod().getCode());
         paymentTransaction.setStatus(PaymentStatus.INITIATED);

@@ -1,11 +1,11 @@
-package com.sep.psp.back.feature_payment.dto;
+package com.sep.psp.back.feature_payment.dto.plugin;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.math.BigDecimal;
 
 @Schema(description = "Request sent by PSP to payment plugin to initiate selected payment method flow.")
-public record PluginPaymentInitiationRequest(
+public record PaymentPluginInitiationRequest(
 
         @Schema(
                 description = "PSP payment transaction identifier.",

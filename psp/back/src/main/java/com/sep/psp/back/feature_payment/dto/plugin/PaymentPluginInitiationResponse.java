@@ -1,9 +1,9 @@
-package com.sep.psp.back.feature_payment.dto;
+package com.sep.psp.back.feature_payment.dto.plugin;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
 @Schema(description = "Response returned by payment plugin after payment flow is initiated.")
-public record PluginPaymentInitiationResponse(
+public record PaymentPluginInitiationResponse(
 
         @Schema(
                 description = "URL where the customer should be redirected to continue payment.",

@@ -56,6 +56,8 @@ public final class LogStrings {
         public static final String PAYMENT_CREATE_REJECTED = "PAYMENT CREATE REJECTED";
         public static final String PAYMENT_INITIATED = "PAYMENT INITIATED";
         public static final String PAYMENT_INITIATE_REJECTED = "PAYMENT INITIATE REJECTED";
+        public static final String PAYMENT_RESULT_PROCESSED = "PAYMENT RESULT PROCESSED";
+        public static final String PAYMENT_RESULT_REJECTED = "PAYMENT RESULT REJECTED";
 
         private Action() {
         }
@@ -82,6 +84,13 @@ public final class LogStrings {
         public static final String DUPLICATE_MERCHANT_ORDER = "duplicate_merchant_order";
         public static final String PAYMENT_ALREADY_INITIATED = "payment_already_initiated";
         public static final String PAYMENT_METHOD_NOT_AVAILABLE = "payment_method_not_available";
+        public static final String PLUGIN_REDIRECT_URL_MISSING = "plugin_redirect_url_missing";
+        public static final String PAYMENT_NOT_INITIATED = "payment_not_initiated";
+        public static final String PAYMENT_ALREADY_COMPLETED = "payment_already_completed";
+        public static final String PAYMENT_PLUGIN_MISMATCH = "payment_plugin_mismatch";
+        public static final String INVALID_PAYMENT_RESULT_STATUS = "invalid_payment_result_status";
+        public static final String PAYMENT_METHOD_NOT_SELECTED = "payment_method_not_selected";
+        public static final String SELECTED_PAYMENT_METHOD_NOT_AVAILABLE = "selected_payment_method_not_available";
 
         private Reason() {
         }

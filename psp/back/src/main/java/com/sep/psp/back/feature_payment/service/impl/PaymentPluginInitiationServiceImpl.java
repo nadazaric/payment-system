@@ -1,11 +1,14 @@
 package com.sep.psp.back.feature_payment.service.impl;
 
 import com.sep.psp.back.feature_merchant.model.MerchantSellerPaymentMethod;
-import com.sep.psp.back.feature_payment.dto.PluginPaymentInitiationRequest;
-import com.sep.psp.back.feature_payment.dto.PluginPaymentInitiationResponse;
+import com.sep.psp.back.feature_payment.dto.plugin.PaymentPluginInitiationRequest;
+import com.sep.psp.back.feature_payment.dto.plugin.PaymentPluginInitiationResponse;
 import com.sep.psp.back.feature_payment.model.PaymentTransaction;
 import com.sep.psp.back.feature_payment.service.interf.PaymentPluginInitiationService;
 import com.sep.psp.back.feature_plugin.client.interf.PluginHttpClient;
+import com.sep.psp.back.shared.error.exception.BadRequestException;
+import com.sep.psp.back.shared.logging.LogStrings;
+import com.sep.psp.back.shared.logging.service.interf.AppLoggerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -17,12 +20,15 @@ public class PaymentPluginInitiationServiceImpl implements PaymentPluginInitiati
     @Autowired
     PluginHttpClient pluginHttpClient;
 
+    @Autowired
+    AppLoggerService appLoggerService;
+
     @Override
-    public PluginPaymentInitiationResponse initiatePayment(
+    public PaymentPluginInitiationResponse initiatePayment(
             PaymentTransaction paymentTransaction,
             MerchantSellerPaymentMethod sellerPaymentMethod
     ) {
-        PluginPaymentInitiationRequest request = new PluginPaymentInitiationRequest(
+        PaymentPluginInitiationRequest request = new PaymentPluginInitiationRequest(
                 paymentTransaction.getId(),
                 paymentTransaction.getMerchant().getMerchantId(),
                 paymentTransaction.getSellerAccount().getSellerReference(),
@@ -32,12 +38,42 @@ public class PaymentPluginInitiationServiceImpl implements PaymentPluginInitiati
                 paymentTransaction.getMerchantOrderId()
         );
 
-        return pluginHttpClient.post(
+        PaymentPluginInitiationResponse response = pluginHttpClient.post(
                 sellerPaymentMethod.getPaymentMethod().getPlugin(),
                 PAYMENT_INITIATION_ENDPOINT,
                 request,
-                PluginPaymentInitiationResponse.class
+                PaymentPluginInitiationResponse.class
         );
+
+        validateRedirectUrl(
+                paymentTransaction,
+                sellerPaymentMethod,
+                response
+        );
+
+        return response;
+    }
+
+    private void validateRedirectUrl(
+            PaymentTransaction paymentTransaction,
+            MerchantSellerPaymentMethod sellerPaymentMethod,
+            PaymentPluginInitiationResponse response
+    ) {
+        if (response.redirectUrl() != null && !response.redirectUrl().isBlank()) {
+            return;
+        }
+
+        appLoggerService.warn(
+                LogStrings.Feature.PAYMENT,
+                LogStrings.Action.PAYMENT_INITIATE_REJECTED,
+                "reason={} paymentId={} selectedPaymentMethodCode={} pluginCode={}",
+                LogStrings.Reason.PLUGIN_REDIRECT_URL_MISSING,
+                paymentTransaction.getId(),
+                sellerPaymentMethod.getPaymentMethod().getCode(),
+                sellerPaymentMethod.getPaymentMethod().getPlugin().getCode()
+        );
+
+        throw new BadRequestException("Payment plugin did not return redirect URL.");
     }
 
 }

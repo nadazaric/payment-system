@@ -56,6 +56,7 @@ public class SecurityConfiguration {
                         .requestMatchers(HttpMethod.POST, "/api/payments").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/payments/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/payments/*/initiate").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/payments/*/plugin-callback").permitAll()
                         .requestMatchers("/api/super-admin/**").hasAuthority(UserRole.SUPER_ADMIN.authority())
                         .anyRequest().authenticated() )
                 .csrf(AbstractHttpConfigurer::disable)

@@ -1,7 +1,11 @@
 package com.sep.psp.back.feature_payment.controller;
 
 import com.sep.psp.back.feature_payment.dto.*;
+import com.sep.psp.back.feature_payment.dto.plugin.PaymentPluginCallbackRequest;
+import com.sep.psp.back.feature_payment.dto.plugin.PaymentPluginCallbackResponse;
+import com.sep.psp.back.feature_payment.service.interf.PaymentPluginCallbackService;
 import com.sep.psp.back.feature_payment.service.interf.PaymentTransactionService;
+import com.sep.psp.back.feature_plugin.security.PluginSecurityHeaders;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -20,12 +24,13 @@ public class PaymentTransactionController {
     @Autowired
     PaymentTransactionService paymentTransactionService;
 
+    @Autowired
+    PaymentPluginCallbackService paymentPluginCallbackService;
+
+    // ----------------------------------------------------------------------------------------------------------------- Create Transaction by WS
     @Operation(
             summary = "Create PSP payment transaction",
-            description = """
-                    Creates a PSP payment transaction from a web shop payment initialization request.
-                    The web shop authenticates using merchant ID and merchant password/API key.
-                    """
+            description = "Creates a PSP payment transaction from a web shop payment initialization request."
     )
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
@@ -35,11 +40,10 @@ public class PaymentTransactionController {
         return paymentTransactionService.createPayment(request);
     }
 
+    // ----------------------------------------------------------------------------------------------------------------- Get Transaction Info
     @Operation(
             summary = "Get PSP payment transaction",
-            description = """
-                    Returns basic payment transaction data needed by the PSP payment page.
-                    """
+            description = "Returns basic payment transaction data needed by the PSP payment page."
     )
     @GetMapping("/{paymentId}")
     public PaymentDetailsResponse getPayment(
@@ -48,6 +52,7 @@ public class PaymentTransactionController {
         return paymentTransactionService.getPayment(paymentId);
     }
 
+    // ----------------------------------------------------------------------------------------------------------------- Init Transaction (PSP -> Plugin)
     @Operation(
             summary = "Initiate PSP payment",
             description = """
@@ -63,6 +68,24 @@ public class PaymentTransactionController {
         return paymentTransactionService.initiatePayment(
                 paymentId,
                 request
+        );
+    }
+
+    // ----------------------------------------------------------------------------------------------------------------- Receive Callback from Plugin
+    @Operation(
+            summary = "Process payment plugin callback",
+            description = "Processes the final payment result reported by a payment plugin."
+    )
+    @PostMapping("/{paymentId}/plugin-callback")
+    public PaymentPluginCallbackResponse processPaymentPluginCallback(
+            @PathVariable String paymentId,
+            @Valid @RequestBody PaymentPluginCallbackRequest request,
+            @RequestHeader(PluginSecurityHeaders.PLUGIN_CODE) String pluginCode
+    ) {
+        return paymentPluginCallbackService.processCallback(
+                paymentId,
+                request,
+                pluginCode
         );
     }
 
