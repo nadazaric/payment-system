@@ -10,12 +10,16 @@ import com.sep.psp.back.shared.error.exception.BadRequestException;
 import com.sep.psp.back.shared.logging.LogStrings;
 import com.sep.psp.back.shared.logging.service.interf.AppLoggerService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
 public class PaymentPluginInitiationServiceImpl implements PaymentPluginInitiationService {
 
     private static final String PAYMENT_INITIATION_ENDPOINT = "/api/plugin/payments/initiate";
+
+    @Value("${app.psp.backend-base-url}")
+    String pspBackendBaseUrl;
 
     @Autowired
     PluginHttpClient pluginHttpClient;
@@ -35,7 +39,11 @@ public class PaymentPluginInitiationServiceImpl implements PaymentPluginInitiati
                 sellerPaymentMethod.getPaymentMethod().getCode(),
                 paymentTransaction.getAmount(),
                 paymentTransaction.getCurrency(),
-                paymentTransaction.getMerchantOrderId()
+                paymentTransaction.getMerchantOrderId(),
+                paymentTransaction.getMerchant().getSuccessUrl(),
+                paymentTransaction.getMerchant().getFailUrl(),
+                paymentTransaction.getMerchant().getErrorUrl(),
+                buildPspCallbackUrl(paymentTransaction.getId())
         );
 
         PaymentPluginInitiationResponse response = pluginHttpClient.post(
@@ -52,6 +60,10 @@ public class PaymentPluginInitiationServiceImpl implements PaymentPluginInitiati
         );
 
         return response;
+    }
+
+    private String buildPspCallbackUrl(String paymentId) {
+        return pspBackendBaseUrl + "/api/payments/" + paymentId + "/plugin-callback";
     }
 
     private void validateRedirectUrl(
