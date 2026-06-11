@@ -12,6 +12,7 @@ from app.models import (
     PluginPaymentInitiationRequest,
     PluginPaymentInitiationResponse
 )
+from app.payment_session_service import save_payment_session
 
 
 def initiate_plugin_payment(
@@ -19,6 +20,8 @@ def initiate_plugin_payment(
 ) -> PluginPaymentInitiationResponse:
     validate_payment_method_is_supported(request.paymentMethodCode)
     validate_seller_payment_method_is_configured(request)
+
+    save_payment_session(request)
 
     redirect_url = build_mock_payment_redirect_url(request)
 
@@ -61,10 +64,7 @@ def build_mock_payment_redirect_url(
         request: PluginPaymentInitiationRequest
 ) -> str:
     query_params = urlencode({
-        "paymentId": request.paymentId,
-        "paymentMethodCode": request.paymentMethodCode,
-        "amount": str(request.amount),
-        "currency": request.currency
+        "paymentId": request.paymentId
     })
 
     return f"{PLUGIN_BASE_URL}/mock-payment?{query_params}"

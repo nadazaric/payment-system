@@ -23,7 +23,16 @@ class PluginPaymentInitiationRequest(BaseModel):
     amount: Decimal
     currency: str
     merchantOrderId: str
+    successUrl: str
+    failUrl: str
+    errorUrl: str
+    pspCallbackUrl: str
 
 
 class PluginPaymentInitiationResponse(BaseModel):
     redirectUrl: str
+
+
+class PaymentPluginCallbackRequest(BaseModel):
+    status: str
+    message: str | None = None

@@ -1,0 +1,28 @@
+{
+  "aa09eaca-2928-404f-b017-5b52dac97303": {
+    "paymentId": "aa09eaca-2928-404f-b017-5b52dac97303",
+    "merchantId": "MER-TEST0001",
+    "sellerReference": "MAIN_SELLER",
+    "paymentMethodCode": "MOCK_PAY",
+    "amount": "105.0",
+    "currency": "EUR",
+    "merchantOrderId": "RES-adee5708-8d55-4b61-8994-d46074eb2030",
+    "successUrl": "http://localhost:3001/payment/success",
+    "failUrl": "http://localhost:3001/payment/failed",
+    "errorUrl": "http://localhost:3001/payment/error",
+    "pspCallbackUrl": "http://localhost:8082/api/payments/aa09eaca-2928-404f-b017-5b52dac97303/plugin-callback"
+  },
+  "1364fac2-59ea-4a25-bd06-b10115e5c9ab": {
+    "paymentId": "1364fac2-59ea-4a25-bd06-b10115e5c9ab",
+    "merchantId": "MER-TEST0001",
+    "sellerReference": "MAIN_SELLER",
+    "paymentMethodCode": "MOCK_PAY",
+    "amount": "255.0",
+    "currency": "EUR",
+    "merchantOrderId": "RES-08bc8e12-3e55-4de5-830a-f04563d39bdf",
+    "successUrl": "http://localhost:3001/payment/success",
+    "failUrl": "http://localhost:3001/payment/failed",
+    "errorUrl": "http://localhost:3001/payment/error",
+    "pspCallbackUrl": "http://localhost:8082/api/payments/1364fac2-59ea-4a25-bd06-b10115e5c9ab/plugin-callback"
+  }
+}
