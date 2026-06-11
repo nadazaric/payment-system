@@ -46,3 +46,4 @@ Thumbs.db
 
 # Local plugin storage
 plugin-configurations.json
+mock-payment-sessions.json
