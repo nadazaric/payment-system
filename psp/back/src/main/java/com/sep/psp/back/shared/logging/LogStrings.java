@@ -30,6 +30,8 @@ public final class LogStrings {
         public static final String LOGIN_SUCCESS = "LOGIN SUCCESS";
         public static final String LOGIN_REJECTED = "LOGIN REJECTED";
 
+        public static final String RABBITMQ_CONNECTED = "RABBITMQ CONNECTED";
+
         public static final String SELLER_CREATED = "SELLER CREATED";
         public static final String SELLER_UPDATED = "SELLER UPDATED";
         public static final String SELLER_CREATE_REJECTED = "SELLER CREATE REJECTED";
@@ -58,6 +60,7 @@ public final class LogStrings {
         public static final String PAYMENT_INITIATE_REJECTED = "PAYMENT INITIATE REJECTED";
         public static final String PAYMENT_RESULT_PROCESSED = "PAYMENT RESULT PROCESSED";
         public static final String PAYMENT_RESULT_REJECTED = "PAYMENT RESULT REJECTED";
+        public static final String PAYMENT_NOTIFICATION_PUBLISH_FAILED = "PAYMENT NOTIFICATION PUBLISH FAILED";
 
         private Action() {
         }
@@ -91,6 +94,7 @@ public final class LogStrings {
         public static final String INVALID_PAYMENT_RESULT_STATUS = "invalid_payment_result_status";
         public static final String PAYMENT_METHOD_NOT_SELECTED = "payment_method_not_selected";
         public static final String SELECTED_PAYMENT_METHOD_NOT_AVAILABLE = "selected_payment_method_not_available";
+        public static final String RABBITMQ_PUBLISH_FAILED = "rabbitmq_publish_failed";
 
         private Reason() {
         }

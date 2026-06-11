@@ -7,6 +7,7 @@ import com.sep.psp.back.feature_payment.enumeration.PaymentStatus;
 import com.sep.psp.back.feature_payment.model.PaymentTransaction;
 import com.sep.psp.back.feature_payment.repository.PaymentTransactionRepository;
 import com.sep.psp.back.feature_payment.service.interf.PaymentPluginCallbackService;
+import com.sep.psp.back.feature_payment.service.interf.PaymentResultNotificationPublisher;
 import com.sep.psp.back.shared.error.exception.BadRequestException;
 import com.sep.psp.back.shared.logging.LogStrings;
 import com.sep.psp.back.shared.logging.service.interf.AppLoggerService;
@@ -22,6 +23,9 @@ public class PaymentPluginCallbackServiceImpl implements PaymentPluginCallbackSe
 
     @Autowired
     AppLoggerService appLoggerService;
+
+    @Autowired
+    PaymentResultNotificationPublisher paymentResultNotificationPublisher;
 
     @Override
     @Transactional
@@ -41,6 +45,8 @@ public class PaymentPluginCallbackServiceImpl implements PaymentPluginCallbackSe
         paymentTransaction.setStatus(request.status());
 
         PaymentTransaction savedPaymentTransaction = paymentTransactionRepository.save(paymentTransaction);
+
+        paymentResultNotificationPublisher.publishPaymentResult(savedPaymentTransaction, request.message());
 
         appLoggerService.info(
                 LogStrings.Feature.PAYMENT,

@@ -24,5 +24,18 @@
     "failUrl": "http://localhost:3001/payment/failed",
     "errorUrl": "http://localhost:3001/payment/error",
     "pspCallbackUrl": "http://localhost:8082/api/payments/1364fac2-59ea-4a25-bd06-b10115e5c9ab/plugin-callback"
+  },
+  "67291191-5efb-4f09-a140-bba00f6240dd": {
+    "paymentId": "67291191-5efb-4f09-a140-bba00f6240dd",
+    "merchantId": "MER-TEST0001",
+    "sellerReference": "MAIN_SELLER",
+    "paymentMethodCode": "MOCK_PAY",
+    "amount": "255.0",
+    "currency": "EUR",
+    "merchantOrderId": "RES-59dff922-e8b8-4278-b1d7-1f25d34d9811",
+    "successUrl": "http://localhost:3001/payment/success",
+    "failUrl": "http://localhost:3001/payment/failed",
+    "errorUrl": "http://localhost:3001/payment/error",
+    "pspCallbackUrl": "http://localhost:8082/api/payments/67291191-5efb-4f09-a140-bba00f6240dd/plugin-callback"
   }
 }
