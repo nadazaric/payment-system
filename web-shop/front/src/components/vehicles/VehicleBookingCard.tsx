@@ -286,7 +286,6 @@ export default function VehicleBookingCard({
             window.location.href = response.redirectUrl;
         } catch {
             setReservationError("Failed to create reservation.");
-        } finally {
             setSaving(false);
         }
     };
