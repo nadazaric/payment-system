@@ -1,0 +1,30 @@
+{
+  "pluginCode": "BANK_PLUGIN",
+  "displayName": "Bank Payment Plugin",
+  "methods": [
+    {
+      "code": "CARD",
+      "displayName": "Payment card",
+      "active": true,
+      "updateRequired": false,
+      "configFields": [
+        {
+          "fieldName": "bankMerchantId",
+          "fieldType": "TEXT"
+        }
+      ]
+    },
+    {
+      "code": "QR",
+      "displayName": "QR payment",
+      "active": true,
+      "updateRequired": false,
+      "configFields": [
+        {
+          "fieldName": "bankMerchantId",
+          "fieldType": "TEXT"
+        }
+      ]
+    }
+  ]
+}

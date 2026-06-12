@@ -77,12 +77,12 @@ INSERT INTO payment_plugin (
     encrypted_plugin_secret
 )
 VALUES (
-           'MOCK_PLUGIN',
-           'Mock Payment Plugin',
-           'http://localhost:8085',
+           'BANK_PLUGIN',
+           'Bank Payment Plugin',
+           'http://localhost:8086',
            true,
            true,
-           'LluElvujwjREXdPz1Z0ClqafYEEdUbzE8R1MqTRB0mbxix6R611K5wx/OGLh/vi5RuPImKjKjwYTgMtTx8FIbegjh38Aew=='
+           'JG/CXiRyNO1sSYmt9EJsxSGIQK6T96VTGeVBYqd6l3LIJTdl23ptfiY/lgJ7DXspsme64QWwmwvIZikpTmuTacyXJfGDyA=='
        );
 
 INSERT INTO payment_method (
@@ -93,11 +93,11 @@ INSERT INTO payment_method (
     config_schema_json
 )
 VALUES (
-           'MOCK_PAY',
-           'Mock payment',
+           'CARD',
+           'Payment card',
            true,
-           'MOCK_PLUGIN',
-           '[{"fieldName":"mockApiKey","fieldType":"PASSWORD"}]'
+           'BANK_PLUGIN',
+           '[{"fieldName":"bankMerchantId","fieldType":"TEXT"}]'
        );
 
 INSERT INTO payment_method (
@@ -108,11 +108,11 @@ INSERT INTO payment_method (
     config_schema_json
 )
 VALUES (
-           'MOCK_PAY_TWO',
-           'Mock payment 2',
+           'QR',
+           'QR payment',
            true,
-           'MOCK_PLUGIN',
-           '[{"fieldName":"mockApiKey","fieldType":"PASSWORD"},{"fieldName":"mockText","fieldType":"TEXT"},{"fieldName":"mockNumber","fieldType":"NUMBER"}]'
+           'BANK_PLUGIN',
+           '[{"fieldName":"bankMerchantId","fieldType":"TEXT"}]'
        );
 
 INSERT INTO merchant_seller_payment_method (
@@ -122,9 +122,9 @@ INSERT INTO merchant_seller_payment_method (
     configured
 )
 VALUES (
-           'seller-method-test-001',
+           'seller-method-card-001',
            'seller-test-001',
-           'MOCK_PAY',
+           'CARD',
            true
        );
 
@@ -135,8 +135,8 @@ INSERT INTO merchant_seller_payment_method (
     configured
 )
 VALUES (
-           'seller-method-test-002',
+           'seller-method-qr-001',
            'seller-test-001',
-           'MOCK_PAY_TWO',
+           'QR',
            true
        );

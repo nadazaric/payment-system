@@ -45,6 +45,20 @@ services:
     networks:
       - app-network
 
+  bank-plugin-postgres:
+    image: postgres:17
+    container_name: bank_plugin_postgres
+    environment:
+      - POSTGRES_USER=${BANK_PLUGIN_DB_USERNAME}
+      - POSTGRES_PASSWORD=${BANK_PLUGIN_DB_PASSWORD}
+      - POSTGRES_DB=${BANK_PLUGIN_DB_NAME}
+    volumes:
+      - bank-plugin-postgres-data:/var/lib/postgresql/data
+    ports:
+      - ${BANK_PLUGIN_DB_PORT}:5432
+    networks:
+      - app-network
+
   pgadmin:
     image: dpage/pgadmin4
     container_name: pgadmin
@@ -95,6 +109,7 @@ volumes:
   pgadmin-data:
   rabbitmq-data:
   bank-postgres-data:
+  bank-plugin-postgres-data:
 
 networks:
   app-network:
