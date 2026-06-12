@@ -1,16 +1,13 @@
-package com.sep.bank.plugin.back.feature_psp.security;
+package com.sep.bank.back.shared.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sep.bank.plugin.back.feature_psp.dto.manifest.PluginManifest;
-import com.sep.bank.plugin.back.feature_psp.service.interf.PspHmacService;
-import com.sep.bank.plugin.back.shared.logging.LogStrings;
+import com.sep.bank.back.shared.security.service.interf.HmacService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.ResourceLoader;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -21,33 +18,28 @@ import java.time.Instant;
 import java.util.Map;
 
 @Component
-public class PspSignatureVerificationFilter extends OncePerRequestFilter {
+public class SignatureVerificationFilter extends OncePerRequestFilter {
 
-    private static final String PLUGIN_HEARTBEAT_PATH = "/api/plugin/heartbeat";
-    private static final String PLUGIN_CONFIGURATION_PATH = "/api/plugin/configurations";
-    private static final String PLUGIN_PAYMENT_INITIATE_PATH = "/api/plugin/payments/initiate";
+    private static final String CREATE_PAYMENT_PATH = "/api/bank/payments";
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    @Value("${app.plugin.secret}")
+    @Value("${app.security.expected-plugin-code}")
+    String expectedPluginCode;
+
+    @Value("${app.security.plugin-secret}")
     String pluginSecret;
 
-    @Value("${app.plugin.manifest-path}")
-    String manifestPath;
-
-    @Value("${app.plugin.signature-max-timestamp-age-minutes:5}")
+    @Value("${app.security.signature-max-timestamp-age-minutes:5}")
     long maxTimestampAgeMinutes;
 
     @Autowired
-    ResourceLoader resourceLoader;
-
-    @Autowired
-    PspHmacService pspHmacService;
+    HmacService hmacService;
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         return !HttpMethod.POST.matches(request.getMethod())
-                || !isSignedPspEndpoint(request.getServletPath());
+                || !CREATE_PAYMENT_PATH.equals(request.getServletPath());
     }
 
     @Override
@@ -61,7 +53,7 @@ public class PspSignatureVerificationFilter extends OncePerRequestFilter {
         String requestBody = cachedRequest.getCachedBodyAsString();
 
         try {
-            verifyPspRequest(
+            verifySignedRequest(
                     cachedRequest,
                     requestBody
             );
@@ -78,13 +70,13 @@ public class PspSignatureVerificationFilter extends OncePerRequestFilter {
         }
     }
 
-    private void verifyPspRequest(
+    private void verifySignedRequest(
             HttpServletRequest request,
             String requestBody
     ) {
-        String pluginCodeHeader = request.getHeader(PspSecurityHeaders.PLUGIN_CODE);
-        String timestamp = request.getHeader(PspSecurityHeaders.TIMESTAMP);
-        String signature = request.getHeader(PspSecurityHeaders.SIGNATURE);
+        String pluginCodeHeader = request.getHeader(SignatureHeaders.PLUGIN_CODE);
+        String timestamp = request.getHeader(SignatureHeaders.TIMESTAMP);
+        String signature = request.getHeader(SignatureHeaders.SIGNATURE);
 
         validateRequiredHeaders(
                 pluginCodeHeader,
@@ -94,7 +86,6 @@ public class PspSignatureVerificationFilter extends OncePerRequestFilter {
 
         validatePluginCode(pluginCodeHeader);
         validateTimestamp(timestamp);
-
         validateSignature(
                 timestamp,
                 requestBody,
@@ -121,9 +112,7 @@ public class PspSignatureVerificationFilter extends OncePerRequestFilter {
     }
 
     private void validatePluginCode(String pluginCodeHeader) {
-        PluginManifest manifest = loadManifest();
-
-        if (!manifest.pluginCode().equals(pluginCodeHeader)) {
+        if (!expectedPluginCode.equals(pluginCodeHeader)) {
             throw new IllegalArgumentException("Plugin code header is not valid.");
         }
     }
@@ -139,10 +128,10 @@ public class PspSignatureVerificationFilter extends OncePerRequestFilter {
             ).abs();
 
             if (age.compareTo(Duration.ofMinutes(maxTimestampAgeMinutes)) > 0) {
-                throw new IllegalArgumentException("PSP request timestamp is not valid.");
+                throw new IllegalArgumentException("Signed request timestamp is not valid.");
             }
         } catch (Exception exception) {
-            throw new IllegalArgumentException("PSP request timestamp is not valid.");
+            throw new IllegalArgumentException("Signed request timestamp is not valid.");
         }
     }
 
@@ -151,7 +140,7 @@ public class PspSignatureVerificationFilter extends OncePerRequestFilter {
             String requestBody,
             String signature
     ) {
-        boolean signatureValid = pspHmacService.isSignatureValid(
+        boolean signatureValid = hmacService.isSignatureValid(
                 pluginSecret,
                 timestamp,
                 requestBody,
@@ -159,26 +148,8 @@ public class PspSignatureVerificationFilter extends OncePerRequestFilter {
         );
 
         if (!signatureValid) {
-            throw new IllegalArgumentException("Invalid PSP request signature.");
+            throw new IllegalArgumentException("Invalid request signature.");
         }
-    }
-
-    private PluginManifest loadManifest() {
-        try {
-            return objectMapper.readValue(
-                    resourceLoader.getResource("classpath:" + manifestPath)
-                            .getInputStream(),
-                    PluginManifest.class
-            );
-        } catch (Exception exception) {
-            throw new IllegalStateException(LogStrings.Reason.MANIFEST_READ_FAILED);
-        }
-    }
-
-    private boolean isSignedPspEndpoint(String servletPath) {
-        return PLUGIN_HEARTBEAT_PATH.equals(servletPath)
-                || PLUGIN_CONFIGURATION_PATH.equals(servletPath)
-                || PLUGIN_PAYMENT_INITIATE_PATH.equals(servletPath);
     }
 
     private void writeErrorResponse(

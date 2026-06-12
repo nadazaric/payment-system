@@ -11,7 +11,7 @@ VALUES (
            'MAIN_SELLER',
            'CARD',
            'BANK_MERCHANT_001'
-       )
+       );
 
 INSERT INTO bank_plugin_seller_configuration (
     id,
@@ -26,4 +26,4 @@ VALUES (
            'MAIN_SELLER',
            'QR',
            'BANK_MERCHANT_001'
-       )
+       );

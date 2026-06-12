@@ -1,4 +1,4 @@
-package com.sep.bank.plugin.back.feature_psp.security;
+package com.sep.bank.back.shared.security;
 
 import jakarta.servlet.ReadListener;
 import jakarta.servlet.ServletInputStream;

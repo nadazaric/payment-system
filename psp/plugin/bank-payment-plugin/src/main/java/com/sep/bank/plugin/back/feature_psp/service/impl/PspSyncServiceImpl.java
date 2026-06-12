@@ -6,10 +6,10 @@ import com.sep.bank.plugin.back.feature_psp.dto.manifest.PluginManifest;
 import com.sep.bank.plugin.back.feature_psp.dto.psp.PluginPaymentMethodRegistrationRequest;
 import com.sep.bank.plugin.back.feature_psp.dto.psp.PluginSyncRequest;
 import com.sep.bank.plugin.back.feature_psp.dto.psp.PluginSyncResponse;
-import com.sep.bank.plugin.back.feature_psp.service.interf.PspHmacService;
 import com.sep.bank.plugin.back.feature_psp.service.interf.PspSyncService;
 import com.sep.bank.plugin.back.shared.logging.LogStrings;
 import com.sep.bank.plugin.back.shared.logging.service.interf.AppLoggerService;
+import com.sep.bank.plugin.back.shared.security.service.interf.HmacService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ResourceLoader;
@@ -24,11 +24,20 @@ public class PspSyncServiceImpl implements PspSyncService {
 
     private final ResourceLoader resourceLoader;
 
+    @Autowired
+    HmacService hmacService;
+
+    @Autowired
+    PspClient pspClient;
+
+    @Autowired
+    AppLoggerService appLoggerService;
+
     @Value("${app.plugin.base-url}")
     String pluginBaseUrl;
 
-    @Value("${app.plugin.secret}")
-    String pluginSecret;
+    @Value("${app.security.psp-secret}")
+    String pspSecret;
 
     @Value("${app.plugin.manifest-path}")
     String manifestPath;
@@ -38,15 +47,6 @@ public class PspSyncServiceImpl implements PspSyncService {
 
     @Value("${app.psp.sync.retry-delay-ms:3000}")
     long syncRetryDelayMs;
-
-    @Autowired
-    PspHmacService pspHmacService;
-
-    @Autowired
-    PspClient pspClient;
-
-    @Autowired
-    AppLoggerService appLoggerService;
 
     public PspSyncServiceImpl(ResourceLoader resourceLoader) {
         this.resourceLoader = resourceLoader;
@@ -117,8 +117,8 @@ public class PspSyncServiceImpl implements PspSyncService {
         String requestBody = writeJson(request);
         String timestamp = Instant.now().toString();
 
-        String signature = pspHmacService.generateSignature(
-                pluginSecret,
+        String signature = hmacService.generateSignature(
+                pspSecret,
                 timestamp,
                 requestBody
         );

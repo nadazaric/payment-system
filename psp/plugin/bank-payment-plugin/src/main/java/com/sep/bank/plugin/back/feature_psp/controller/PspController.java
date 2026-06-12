@@ -2,9 +2,9 @@ package com.sep.bank.plugin.back.feature_psp.controller;
 
 import com.sep.bank.plugin.back.feature_psp.dto.psp.PluginConfigurationRequest;
 import com.sep.bank.plugin.back.feature_psp.dto.psp.PluginConfigurationResponse;
-import com.sep.bank.plugin.back.feature_psp.security.PspSecurityHeaders;
-import com.sep.bank.plugin.back.feature_psp.service.interf.PluginConfigurationService;
 import com.sep.bank.plugin.back.shared.logging.LogStrings;
+import com.sep.bank.plugin.back.shared.security.SignatureHeaders;
+import com.sep.bank.plugin.back.feature_psp.service.interf.PluginConfigurationService;
 import com.sep.bank.plugin.back.shared.logging.service.interf.AppLoggerService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
@@ -24,7 +24,7 @@ public class PspController {
 
     @PostMapping("/heartbeat")
     @Operation(summary = "Heartbeat check")
-    public ResponseEntity<Void> heartbeat(@RequestHeader(PspSecurityHeaders.PLUGIN_CODE) String pluginCode) {
+    public ResponseEntity<Void> heartbeat(@RequestHeader(SignatureHeaders.PLUGIN_CODE) String pluginCode) {
 //        appLoggerService.info(
 //                LogStrings.Feature.APP,
 //                LogStrings.Action.HEARTBEAT,

@@ -34,6 +34,7 @@ public final class LogStrings {
 
         public static final String BANK_MERCHANT_NOT_FOUND = "bank_merchant_not_found";
         public static final String PAYMENT_REQUEST_ALREADY_EXISTS = "payment_request_already_exists";
+        public static final String SIGNATURE_GENERATION_FAILED = "signature_generation_failed";
     }
 
 }
