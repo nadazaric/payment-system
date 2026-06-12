@@ -22,16 +22,13 @@ public class PaymentPageRenderer {
         this.resourceLoader = resourceLoader;
     }
 
-    public String renderPaymentPage(
-            PaymentPageDTO payment
-    ) {
+    public String renderPaymentPage(PaymentPageDTO payment) {
         String template = loadTemplate(getPaymentPageTemplatePath(payment.paymentMethod()));
 
         return template
-                .replace("{{paymentId}}", payment.paymentId().toString())
                 .replace("{{amount}}", payment.amount().toString())
                 .replace("{{currency}}", payment.currency())
-                .replace("{{paymentMethod}}", payment.paymentMethod().name());
+                .replace("{{paymentFormContent}}", buildPaymentFormContent(payment));
     }
 
     public String renderNotFoundPage() {
@@ -61,6 +58,98 @@ public class PaymentPageRenderer {
         } catch (Exception exception) {
             throw new IllegalStateException("Payment page template could not be loaded.");
         }
+    }
+
+    private String buildPaymentFormContent(
+            PaymentPageDTO payment
+    ) {
+        if (Boolean.TRUE.equals(payment.expired())) {
+            return """
+                <div class="disabled-box">
+                    This payment link has expired.
+                </div>
+                """;
+        }
+
+        if (Boolean.TRUE.equals(payment.paymentAttemptUsed())) {
+            return """
+                <div class="disabled-box">
+                    This payment form has already been used.
+                </div>
+                """;
+        }
+
+        return """
+            <form method="post" action="/api/bank/payments/%s/submit">
+                <div class="form-grid">
+                    <div class="field">
+                        <label for="pan">Card number (PAN)</label>
+                        <input
+                            type="text"
+                            id="pan"
+                            name="pan"
+                            inputmode="numeric"
+                            autocomplete="cc-number"
+                            maxlength="19"
+                            placeholder="0000 0000 0000 0000"
+                            required>
+                        <span id="panError" class="error-text">Enter a valid 16-digit card number.</span>
+                    </div>
+            
+                    <div class="field">
+                        <label for="cardHolderName">Card holder name</label>
+                        <input
+                            type="text"
+                            id="cardHolderName"
+                            name="cardHolderName"
+                            autocomplete="cc-name"
+                            maxlength="100"
+                            placeholder="Name printed on card"
+                            required>
+                        <span id="cardHolderNameError" class="error-text">Enter card holder name.</span>
+                    </div>
+            
+                    <div class="form-row">
+                        <div class="field">
+                            <label for="expirationDate">Expiration date</label>
+                            <input
+                                type="text"
+                                id="expirationDate"
+                                name="expirationDate"
+                                autocomplete="cc-exp"
+                                maxlength="5"
+                                placeholder="MM/YY"
+                                required>
+                            <span id="expirationDateError" class="error-text">Enter a valid future date in MM/YY format.</span>
+                        </div>
+            
+                        <div class="field">
+                            <label for="securityCode">Security code</label>
+                            <input
+                                type="password"
+                                id="securityCode"
+                                name="securityCode"
+                                inputmode="numeric"
+                                autocomplete="cc-csc"
+                                maxlength="3"
+                                placeholder="CVV"
+                                required>
+                            <span id="securityCodeError" class="error-text">Enter a valid 3-digit security code.</span>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="actions">
+                    <button
+                        id="submitPaymentButton"
+                        class="button"
+                        type="submit"
+                        disabled>
+                        Submit payment
+                    </button>
+                </div>
+            </form>
+            """.formatted(payment.paymentId());
     }
 
 }

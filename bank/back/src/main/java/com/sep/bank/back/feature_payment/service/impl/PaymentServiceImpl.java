@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -30,6 +31,9 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Value("${app.bank.payment-page-base-url}")
     String paymentPageBaseUrl;
+
+    @Value("${app.bank.payment-url-expiration-minutes}")
+    Long paymentUrlExpirationMinutes;
 
     @Override
     public CreatePaymentResponse createPayment(CreatePaymentRequest request) {
@@ -50,6 +54,8 @@ public class PaymentServiceImpl implements PaymentService {
 
         Payment payment = new Payment();
 
+        LocalDateTime now = LocalDateTime.now();
+
         payment.setBankMerchantId(request.bankMerchantId());
         payment.setStan(request.stan());
         payment.setPspTimestamp(request.pspTimestamp());
@@ -60,6 +66,9 @@ public class PaymentServiceImpl implements PaymentService {
         payment.setFailUrl(request.failUrl());
         payment.setErrorUrl(request.errorUrl());
         payment.setPluginCallbackUrl(request.pluginCallbackUrl());
+        payment.setCreatedAt(now);
+        payment.setExpiresAt(now.plusMinutes(paymentUrlExpirationMinutes));
+        payment.setPaymentAttemptUsed(false);
 
         Payment savedPayment = paymentRepository.save(payment);
         String paymentUrl = paymentPageBaseUrl + "/" + savedPayment.getId();
@@ -67,11 +76,12 @@ public class PaymentServiceImpl implements PaymentService {
         appLoggerService.info(
                 LogStrings.Feature.PAYMENT,
                 LogStrings.Action.PAYMENT_CREATED,
-                "bankPaymentId={} bankMerchantId={} stan={} paymentUrl={}",
+                "bankPaymentId={} bankMerchantId={} stan={} paymentUrl={} expiresAt={}",
                 savedPayment.getId(),
                 savedPayment.getBankMerchantId(),
                 savedPayment.getStan(),
-                paymentUrl
+                paymentUrl,
+                savedPayment.getExpiresAt()
         );
 
         return new CreatePaymentResponse(
@@ -136,11 +146,17 @@ public class PaymentServiceImpl implements PaymentService {
 
         Payment payment = paymentOptional.get();
 
+        boolean expired = payment.getExpiresAt().isBefore(LocalDateTime.now());
+
         return Optional.of(new PaymentPageDTO(
                 payment.getId(),
                 payment.getPaymentMethod(),
                 payment.getAmount(),
-                payment.getCurrency()
+                payment.getCurrency(),
+                payment.getStatus(),
+                payment.getExpiresAt(),
+                payment.getPaymentAttemptUsed(),
+                expired
         ));
     }
 

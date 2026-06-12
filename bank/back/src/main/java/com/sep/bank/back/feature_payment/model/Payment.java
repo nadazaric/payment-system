@@ -1,6 +1,7 @@
 package com.sep.bank.back.feature_payment.model;
 
 import com.sep.bank.back.feature_payment.enumeration.PaymentMethod;
+import com.sep.bank.back.feature_payment.enumeration.PaymentStatus;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -49,5 +50,18 @@ public class Payment {
 
     @Column(nullable = false, length = 1000)
     private String pluginCallbackUrl;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private PaymentStatus status = PaymentStatus.CREATED;
+
+    @Column(nullable = false)
+    private LocalDateTime createdAt;
+
+    @Column(nullable = false)
+    private LocalDateTime expiresAt;
+
+    @Column(nullable = false)
+    private Boolean paymentAttemptUsed = false;
 
 }
