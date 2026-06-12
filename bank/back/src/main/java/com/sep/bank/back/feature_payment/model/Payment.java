@@ -22,7 +22,7 @@ public class Payment {
     @Column(nullable = false)
     private String bankMerchantId;
 
-    @Column(nullable = false)
+    @Column(nullable = false, precision = 19, scale = 2)
     private BigDecimal amount;
 
     @Column(nullable = false)
