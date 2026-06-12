@@ -1,9 +1,122 @@
-INSERT INTO merchant (
-    bank_merchant_id,
-    name
+------------------------------------------------------------------------------------------------------------------------ Web Shop
+INSERT INTO bank_account (
+    id,
+    account_number,
+    holder_name,
+    balance,
+    currency,
+    active
 )
 VALUES (
-    'BANK_MERCHANT_001',
-    'Rent a Car Web Shop'
+           '11111111-1111-1111-1111-111111111111',
+           'RS35160000000000000001',
+           'Rent a Car Web Shop',
+           0.00,
+           'EUR',
+           true
+       );
+
+INSERT INTO merchant (
+    bank_merchant_id,
+    name,
+    bank_account_id
 )
-ON CONFLICT (bank_merchant_id) DO NOTHING;
+VALUES (
+           'BANK_MERCHANT_001',
+           'Rent a Car Web Shop',
+           '11111111-1111-1111-1111-111111111111'
+       );
+
+------------------------------------------------------------------------------------------------------------------------ Nada Zaric
+INSERT INTO bank_account (
+    id,
+    account_number,
+    holder_name,
+    balance,
+    currency,
+    active
+)
+VALUES (
+           '22222222-2222-2222-2222-222222222222',
+           'RS35160000000000000002',
+           'Nada Zaric',
+           10000.00,
+           'EUR',
+           true
+       );
+
+
+INSERT INTO payment_card (
+    id,
+    pan,
+    card_holder_name,
+    expiration_month,
+    expiration_year,
+    active,
+    bank_account_id
+)
+VALUES (
+           '44444444-4444-4444-4444-444444444444',
+           '4111111111111111',
+           'Nada Zaric',
+           12,
+           2030,
+           true,
+           '22222222-2222-2222-2222-222222222222'
+       );
+
+INSERT INTO payment_card (
+    id,
+    pan,
+    card_holder_name,
+    expiration_month,
+    expiration_year,
+    active,
+    bank_account_id
+)
+VALUES (
+           '55555555-5555-5555-5555-555555555555',
+           '4242424242424242',
+           'Nada Zaric',
+           12,
+           2030,
+           false,
+           '22222222-2222-2222-2222-222222222222'
+       );
+
+------------------------------------------------------------------------------------------------------------------------ Marko Markovic
+INSERT INTO bank_account (
+    id,
+    account_number,
+    holder_name,
+    balance,
+    currency,
+    active
+)
+VALUES (
+           '33333333-3333-3333-3333-333333333333',
+           'RS35160000000000000003',
+           'Marko Markovic',
+           250.00,
+           'EUR',
+           true
+       );
+
+INSERT INTO payment_card (
+    id,
+    pan,
+    card_holder_name,
+    expiration_month,
+    expiration_year,
+    active,
+    bank_account_id
+)
+VALUES (
+           '66666666-6666-6666-6666-666666666666',
+           '5555555555554444',
+           'Marko Markovic',
+           12,
+           2030,
+           true,
+           '33333333-3333-3333-3333-333333333333'
+       );

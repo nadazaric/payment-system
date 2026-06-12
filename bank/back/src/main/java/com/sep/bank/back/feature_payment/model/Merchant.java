@@ -18,4 +18,8 @@ public class Merchant {
     @Column(nullable = false)
     private String name;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(nullable = false)
+    private BankAccount bankAccount;
+
 }
