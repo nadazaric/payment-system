@@ -9,6 +9,10 @@ public record CreateBankPaymentRequest(
         LocalDateTime pspTimestamp,
         String paymentMethod,
         BigDecimal amount,
-        String currency
+        String currency,
+        String successUrl,
+        String failUrl,
+        String errorUrl,
+        String pluginCallbackUrl
 ) {
 }

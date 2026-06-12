@@ -38,4 +38,16 @@ public class Payment {
     @Column(nullable = false)
     private PaymentMethod paymentMethod;
 
+    @Column(nullable = false, length = 1000)
+    private String successUrl;
+
+    @Column(nullable = false, length = 1000)
+    private String failUrl;
+
+    @Column(nullable = false, length = 1000)
+    private String errorUrl;
+
+    @Column(nullable = false, length = 1000)
+    private String pluginCallbackUrl;
+
 }

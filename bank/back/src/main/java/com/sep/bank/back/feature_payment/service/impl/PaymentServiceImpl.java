@@ -52,6 +52,10 @@ public class PaymentServiceImpl implements PaymentService {
         payment.setPaymentMethod(request.paymentMethod());
         payment.setAmount(request.amount());
         payment.setCurrency(request.currency());
+        payment.setSuccessUrl(request.successUrl());
+        payment.setFailUrl(request.failUrl());
+        payment.setErrorUrl(request.errorUrl());
+        payment.setPluginCallbackUrl(request.pluginCallbackUrl());
 
         Payment savedPayment = paymentRepository.save(payment);
 

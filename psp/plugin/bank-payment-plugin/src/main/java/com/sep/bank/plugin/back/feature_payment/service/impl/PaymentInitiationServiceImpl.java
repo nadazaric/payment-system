@@ -14,6 +14,7 @@ import com.sep.bank.plugin.back.feature_psp.repository.BankPluginSellerConfigura
 import com.sep.bank.plugin.back.shared.logging.LogStrings;
 import com.sep.bank.plugin.back.shared.logging.service.interf.AppLoggerService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClientException;
@@ -35,6 +36,9 @@ public class PaymentInitiationServiceImpl implements PaymentInitiationService {
 
     @Autowired
     AppLoggerService appLoggerService;
+
+    @Value("${app.plugin.bank-callback-url}")
+    String bankCallbackUrl;
 
     @Override
     @Transactional
@@ -144,7 +148,11 @@ public class PaymentInitiationServiceImpl implements PaymentInitiationService {
                     pspTimestamp,
                     request.paymentMethodCode(),
                     request.amount(),
-                    request.currency()
+                    request.currency(),
+                    request.successUrl(),
+                    request.failUrl(),
+                    request.errorUrl(),
+                    bankCallbackUrl
             );
 
             CreateBankPaymentResponse bankResponse = bankClient.createPayment(bankRequest);
