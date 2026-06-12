@@ -50,29 +50,37 @@ public class CardPaymentProcessingServiceImpl implements CardPaymentProcessingSe
         appLoggerService.info(
                 LogStrings.Feature.PAYMENT,
                 LogStrings.Action.CARD_PAYMENT_SUBMIT_RECEIVED,
-                "bankPaymentId={} pan={} cardHolderName={} expirationDate={}",
+                "bankPaymentId={} cardHolderName={} expirationDate={}",
                 paymentId,
-                request.pan(),
                 request.cardHolderName(),
                 request.expirationDate()
         );
 
         Payment payment = findPayment(paymentId);
 
-        validatePaymentIsAvailableForProcessing(payment);
-        validatePaymentNotExpired(payment);
-        validateCardPaymentMethod(payment);
+        try {
+            validatePaymentIsAvailableForProcessing(payment);
+            validatePaymentNotExpired(payment);
+            validateCardPaymentMethod(payment);
 
-        String normalizedPan = validateAndNormalizePan(payment, request.pan());
-        PaymentCard paymentCard = findPaymentCard(payment, normalizedPan);
+            String normalizedPan = validateAndNormalizePan(payment, request.pan());
+            PaymentCard paymentCard = findPaymentCard(payment, normalizedPan);
 
-        validateSecurityCode(payment, paymentCard, request);
-        validateCardHolderName(payment, paymentCard, request);
-        validateExpirationDate(payment, paymentCard, request);
-        validateCardAndAccountAreActive(payment, paymentCard);
+            validateSecurityCode(payment, paymentCard, request);
+            validateCardHolderName(payment, paymentCard, request);
+            validateExpirationDate(payment, paymentCard, request);
+            validateCardAndAccountAreActive(payment, paymentCard);
 
-        transferFunds(payment, paymentCard);
-        completePaymentSuccessfully(payment);
+            transferFunds(payment, paymentCard);
+            completePaymentSuccessfully(payment);
+        } catch (CardPaymentRejectedException exception) {
+            return exception.getRedirectUrl();
+        } catch (Exception exception) {
+            return rejectPaymentAsError(
+                    payment,
+                    exception
+            );
+        }
 
         return payment.getSuccessUrl();
     }
@@ -385,6 +393,24 @@ public class CardPaymentProcessingServiceImpl implements CardPaymentProcessingSe
         );
     }
 
+    private void completePaymentSuccessfully(Payment payment) {
+        payment.setStatus(PaymentStatus.SUCCESS);
+        payment.setPaymentAttemptUsed(true);
+        payment.setGlobalTransactionId(UUID.randomUUID().toString());
+        payment.setAcquirerTimestamp(LocalDateTime.now());
+
+        paymentRepository.save(payment);
+
+        appLoggerService.info(
+                LogStrings.Feature.PAYMENT,
+                LogStrings.Action.CARD_PAYMENT_COMPLETED,
+                "bankPaymentId={} globalTransactionId={} acquirerTimestamp={}",
+                payment.getId(),
+                payment.getGlobalTransactionId(),
+                payment.getAcquirerTimestamp()
+        );
+    }
+
     private void rejectPaymentAsFailed(Payment payment, String reason, String message) {
         payment.setStatus(PaymentStatus.FAILED);
         payment.setPaymentAttemptUsed(true);
@@ -402,22 +428,25 @@ public class CardPaymentProcessingServiceImpl implements CardPaymentProcessingSe
         throw new CardPaymentRejectedException(message, payment.getFailUrl());
     }
 
-    private void completePaymentSuccessfully(Payment payment) {
-        payment.setStatus(PaymentStatus.SUCCESS);
+    private String rejectPaymentAsError(
+            Payment payment,
+            Exception exception
+    ) {
+        payment.setStatus(PaymentStatus.ERROR);
         payment.setPaymentAttemptUsed(true);
-        payment.setGlobalTransactionId(UUID.randomUUID().toString());
-        payment.setAcquirerTimestamp(LocalDateTime.now());
 
         paymentRepository.save(payment);
 
-        appLoggerService.info(
+        appLoggerService.error(
                 LogStrings.Feature.PAYMENT,
-                LogStrings.Action.CARD_PAYMENT_COMPLETED,
-                "bankPaymentId={} globalTransactionId={} acquirerTimestamp={}",
+                LogStrings.Action.CARD_PAYMENT_REJECTED,
+                "reason={} bankPaymentId={} error={}",
+                LogStrings.Reason.CARD_PAYMENT_PROCESSING_ERROR,
                 payment.getId(),
-                payment.getGlobalTransactionId(),
-                payment.getAcquirerTimestamp()
+                exception.getMessage()
         );
+
+        return payment.getErrorUrl();
     }
 
 }

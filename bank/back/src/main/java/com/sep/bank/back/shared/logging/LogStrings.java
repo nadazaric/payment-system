@@ -57,6 +57,7 @@ public final class LogStrings {
         public static final String MERCHANT_NOT_FOUND = "merchant_not_found";
         public static final String CURRENCY_MISMATCH = "currency_mismatch";
         public static final String INSUFFICIENT_FUNDS = "insufficient_funds";
+        public static final String CARD_PAYMENT_PROCESSING_ERROR = "card_payment_processing_error";
 
     }
 

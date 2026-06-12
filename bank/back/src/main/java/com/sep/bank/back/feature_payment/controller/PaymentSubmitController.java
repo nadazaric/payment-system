@@ -35,15 +35,7 @@ public class PaymentSubmitController {
                 expirationDate
         );
 
-        String redirectUrl;
-
-        try {
-            redirectUrl = cardPaymentProcessingService.submitCardPayment(paymentId, request);
-        } catch (CardPaymentRejectedException exception) {
-            redirectUrl = exception.getRedirectUrl();
-        } catch (IllegalArgumentException exception) {
-            redirectUrl = "/payments/" + paymentId;
-        }
+        String redirectUrl = cardPaymentProcessingService.submitCardPayment(paymentId, request);
 
         return ResponseEntity.status(HttpStatus.SEE_OTHER)
                 .location(URI.create(redirectUrl))
