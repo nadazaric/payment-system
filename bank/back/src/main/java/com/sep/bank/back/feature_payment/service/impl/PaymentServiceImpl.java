@@ -40,7 +40,7 @@ public class PaymentServiceImpl implements PaymentService {
 
         return new CreatePaymentResponse(
                 savedPayment.getId().toString(),
-                paymentPageBaseUrl + "/" + payment.getId()
+                paymentPageBaseUrl + "/" + savedPayment.getId()
         );
     }
 
