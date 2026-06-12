@@ -25,12 +25,12 @@ public class PspController {
     @PostMapping("/heartbeat")
     @Operation(summary = "Heartbeat check")
     public ResponseEntity<Void> heartbeat(@RequestHeader(PspSecurityHeaders.PLUGIN_CODE) String pluginCode) {
-        appLoggerService.info(
-                LogStrings.Feature.APP,
-                LogStrings.Action.HEARTBEAT,
-                "pluginCode={} status=UP",
-                pluginCode
-        );
+//        appLoggerService.info(
+//                LogStrings.Feature.APP,
+//                LogStrings.Action.HEARTBEAT,
+//                "pluginCode={} status=UP",
+//                pluginCode
+//        );
 
         return ResponseEntity.noContent()
                 .build();

@@ -25,6 +25,7 @@ public class PspSignatureVerificationFilter extends OncePerRequestFilter {
 
     private static final String PLUGIN_HEARTBEAT_PATH = "/api/plugin/heartbeat";
     private static final String PLUGIN_CONFIGURATION_PATH = "/api/plugin/configurations";
+    private static final String PLUGIN_PAYMENT_INITIATE_PATH = "/api/plugin/payments/initiate";
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -175,7 +176,9 @@ public class PspSignatureVerificationFilter extends OncePerRequestFilter {
     }
 
     private boolean isSignedPspEndpoint(String servletPath) {
-        return PLUGIN_HEARTBEAT_PATH.equals(servletPath) || PLUGIN_CONFIGURATION_PATH.equals(servletPath);
+        return PLUGIN_HEARTBEAT_PATH.equals(servletPath)
+                || PLUGIN_CONFIGURATION_PATH.equals(servletPath)
+                || PLUGIN_PAYMENT_INITIATE_PATH.equals(servletPath);
     }
 
     private void writeErrorResponse(

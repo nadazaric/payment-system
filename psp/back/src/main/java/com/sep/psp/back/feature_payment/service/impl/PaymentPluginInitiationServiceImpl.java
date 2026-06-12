@@ -39,7 +39,6 @@ public class PaymentPluginInitiationServiceImpl implements PaymentPluginInitiati
                 sellerPaymentMethod.getPaymentMethod().getCode(),
                 paymentTransaction.getAmount(),
                 paymentTransaction.getCurrency(),
-                paymentTransaction.getMerchantOrderId(),
                 paymentTransaction.getMerchant().getSuccessUrl(),
                 paymentTransaction.getMerchant().getFailUrl(),
                 paymentTransaction.getMerchant().getErrorUrl(),
