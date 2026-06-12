@@ -16,8 +16,11 @@ public class PaymentCard {
     @Column(nullable = false, updatable = false)
     private UUID id;
 
-    @Column(nullable = false, unique = true)
-    private String pan;
+    @Column(nullable = false, unique = true, length = 1000)
+    private String panHash;
+
+    @Column(nullable = false)
+    private String maskedPan;
 
     @Column(nullable = false)
     private String cardHolderName;

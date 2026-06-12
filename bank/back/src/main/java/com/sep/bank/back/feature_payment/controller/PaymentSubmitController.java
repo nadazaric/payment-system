@@ -2,9 +2,10 @@ package com.sep.bank.back.feature_payment.controller;
 
 import com.sep.bank.back.feature_payment.dto.CardPaymentSubmitRequest;
 import com.sep.bank.back.feature_payment.service.interf.CardPaymentProcessingService;
-import com.sep.bank.back.shared.exception.CardPaymentRejectedException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.*;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;

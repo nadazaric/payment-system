@@ -8,6 +8,6 @@ import java.util.UUID;
 
 public interface PaymentCardRepository extends JpaRepository<PaymentCard, UUID> {
 
-    Optional<PaymentCard> findByPan(String pan);
+    Optional<PaymentCard> findByPanHash(String panHash);
 
 }

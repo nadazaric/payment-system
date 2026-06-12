@@ -20,19 +20,19 @@ public class CardSecurityServiceImpl implements CardSecurityService {
     String cardSecret;
 
     @Override
-    public boolean isSecurityCodeValid(PaymentCard paymentCard, String securityCode) {
+    public boolean isSecurityCodeValid(PaymentCard paymentCard, String normalizedPan, String securityCode) {
         if (securityCode == null || !securityCode.matches("\\d{3}")) {
             return false;
         }
 
-        String expectedSecurityCode = generateSecurityCode(paymentCard);
+        String expectedSecurityCode = generateSecurityCode(paymentCard, normalizedPan);
 
         return expectedSecurityCode.equals(securityCode);
     }
 
-    private String generateSecurityCode(PaymentCard paymentCard) {
+    private String generateSecurityCode(PaymentCard paymentCard, String normalizedPan) {
         try {
-            String payload = paymentCard.getPan()
+            String payload = normalizedPan
                     + PAYLOAD_SEPARATOR
                     + paymentCard.getExpirationMonth()
                     + PAYLOAD_SEPARATOR

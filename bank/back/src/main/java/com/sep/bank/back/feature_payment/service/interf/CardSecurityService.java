@@ -4,6 +4,6 @@ import com.sep.bank.back.feature_payment.model.PaymentCard;
 
 public interface CardSecurityService {
 
-    boolean isSecurityCodeValid(PaymentCard paymentCard, String securityCode);
+    boolean isSecurityCodeValid(PaymentCard paymentCard, String normalizedPan, String securityCode);
 
 }

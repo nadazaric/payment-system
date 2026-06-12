@@ -10,6 +10,7 @@ import com.sep.bank.back.feature_payment.model.PaymentCard;
 import com.sep.bank.back.feature_payment.repository.MerchantRepository;
 import com.sep.bank.back.feature_payment.repository.PaymentCardRepository;
 import com.sep.bank.back.feature_payment.repository.PaymentRepository;
+import com.sep.bank.back.feature_payment.service.interf.CardPanHashService;
 import com.sep.bank.back.feature_payment.service.interf.CardPaymentProcessingService;
 import com.sep.bank.back.feature_payment.service.interf.CardSecurityService;
 import com.sep.bank.back.shared.exception.CardPaymentRejectedException;
@@ -42,6 +43,9 @@ public class CardPaymentProcessingServiceImpl implements CardPaymentProcessingSe
     CardSecurityService cardSecurityService;
 
     @Autowired
+    CardPanHashService cardPanHashService;
+
+    @Autowired
     AppLoggerService appLoggerService;
 
     @Override
@@ -66,7 +70,7 @@ public class CardPaymentProcessingServiceImpl implements CardPaymentProcessingSe
             String normalizedPan = validateAndNormalizePan(payment, request.pan());
             PaymentCard paymentCard = findPaymentCard(payment, normalizedPan);
 
-            validateSecurityCode(payment, paymentCard, request);
+            validateSecurityCode(payment, paymentCard, normalizedPan, request);
             validateCardHolderName(payment, paymentCard, request);
             validateExpirationDate(payment, paymentCard, request);
             validateCardAndAccountAreActive(payment, paymentCard);
@@ -201,7 +205,9 @@ public class CardPaymentProcessingServiceImpl implements CardPaymentProcessingSe
     }
 
     private PaymentCard findPaymentCard(Payment payment, String normalizedPan) {
-        Optional<PaymentCard> paymentCardOptional = paymentCardRepository.findByPan(normalizedPan);
+        String panHash = cardPanHashService.generatePanHash(normalizedPan);
+
+        Optional<PaymentCard> paymentCardOptional = paymentCardRepository.findByPanHash(panHash);
 
         if (paymentCardOptional.isPresent()) {
             return paymentCardOptional.get();
@@ -213,15 +219,23 @@ public class CardPaymentProcessingServiceImpl implements CardPaymentProcessingSe
                 "Card was not found."
         );
 
-        throw new IllegalArgumentException("Card was not found.");
+        throw new CardPaymentRejectedException(
+                "Card was not found.",
+                payment.getFailUrl()
+        );
     }
 
     private void validateSecurityCode(
             Payment payment,
             PaymentCard paymentCard,
+            String normalizedPan,
             CardPaymentSubmitRequest request
     ) {
-        boolean securityCodeValid = cardSecurityService.isSecurityCodeValid(paymentCard, request.securityCode());
+        boolean securityCodeValid = cardSecurityService.isSecurityCodeValid(
+                paymentCard,
+                normalizedPan,
+                request.securityCode()
+        );
 
         if (securityCodeValid) {
             return;
