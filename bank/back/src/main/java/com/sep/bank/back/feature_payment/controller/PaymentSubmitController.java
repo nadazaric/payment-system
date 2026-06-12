@@ -38,11 +38,10 @@ public class PaymentSubmitController {
         String redirectUrl;
 
         try {
-            redirectUrl = cardPaymentProcessingService.submitCardPayment(
-                    paymentId,
-                    request
-            );
-        } catch (CardPaymentRejectedException | IllegalArgumentException exception) {
+            redirectUrl = cardPaymentProcessingService.submitCardPayment(paymentId, request);
+        } catch (CardPaymentRejectedException exception) {
+            redirectUrl = exception.getRedirectUrl();
+        } catch (IllegalArgumentException exception) {
             redirectUrl = "/payments/" + paymentId;
         }
 

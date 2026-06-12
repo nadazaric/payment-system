@@ -27,19 +27,24 @@ public class PaymentPageController {
         try {
             parsedPaymentId = UUID.fromString(paymentId);
         } catch (IllegalArgumentException exception) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .contentType(MediaType.TEXT_HTML)
-                    .body(paymentPageRenderer.renderNotFoundPage());
+            return noCacheResponse(HttpStatus.NOT_FOUND).body(paymentPageRenderer.renderNotFoundPage());
         }
 
         Optional<PaymentPageDTO> paymentPageOptional = paymentService.getPaymentPageData(parsedPaymentId);
 
-        return paymentPageOptional.map(paymentPageDTO -> ResponseEntity.ok()
-                .contentType(MediaType.TEXT_HTML)
-                .body(paymentPageRenderer.renderPaymentPage(paymentPageDTO))).orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .contentType(MediaType.TEXT_HTML)
-                .body(paymentPageRenderer.renderNotFoundPage()));
+        if (paymentPageOptional.isEmpty()) {
+            return noCacheResponse(HttpStatus.NOT_FOUND).body(paymentPageRenderer.renderNotFoundPage());
+        }
 
+        return noCacheResponse(HttpStatus.OK).body(paymentPageRenderer.renderPaymentPage(paymentPageOptional.get()));
+    }
+
+    private ResponseEntity.BodyBuilder noCacheResponse(HttpStatus status) {
+        return ResponseEntity.status(status)
+                .cacheControl(CacheControl.noStore())
+                .header("Pragma", "no-cache")
+                .header("Expires", "0")
+                .contentType(MediaType.TEXT_HTML);
     }
 
 }

@@ -64,4 +64,8 @@ public class Payment {
     @Column(nullable = false)
     private Boolean paymentAttemptUsed = false;
 
+    private String globalTransactionId;
+
+    private LocalDateTime acquirerTimestamp;
+
 }

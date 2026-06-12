@@ -29,6 +29,7 @@ public final class LogStrings {
 
         public static final String CARD_PAYMENT_SUBMIT_RECEIVED = "CARD PAYMENT SUBMIT RECEIVED";
         public static final String CARD_PAYMENT_REJECTED = "CARD PAYMENT REJECTED";
+        public static final String CARD_PAYMENT_COMPLETED = "CARD PAYMENT COMPLETED";
     }
 
     public static final class Reason {

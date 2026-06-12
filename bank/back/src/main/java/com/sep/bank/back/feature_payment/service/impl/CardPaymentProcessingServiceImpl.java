@@ -72,8 +72,9 @@ public class CardPaymentProcessingServiceImpl implements CardPaymentProcessingSe
         validateCardAndAccountAreActive(payment, paymentCard);
 
         transferFunds(payment, paymentCard);
+        completePaymentSuccessfully(payment);
 
-        return "/payments/" + payment.getId();
+        return payment.getSuccessUrl();
     }
 
     private Payment findPayment(UUID paymentId) {
@@ -398,7 +399,25 @@ public class CardPaymentProcessingServiceImpl implements CardPaymentProcessingSe
                 payment.getId()
         );
 
-        throw new CardPaymentRejectedException(message);
+        throw new CardPaymentRejectedException(message, payment.getFailUrl());
+    }
+
+    private void completePaymentSuccessfully(Payment payment) {
+        payment.setStatus(PaymentStatus.SUCCESS);
+        payment.setPaymentAttemptUsed(true);
+        payment.setGlobalTransactionId(UUID.randomUUID().toString());
+        payment.setAcquirerTimestamp(LocalDateTime.now());
+
+        paymentRepository.save(payment);
+
+        appLoggerService.info(
+                LogStrings.Feature.PAYMENT,
+                LogStrings.Action.CARD_PAYMENT_COMPLETED,
+                "bankPaymentId={} globalTransactionId={} acquirerTimestamp={}",
+                payment.getId(),
+                payment.getGlobalTransactionId(),
+                payment.getAcquirerTimestamp()
+        );
     }
 
 }
