@@ -2,6 +2,7 @@ package com.sep.bank.back.feature_payment.service.impl;
 
 import com.sep.bank.back.feature_payment.dto.CreatePaymentRequest;
 import com.sep.bank.back.feature_payment.dto.CreatePaymentResponse;
+import com.sep.bank.back.feature_payment.dto.PaymentPageDTO;
 import com.sep.bank.back.feature_payment.model.Payment;
 import com.sep.bank.back.feature_payment.repository.MerchantRepository;
 import com.sep.bank.back.feature_payment.repository.PaymentRepository;
@@ -11,6 +12,9 @@ import com.sep.bank.back.shared.logging.service.interf.AppLoggerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+
+import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class PaymentServiceImpl implements PaymentService {
@@ -58,19 +62,21 @@ public class PaymentServiceImpl implements PaymentService {
         payment.setPluginCallbackUrl(request.pluginCallbackUrl());
 
         Payment savedPayment = paymentRepository.save(payment);
+        String paymentUrl = paymentPageBaseUrl + "/" + savedPayment.getId();
 
         appLoggerService.info(
                 LogStrings.Feature.PAYMENT,
                 LogStrings.Action.PAYMENT_CREATED,
-                "bankPaymentId={} bankMerchantId={} stan={}",
+                "bankPaymentId={} bankMerchantId={} stan={} paymentUrl={}",
                 savedPayment.getId(),
                 savedPayment.getBankMerchantId(),
-                savedPayment.getStan()
+                savedPayment.getStan(),
+                paymentUrl
         );
 
         return new CreatePaymentResponse(
                 savedPayment.getId().toString(),
-                paymentPageBaseUrl + "/" + savedPayment.getId()
+                paymentUrl
         );
     }
 
@@ -110,6 +116,32 @@ public class PaymentServiceImpl implements PaymentService {
 
             throw new IllegalArgumentException("Payment request already exists.");
         }
+    }
+
+    @Override
+    public Optional<PaymentPageDTO> getPaymentPageData(UUID paymentId) {
+        Optional<Payment> paymentOptional = paymentRepository.findById(paymentId);
+
+        if (paymentOptional.isEmpty()) {
+            appLoggerService.warn(
+                    LogStrings.Feature.PAYMENT,
+                    LogStrings.Action.PAYMENT_PAGE_NOT_FOUND,
+                    "reason={} bankPaymentId={}",
+                    LogStrings.Reason.PAYMENT_NOT_FOUND,
+                    paymentId
+            );
+
+            return Optional.empty();
+        }
+
+        Payment payment = paymentOptional.get();
+
+        return Optional.of(new PaymentPageDTO(
+                payment.getId(),
+                payment.getPaymentMethod(),
+                payment.getAmount(),
+                payment.getCurrency()
+        ));
     }
 
 }

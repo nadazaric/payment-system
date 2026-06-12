@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Payment</title>
+    <style>
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: Arial, sans-serif;
+            background: #f3f4f6;
+            color: #111827;
+        }
+
+        .card {
+            width: 100%;
+            max-width: 560px;
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            box-shadow: 0 16px 40px rgba(15, 23, 42, 0.12);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: #dcfce7;
+            color: #166534;
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+
+        h1 {
+            margin: 0 0 12px;
+            font-size: 30px;
+        }
+
+        p {
+            margin: 0 0 24px;
+            color: #6b7280;
+        }
+
+        .row {
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 14px 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .label {
+            color: #6b7280;
+        }
+
+        .value {
+            font-weight: 700;
+            text-align: right;
+            word-break: break-word;
+        }
+
+        .qr-box {
+            margin-top: 28px;
+            height: 180px;
+            border: 2px dashed #9ca3af;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #6b7280;
+            font-weight: 700;
+        }
+
+        .note {
+            margin-top: 16px;
+            font-size: 13px;
+            color: #6b7280;
+        }
+    </style>
+</head>
+<body>
+<main class="card">
+    <div class="badge">QR</div>
+    <h1>QR payment</h1>
+    <p>Please review the payment details before continuing.</p>
+
+    <div class="row">
+        <span class="label">Payment ID</span>
+        <span class="value">{{paymentId}}</span>
+    </div>
+
+    <div class="row">
+        <span class="label">Amount</span>
+        <span class="value">{{amount}} {{currency}}</span>
+    </div>
+
+    <div class="row">
+        <span class="label">Payment method</span>
+        <span class="value">{{paymentMethod}}</span>
+    </div>
+
+    <div class="qr-box">
+        QR code placeholder
+    </div>
+</main>
+</body>
+</html>
