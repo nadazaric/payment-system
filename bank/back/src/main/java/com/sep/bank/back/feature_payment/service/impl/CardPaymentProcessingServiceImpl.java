@@ -3,18 +3,26 @@ package com.sep.bank.back.feature_payment.service.impl;
 import com.sep.bank.back.feature_payment.dto.CardPaymentSubmitRequest;
 import com.sep.bank.back.feature_payment.enumeration.PaymentMethod;
 import com.sep.bank.back.feature_payment.enumeration.PaymentStatus;
+import com.sep.bank.back.feature_payment.model.BankAccount;
+import com.sep.bank.back.feature_payment.model.Merchant;
 import com.sep.bank.back.feature_payment.model.Payment;
 import com.sep.bank.back.feature_payment.model.PaymentCard;
+import com.sep.bank.back.feature_payment.repository.MerchantRepository;
 import com.sep.bank.back.feature_payment.repository.PaymentCardRepository;
 import com.sep.bank.back.feature_payment.repository.PaymentRepository;
 import com.sep.bank.back.feature_payment.service.interf.CardPaymentProcessingService;
 import com.sep.bank.back.feature_payment.service.interf.CardSecurityService;
+import com.sep.bank.back.shared.exception.CardPaymentRejectedException;
 import com.sep.bank.back.shared.logging.LogStrings;
 import com.sep.bank.back.shared.logging.service.interf.AppLoggerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.text.Normalizer;
+import java.time.YearMonth;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -28,12 +36,16 @@ public class CardPaymentProcessingServiceImpl implements CardPaymentProcessingSe
     PaymentCardRepository paymentCardRepository;
 
     @Autowired
+    MerchantRepository merchantRepository;
+
+    @Autowired
     CardSecurityService cardSecurityService;
 
     @Autowired
     AppLoggerService appLoggerService;
 
     @Override
+    @Transactional(noRollbackFor = CardPaymentRejectedException.class)
     public String submitCardPayment(UUID paymentId, CardPaymentSubmitRequest request) {
         appLoggerService.info(
                 LogStrings.Feature.PAYMENT,
@@ -55,6 +67,11 @@ public class CardPaymentProcessingServiceImpl implements CardPaymentProcessingSe
         PaymentCard paymentCard = findPaymentCard(payment, normalizedPan);
 
         validateSecurityCode(payment, paymentCard, request);
+        validateCardHolderName(payment, paymentCard, request);
+        validateExpirationDate(payment, paymentCard, request);
+        validateCardAndAccountAreActive(payment, paymentCard);
+
+        transferFunds(payment, paymentCard);
 
         return "/payments/" + payment.getId();
     }
@@ -208,6 +225,165 @@ public class CardPaymentProcessingServiceImpl implements CardPaymentProcessingSe
         );
     }
 
+    private void validateCardHolderName(
+            Payment payment,
+            PaymentCard paymentCard,
+            CardPaymentSubmitRequest request
+    ) {
+        String requestCardHolderName = normalizeCardHolderName(request.cardHolderName());
+        String storedCardHolderName = normalizeCardHolderName(paymentCard.getCardHolderName());
+
+        if (storedCardHolderName.equals(requestCardHolderName)) {
+            return;
+        }
+
+        rejectPaymentAsFailed(
+                payment,
+                LogStrings.Reason.INVALID_CARD_HOLDER_NAME,
+                "Card holder name is not valid."
+        );
+    }
+
+    private String normalizeCardHolderName(String cardHolderName) {
+        if (cardHolderName == null) {
+            return "";
+        }
+
+        String normalized = Normalizer.normalize(
+                cardHolderName,
+                Normalizer.Form.NFD
+        );
+
+        return normalized
+                .replaceAll("\\p{M}", "")
+                .replace("đ", "d")
+                .replace("Đ", "D")
+                .trim()
+                .replaceAll("\\s+", " ")
+                .toLowerCase();
+    }
+
+    private void validateExpirationDate(
+            Payment payment,
+            PaymentCard paymentCard,
+            CardPaymentSubmitRequest request
+    ) {
+        String expirationDate = request.expirationDate();
+
+        if (expirationDate == null || !expirationDate.matches("^(0[1-9]|1[0-2])/\\d{2}$")) {
+            rejectPaymentAsFailed(
+                    payment,
+                    LogStrings.Reason.INVALID_EXPIRATION_DATE_FORMAT,
+                    "Expiration date format is not valid."
+            );
+        }
+
+        int requestExpirationMonth = Integer.parseInt(expirationDate.substring(0, 2));
+        int requestExpirationYear = 2000 + Integer.parseInt(expirationDate.substring(3, 5));
+
+        if (!paymentCard.getExpirationMonth().equals(requestExpirationMonth)
+                || !paymentCard.getExpirationYear().equals(requestExpirationYear)) {
+            rejectPaymentAsFailed(
+                    payment,
+                    LogStrings.Reason.CARD_EXPIRATION_DATE_MISMATCH,
+                    "Expiration date does not match card data."
+            );
+        }
+
+        YearMonth cardExpiration = YearMonth.of(paymentCard.getExpirationYear(), paymentCard.getExpirationMonth());
+
+        if (cardExpiration.isBefore(YearMonth.now())) {
+            rejectPaymentAsFailed(
+                    payment,
+                    LogStrings.Reason.CARD_EXPIRED,
+                    "Card has expired."
+            );
+        }
+    }
+
+    private void validateCardAndAccountAreActive(Payment payment, PaymentCard paymentCard) {
+        if (!Boolean.TRUE.equals(paymentCard.getActive())) {
+            rejectPaymentAsFailed(
+                    payment,
+                    LogStrings.Reason.PAYMENT_CARD_INACTIVE,
+                    "Payment card is not active."
+            );
+        }
+
+        if (!Boolean.TRUE.equals(paymentCard.getBankAccount().getActive())) {
+            rejectPaymentAsFailed(
+                    payment,
+                    LogStrings.Reason.BANK_ACCOUNT_INACTIVE,
+                    "Bank account is not active."
+            );
+        }
+    }
+
+    private void transferFunds(Payment payment, PaymentCard paymentCard) {
+        BankAccount customerAccount = paymentCard.getBankAccount();
+
+        Merchant merchant = findMerchant(payment);
+        BankAccount merchantAccount = merchant.getBankAccount();
+
+        validateCurrency(
+                payment,
+                customerAccount,
+                merchantAccount
+        );
+
+        validateSufficientFunds(payment, customerAccount);
+
+        customerAccount.setBalance(customerAccount.getBalance().subtract(payment.getAmount()));
+        merchantAccount.setBalance(merchantAccount.getBalance().add(payment.getAmount()));
+    }
+
+    private Merchant findMerchant(Payment payment) {
+        return merchantRepository.findByBankMerchantId(payment.getBankMerchantId())
+                .orElseThrow(() -> {
+                    rejectPaymentAsFailed(
+                            payment,
+                            LogStrings.Reason.MERCHANT_NOT_FOUND,
+                            "Merchant was not found."
+                    );
+
+                    return new IllegalArgumentException("Merchant was not found.");
+                });
+    }
+
+    private void validateCurrency(
+            Payment payment,
+            BankAccount customerAccount,
+            BankAccount merchantAccount
+    ) {
+        boolean currencyValid = payment.getCurrency().equals(customerAccount.getCurrency())
+                && payment.getCurrency().equals(merchantAccount.getCurrency());
+
+        if (currencyValid) {
+            return;
+        }
+
+        rejectPaymentAsFailed(
+                payment,
+                LogStrings.Reason.CURRENCY_MISMATCH,
+                "Payment currency does not match account currency."
+        );
+    }
+
+    private void validateSufficientFunds(Payment payment, BankAccount customerAccount) {
+        BigDecimal customerBalance = customerAccount.getBalance();
+        BigDecimal paymentAmount = payment.getAmount();
+
+        if (customerBalance.compareTo(paymentAmount) >= 0) {
+            return;
+        }
+
+        rejectPaymentAsFailed(
+                payment,
+                LogStrings.Reason.INSUFFICIENT_FUNDS,
+                "Insufficient funds."
+        );
+    }
+
     private void rejectPaymentAsFailed(Payment payment, String reason, String message) {
         payment.setStatus(PaymentStatus.FAILED);
         payment.setPaymentAttemptUsed(true);
@@ -222,7 +398,7 @@ public class CardPaymentProcessingServiceImpl implements CardPaymentProcessingSe
                 payment.getId()
         );
 
-        throw new IllegalArgumentException(message);
+        throw new CardPaymentRejectedException(message);
     }
 
 }

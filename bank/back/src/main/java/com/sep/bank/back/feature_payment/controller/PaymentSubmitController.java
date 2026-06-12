@@ -2,6 +2,7 @@ package com.sep.bank.back.feature_payment.controller;
 
 import com.sep.bank.back.feature_payment.dto.CardPaymentSubmitRequest;
 import com.sep.bank.back.feature_payment.service.interf.CardPaymentProcessingService;
+import com.sep.bank.back.shared.exception.CardPaymentRejectedException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
@@ -34,7 +35,16 @@ public class PaymentSubmitController {
                 expirationDate
         );
 
-        String redirectUrl = cardPaymentProcessingService.submitCardPayment(paymentId, request);
+        String redirectUrl;
+
+        try {
+            redirectUrl = cardPaymentProcessingService.submitCardPayment(
+                    paymentId,
+                    request
+            );
+        } catch (CardPaymentRejectedException | IllegalArgumentException exception) {
+            redirectUrl = "/payments/" + paymentId;
+        }
 
         return ResponseEntity.status(HttpStatus.SEE_OTHER)
                 .location(URI.create(redirectUrl))

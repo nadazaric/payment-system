@@ -47,6 +47,16 @@ public final class LogStrings {
         public static final String PAN_LUHN_VALIDATION_FAILED = "pan_luhn_validation_failed";
         public static final String CARD_NOT_FOUND = "card_not_found";
         public static final String INVALID_SECURITY_CODE = "invalid_security_code";
+        public static final String INVALID_CARD_HOLDER_NAME = "invalid_card_holder_name";
+        public static final String INVALID_EXPIRATION_DATE_FORMAT = "invalid_expiration_date_format";
+        public static final String CARD_EXPIRATION_DATE_MISMATCH = "card_expiration_date_mismatch";
+        public static final String CARD_EXPIRED = "card_expired";
+        public static final String PAYMENT_CARD_INACTIVE = "payment_card_inactive";
+        public static final String BANK_ACCOUNT_INACTIVE = "bank_account_inactive";
+        public static final String MERCHANT_NOT_FOUND = "merchant_not_found";
+        public static final String CURRENCY_MISMATCH = "currency_mismatch";
+        public static final String INSUFFICIENT_FUNDS = "insufficient_funds";
+
     }
 
 }
