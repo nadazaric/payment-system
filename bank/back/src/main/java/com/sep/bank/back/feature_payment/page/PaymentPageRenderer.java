@@ -2,6 +2,7 @@ package com.sep.bank.back.feature_payment.page;
 
 import com.sep.bank.back.feature_payment.dto.PaymentPageDTO;
 import com.sep.bank.back.feature_payment.enumeration.PaymentMethod;
+import com.sep.bank.back.feature_payment.enumeration.PaymentStatus;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Component;
@@ -29,7 +30,7 @@ public class PaymentPageRenderer {
             return loadTemplate(PAYMENT_EXPIRED_PAGE);
         }
 
-        if (Boolean.TRUE.equals(payment.paymentAttemptUsed())) {
+        if (Boolean.TRUE.equals(payment.paymentAttemptUsed()) || payment.status() != PaymentStatus.CREATED) {
             return loadTemplate(PAYMENT_USED_PAGE);
         }
 
@@ -45,9 +46,7 @@ public class PaymentPageRenderer {
         return loadTemplate(PAYMENT_NOT_FOUND_PAGE);
     }
 
-    private String getPaymentPageTemplatePath(
-            PaymentMethod paymentMethod
-    ) {
+    private String getPaymentPageTemplatePath(PaymentMethod paymentMethod) {
         if (PaymentMethod.QR.equals(paymentMethod)) {
             return QR_PAYMENT_PAGE;
         }
