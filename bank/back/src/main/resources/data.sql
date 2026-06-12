@@ -45,7 +45,7 @@ VALUES (
            true
        );
 
-
+------------------------------ Security code: 348
 INSERT INTO payment_card (
     id,
     pan,
@@ -65,6 +65,7 @@ VALUES (
            '22222222-2222-2222-2222-222222222222'
        );
 
+------------------------------ Security code: 905
 INSERT INTO payment_card (
     id,
     pan,
@@ -102,6 +103,7 @@ VALUES (
            true
        );
 
+------------------------------ Security code: 004
 INSERT INTO payment_card (
     id,
     pan,

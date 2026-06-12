@@ -8,6 +8,7 @@ import com.sep.bank.back.feature_payment.model.PaymentCard;
 import com.sep.bank.back.feature_payment.repository.PaymentCardRepository;
 import com.sep.bank.back.feature_payment.repository.PaymentRepository;
 import com.sep.bank.back.feature_payment.service.interf.CardPaymentProcessingService;
+import com.sep.bank.back.feature_payment.service.interf.CardSecurityService;
 import com.sep.bank.back.shared.logging.LogStrings;
 import com.sep.bank.back.shared.logging.service.interf.AppLoggerService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +26,9 @@ public class CardPaymentProcessingServiceImpl implements CardPaymentProcessingSe
 
     @Autowired
     PaymentCardRepository paymentCardRepository;
+
+    @Autowired
+    CardSecurityService cardSecurityService;
 
     @Autowired
     AppLoggerService appLoggerService;
@@ -46,9 +50,11 @@ public class CardPaymentProcessingServiceImpl implements CardPaymentProcessingSe
         validatePaymentIsAvailableForProcessing(payment);
         validatePaymentNotExpired(payment);
         validateCardPaymentMethod(payment);
-        String normalizedPan = validateAndNormalizePan(payment, request.pan());
 
+        String normalizedPan = validateAndNormalizePan(payment, request.pan());
         PaymentCard paymentCard = findPaymentCard(payment, normalizedPan);
+
+        validateSecurityCode(payment, paymentCard, request);
 
         return "/payments/" + payment.getId();
     }
@@ -182,6 +188,24 @@ public class CardPaymentProcessingServiceImpl implements CardPaymentProcessingSe
         );
 
         throw new IllegalArgumentException("Card was not found.");
+    }
+
+    private void validateSecurityCode(
+            Payment payment,
+            PaymentCard paymentCard,
+            CardPaymentSubmitRequest request
+    ) {
+        boolean securityCodeValid = cardSecurityService.isSecurityCodeValid(paymentCard, request.securityCode());
+
+        if (securityCodeValid) {
+            return;
+        }
+
+        rejectPaymentAsFailed(
+                payment,
+                LogStrings.Reason.INVALID_SECURITY_CODE,
+                "Security code is not valid."
+        );
     }
 
     private void rejectPaymentAsFailed(Payment payment, String reason, String message) {

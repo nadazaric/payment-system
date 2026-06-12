@@ -46,6 +46,7 @@ public final class LogStrings {
         public static final String INVALID_PAN = "invalid_pan";
         public static final String PAN_LUHN_VALIDATION_FAILED = "pan_luhn_validation_failed";
         public static final String CARD_NOT_FOUND = "card_not_found";
+        public static final String INVALID_SECURITY_CODE = "invalid_security_code";
     }
 
 }
