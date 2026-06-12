@@ -120,3 +120,42 @@ VALUES (
            true,
            '33333333-3333-3333-3333-333333333333'
        );
+
+INSERT INTO payment (
+    id,
+    bank_merchant_id,
+    stan,
+    psp_timestamp,
+    payment_method,
+    amount,
+    currency,
+    success_url,
+    fail_url,
+    error_url,
+    plugin_callback_url,
+    status,
+    created_at,
+    expires_at,
+    payment_attempt_used
+)
+VALUES (
+           '77777777-7777-7777-7777-777777777777',
+           'BANK_MERCHANT_001',
+           '123456',
+           CURRENT_TIMESTAMP,
+           'CARD',
+           100.00,
+           'EUR',
+           'http://localhost:3001/payment/success',
+           'http://localhost:3001/payment/failed',
+           'http://localhost:3001/payment/error',
+           'http://localhost:8086/api/plugin/payments/bank-callback',
+           'CREATED',
+           CURRENT_TIMESTAMP,
+           CURRENT_TIMESTAMP + INTERVAL '30 minutes',
+           false
+       )
+    ON CONFLICT (id) DO UPDATE
+                            SET status = 'CREATED',
+                            payment_attempt_used = false,
+                            expires_at = CURRENT_TIMESTAMP + INTERVAL '30 minutes';

@@ -12,6 +12,8 @@ import java.nio.charset.StandardCharsets;
 @Component
 public class PaymentPageRenderer {
 
+    private static final String PAYMENT_EXPIRED_PAGE = "classpath:payment-pages/payment-expired-page.html";
+    private static final String PAYMENT_USED_PAGE = "classpath:payment-pages/payment-used-page.html";
     private static final String CARD_PAYMENT_PAGE = "classpath:payment-pages/card-payment-page.html";
     private static final String QR_PAYMENT_PAGE = "classpath:payment-pages/qr-payment-page.html";
     private static final String PAYMENT_NOT_FOUND_PAGE = "classpath:payment-pages/payment-not-found-page.html";
@@ -23,6 +25,14 @@ public class PaymentPageRenderer {
     }
 
     public String renderPaymentPage(PaymentPageDTO payment) {
+        if (Boolean.TRUE.equals(payment.expired())) {
+            return loadTemplate(PAYMENT_EXPIRED_PAGE);
+        }
+
+        if (Boolean.TRUE.equals(payment.paymentAttemptUsed())) {
+            return loadTemplate(PAYMENT_USED_PAGE);
+        }
+
         String template = loadTemplate(getPaymentPageTemplatePath(payment.paymentMethod()));
 
         return template
@@ -63,22 +73,6 @@ public class PaymentPageRenderer {
     private String buildPaymentFormContent(
             PaymentPageDTO payment
     ) {
-        if (Boolean.TRUE.equals(payment.expired())) {
-            return """
-                <div class="disabled-box">
-                    This payment link has expired.
-                </div>
-                """;
-        }
-
-        if (Boolean.TRUE.equals(payment.paymentAttemptUsed())) {
-            return """
-                <div class="disabled-box">
-                    This payment form has already been used.
-                </div>
-                """;
-        }
-
         return """
             <form method="post" action="/api/bank/payments/%s/submit">
                 <div class="form-grid">
