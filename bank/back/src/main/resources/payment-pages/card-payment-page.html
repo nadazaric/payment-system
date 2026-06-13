@@ -221,6 +221,8 @@
 </main>
 
 <script>
+    const paymentForm = document.querySelector("form");
+
     const panInput = document.getElementById("pan");
     const expirationDateInput = document.getElementById("expirationDate");
     const securityCodeInput = document.getElementById("securityCode");
@@ -231,6 +233,8 @@
     const expirationDateError = document.getElementById("expirationDateError");
     const securityCodeError = document.getElementById("securityCodeError");
     const cardHolderNameError = document.getElementById("cardHolderNameError");
+
+    let paymentSubmitting = false;
 
     function digitsOnly(value) {
         return value.replace(/\D/g, "");
@@ -316,14 +320,39 @@
         const securityCodeValid = /^\d{3}$/.test(securityCode);
         const cardHolderNameValid = cardHolderName.length >= 2;
 
+        const formValid = panValid
+            && expirationDateValid
+            && securityCodeValid
+            && cardHolderNameValid;
+
         setFieldState(panInput, panError, panValid, pan.length > 0);
         setFieldState(expirationDateInput, expirationDateError, expirationDateValid, expirationDate.length > 0);
         setFieldState(securityCodeInput, securityCodeError, securityCodeValid, securityCode.length > 0);
         setFieldState(cardHolderNameInput, cardHolderNameError, cardHolderNameValid, cardHolderName.length > 0);
 
         if (submitButton) {
-            submitButton.disabled = !(panValid && expirationDateValid && securityCodeValid && cardHolderNameValid);
+            submitButton.disabled = paymentSubmitting || !formValid;
         }
+
+        return formValid;
+    }
+
+    if (paymentForm) {
+        paymentForm.addEventListener("submit", function (event) {
+            const formValid = validateForm();
+
+            if (!formValid || paymentSubmitting) {
+                event.preventDefault();
+                return;
+            }
+
+            paymentSubmitting = true;
+
+            if (submitButton) {
+                submitButton.disabled = true;
+                submitButton.textContent = "Processing payment...";
+            }
+        });
     }
 
     if (panInput) {
