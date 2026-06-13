@@ -10,18 +10,14 @@ import com.sep.bank.back.feature_payment.model.PaymentCard;
 import com.sep.bank.back.feature_payment.repository.MerchantRepository;
 import com.sep.bank.back.feature_payment.repository.PaymentCardRepository;
 import com.sep.bank.back.feature_payment.repository.PaymentRepository;
-import com.sep.bank.back.feature_payment.service.interf.CardPanHashService;
-import com.sep.bank.back.feature_payment.service.interf.CardPaymentProcessingService;
-import com.sep.bank.back.feature_payment.service.interf.CardSecurityService;
-import com.sep.bank.back.feature_payment.service.interf.PaymentCallbackService;
-import com.sep.bank.back.shared.exception.CardPaymentRejectedException;
+import com.sep.bank.back.feature_payment.service.interf.*;
+import com.sep.bank.back.shared.exception.PaymentRejectedException;
 import com.sep.bank.back.shared.logging.LogStrings;
 import com.sep.bank.back.shared.logging.service.interf.AppLoggerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.text.Normalizer;
 import java.time.YearMonth;
@@ -50,10 +46,13 @@ public class CardPaymentProcessingServiceImpl implements CardPaymentProcessingSe
     PaymentCallbackService paymentCallbackService;
 
     @Autowired
+    PaymentProcessingSupportService paymentProcessingSupportService;
+
+    @Autowired
     AppLoggerService appLoggerService;
 
     @Override
-    @Transactional(noRollbackFor = CardPaymentRejectedException.class)
+    @Transactional(noRollbackFor = PaymentRejectedException.class)
     public String submitCardPayment(UUID paymentId, CardPaymentSubmitRequest request) {
         appLoggerService.info(
                 LogStrings.Feature.PAYMENT,
@@ -65,11 +64,12 @@ public class CardPaymentProcessingServiceImpl implements CardPaymentProcessingSe
         );
 
         Payment payment = findPayment(paymentId);
+        String rejectionAction = LogStrings.Action.CARD_PAYMENT_REJECTED;
 
         try {
-            validatePaymentIsAvailableForProcessing(payment);
-            validatePaymentNotExpired(payment);
-            validateCardPaymentMethod(payment);
+            paymentProcessingSupportService.validatePaymentIsAvailableForProcessing(payment, rejectionAction);
+            paymentProcessingSupportService.validatePaymentNotExpired(payment, rejectionAction);
+            paymentProcessingSupportService.validatePaymentMethod(payment, PaymentMethod.CARD, rejectionAction);
 
             String normalizedPan = validateAndNormalizePan(payment, request.pan());
             PaymentCard paymentCard = findPaymentCard(payment, normalizedPan);
@@ -81,12 +81,17 @@ public class CardPaymentProcessingServiceImpl implements CardPaymentProcessingSe
 
             transferFunds(payment, paymentCard);
             completePaymentSuccessfully(payment);
-        } catch (CardPaymentRejectedException exception) {
+        } catch (PaymentRejectedException exception) {
             return exception.getRedirectUrl();
-        }catch (IllegalArgumentException exception) {
+        } catch (IllegalArgumentException exception) {
             return "/payments/" + payment.getId();
         } catch (Exception exception) {
-            return rejectPaymentAsError(payment, exception);
+            return paymentProcessingSupportService.rejectPaymentAsError(
+                    payment,
+                    exception,
+                    LogStrings.Action.CARD_PAYMENT_REJECTED,
+                    LogStrings.Reason.CARD_PAYMENT_PROCESSING_ERROR
+            );
         }
 
         paymentCallbackService.sendPaymentResultCallback(payment, "Payment completed successfully.");
@@ -108,64 +113,11 @@ public class CardPaymentProcessingServiceImpl implements CardPaymentProcessingSe
                 });
     }
 
-    private void validatePaymentIsAvailableForProcessing(Payment payment) {
-        if (!PaymentStatus.CREATED.equals(payment.getStatus())
-                || Boolean.TRUE.equals(payment.getPaymentAttemptUsed())) {
-            appLoggerService.warn(
-                    LogStrings.Feature.PAYMENT,
-                    LogStrings.Action.CARD_PAYMENT_REJECTED,
-                    "reason={} bankPaymentId={} status={} paymentAttemptUsed={}",
-                    LogStrings.Reason.PAYMENT_NOT_AVAILABLE_FOR_PROCESSING,
-                    payment.getId(),
-                    payment.getStatus(),
-                    payment.getPaymentAttemptUsed()
-            );
-
-            throw new IllegalArgumentException("Payment is not available for processing.");
-        }
-    }
-
-    private void validatePaymentNotExpired(Payment payment) {
-        if (!payment.getExpiresAt().isBefore(LocalDateTime.now())) {
-            return;
-        }
-
-        payment.setStatus(PaymentStatus.EXPIRED);
-        paymentRepository.save(payment);
-
-        appLoggerService.warn(
-                LogStrings.Feature.PAYMENT,
-                LogStrings.Action.CARD_PAYMENT_REJECTED,
-                "reason={} bankPaymentId={} expiresAt={}",
-                LogStrings.Reason.PAYMENT_EXPIRED,
-                payment.getId(),
-                payment.getExpiresAt()
-        );
-
-        throw new IllegalArgumentException("Payment has expired.");
-    }
-
-    private void validateCardPaymentMethod(Payment payment) {
-        if (PaymentMethod.CARD.equals(payment.getPaymentMethod())) {
-            return;
-        }
-
-        appLoggerService.warn(
-                LogStrings.Feature.PAYMENT,
-                LogStrings.Action.CARD_PAYMENT_REJECTED,
-                "reason={} bankPaymentId={} paymentMethod={}",
-                LogStrings.Reason.INVALID_PAYMENT_METHOD,
-                payment.getId(),
-                payment.getPaymentMethod()
-        );
-
-        throw new IllegalArgumentException("Payment method is not valid for card processing.");
-    }
-
     private String validateAndNormalizePan(Payment payment, String pan) {
         if (pan == null || pan.isBlank()) {
-            rejectPaymentAsFailed(
+            paymentProcessingSupportService.rejectPaymentAsFailed(
                     payment,
+                    LogStrings.Action.CARD_PAYMENT_REJECTED,
                     LogStrings.Reason.INVALID_PAN,
                     "Card number is not valid."
             );
@@ -174,8 +126,9 @@ public class CardPaymentProcessingServiceImpl implements CardPaymentProcessingSe
         String normalizedPan = pan.replaceAll("\\s+", "");
 
         if (!normalizedPan.matches("\\d{16}") || !isLuhnValid(normalizedPan)) {
-            rejectPaymentAsFailed(
+            paymentProcessingSupportService.rejectPaymentAsFailed(
                     payment,
+                    LogStrings.Action.CARD_PAYMENT_REJECTED,
                     LogStrings.Reason.PAN_LUHN_VALIDATION_FAILED,
                     "Card number is not valid."
             );
@@ -217,13 +170,14 @@ public class CardPaymentProcessingServiceImpl implements CardPaymentProcessingSe
             return paymentCardOptional.get();
         }
 
-        rejectPaymentAsFailed(
+        paymentProcessingSupportService.rejectPaymentAsFailed(
                 payment,
+                LogStrings.Action.CARD_PAYMENT_REJECTED,
                 LogStrings.Reason.CARD_NOT_FOUND,
                 "Card was not found."
         );
 
-        throw new CardPaymentRejectedException("Card was not found.", payment.getFailUrl());
+        throw new PaymentRejectedException("Card was not found.", payment.getFailUrl());
     }
 
     private void validateSecurityCode(
@@ -242,8 +196,9 @@ public class CardPaymentProcessingServiceImpl implements CardPaymentProcessingSe
             return;
         }
 
-        rejectPaymentAsFailed(
+        paymentProcessingSupportService.rejectPaymentAsFailed(
                 payment,
+                LogStrings.Action.CARD_PAYMENT_REJECTED,
                 LogStrings.Reason.INVALID_SECURITY_CODE,
                 "Security code is not valid."
         );
@@ -261,8 +216,9 @@ public class CardPaymentProcessingServiceImpl implements CardPaymentProcessingSe
             return;
         }
 
-        rejectPaymentAsFailed(
+        paymentProcessingSupportService.rejectPaymentAsFailed(
                 payment,
+                LogStrings.Action.CARD_PAYMENT_REJECTED,
                 LogStrings.Reason.INVALID_CARD_HOLDER_NAME,
                 "Card holder name is not valid."
         );
@@ -295,8 +251,9 @@ public class CardPaymentProcessingServiceImpl implements CardPaymentProcessingSe
         String expirationDate = request.expirationDate();
 
         if (expirationDate == null || !expirationDate.matches("^(0[1-9]|1[0-2])/\\d{2}$")) {
-            rejectPaymentAsFailed(
+            paymentProcessingSupportService.rejectPaymentAsFailed(
                     payment,
+                    LogStrings.Action.CARD_PAYMENT_REJECTED,
                     LogStrings.Reason.INVALID_EXPIRATION_DATE_FORMAT,
                     "Expiration date format is not valid."
             );
@@ -307,8 +264,9 @@ public class CardPaymentProcessingServiceImpl implements CardPaymentProcessingSe
 
         if (!paymentCard.getExpirationMonth().equals(requestExpirationMonth)
                 || !paymentCard.getExpirationYear().equals(requestExpirationYear)) {
-            rejectPaymentAsFailed(
+            paymentProcessingSupportService.rejectPaymentAsFailed(
                     payment,
+                    LogStrings.Action.CARD_PAYMENT_REJECTED,
                     LogStrings.Reason.CARD_EXPIRATION_DATE_MISMATCH,
                     "Expiration date does not match card data."
             );
@@ -317,8 +275,9 @@ public class CardPaymentProcessingServiceImpl implements CardPaymentProcessingSe
         YearMonth cardExpiration = YearMonth.of(paymentCard.getExpirationYear(), paymentCard.getExpirationMonth());
 
         if (cardExpiration.isBefore(YearMonth.now())) {
-            rejectPaymentAsFailed(
+            paymentProcessingSupportService.rejectPaymentAsFailed(
                     payment,
+                    LogStrings.Action.CARD_PAYMENT_REJECTED,
                     LogStrings.Reason.CARD_EXPIRED,
                     "Card has expired."
             );
@@ -327,16 +286,18 @@ public class CardPaymentProcessingServiceImpl implements CardPaymentProcessingSe
 
     private void validateCardAndAccountAreActive(Payment payment, PaymentCard paymentCard) {
         if (!Boolean.TRUE.equals(paymentCard.getActive())) {
-            rejectPaymentAsFailed(
+            paymentProcessingSupportService.rejectPaymentAsFailed(
                     payment,
+                    LogStrings.Action.CARD_PAYMENT_REJECTED,
                     LogStrings.Reason.PAYMENT_CARD_INACTIVE,
                     "Payment card is not active."
             );
         }
 
         if (!Boolean.TRUE.equals(paymentCard.getBankAccount().getActive())) {
-            rejectPaymentAsFailed(
+            paymentProcessingSupportService.rejectPaymentAsFailed(
                     payment,
+                    LogStrings.Action.CARD_PAYMENT_REJECTED,
                     LogStrings.Reason.BANK_ACCOUNT_INACTIVE,
                     "Bank account is not active."
             );
@@ -349,13 +310,18 @@ public class CardPaymentProcessingServiceImpl implements CardPaymentProcessingSe
         Merchant merchant = findMerchant(payment);
         BankAccount merchantAccount = merchant.getBankAccount();
 
-        validateCurrency(
+        paymentProcessingSupportService.validateCurrency(
                 payment,
                 customerAccount,
-                merchantAccount
+                merchantAccount,
+                LogStrings.Action.CARD_PAYMENT_REJECTED
         );
 
-        validateSufficientFunds(payment, customerAccount);
+        paymentProcessingSupportService.validateSufficientFunds(
+                payment,
+                customerAccount,
+                LogStrings.Action.CARD_PAYMENT_REJECTED
+        );
 
         customerAccount.setBalance(customerAccount.getBalance().subtract(payment.getAmount()));
         merchantAccount.setBalance(merchantAccount.getBalance().add(payment.getAmount()));
@@ -364,48 +330,15 @@ public class CardPaymentProcessingServiceImpl implements CardPaymentProcessingSe
     private Merchant findMerchant(Payment payment) {
         return merchantRepository.findByBankMerchantId(payment.getBankMerchantId())
                 .orElseThrow(() -> {
-                    rejectPaymentAsFailed(
+                    paymentProcessingSupportService.rejectPaymentAsFailed(
                             payment,
+                            LogStrings.Action.CARD_PAYMENT_REJECTED,
                             LogStrings.Reason.MERCHANT_NOT_FOUND,
                             "Merchant was not found."
                     );
 
                     return new IllegalArgumentException("Merchant was not found.");
                 });
-    }
-
-    private void validateCurrency(
-            Payment payment,
-            BankAccount customerAccount,
-            BankAccount merchantAccount
-    ) {
-        boolean currencyValid = payment.getCurrency().equals(customerAccount.getCurrency())
-                && payment.getCurrency().equals(merchantAccount.getCurrency());
-
-        if (currencyValid) {
-            return;
-        }
-
-        rejectPaymentAsFailed(
-                payment,
-                LogStrings.Reason.CURRENCY_MISMATCH,
-                "Payment currency does not match account currency."
-        );
-    }
-
-    private void validateSufficientFunds(Payment payment, BankAccount customerAccount) {
-        BigDecimal customerBalance = customerAccount.getBalance();
-        BigDecimal paymentAmount = payment.getAmount();
-
-        if (customerBalance.compareTo(paymentAmount) >= 0) {
-            return;
-        }
-
-        rejectPaymentAsFailed(
-                payment,
-                LogStrings.Reason.INSUFFICIENT_FUNDS,
-                "Insufficient funds."
-        );
     }
 
     private void completePaymentSuccessfully(Payment payment) {
@@ -424,43 +357,6 @@ public class CardPaymentProcessingServiceImpl implements CardPaymentProcessingSe
                 payment.getGlobalTransactionId(),
                 payment.getAcquirerTimestamp()
         );
-    }
-
-    private void rejectPaymentAsFailed(Payment payment, String reason, String message) {
-        payment.setStatus(PaymentStatus.FAILED);
-        payment.setPaymentAttemptUsed(true);
-
-        paymentRepository.save(payment);
-
-        appLoggerService.warn(
-                LogStrings.Feature.PAYMENT,
-                LogStrings.Action.CARD_PAYMENT_REJECTED,
-                "reason={} bankPaymentId={}",
-                reason,
-                payment.getId()
-        );
-
-        paymentCallbackService.sendPaymentResultCallback(payment, message);
-        throw new CardPaymentRejectedException(message, payment.getFailUrl());
-    }
-
-    private String rejectPaymentAsError(Payment payment, Exception exception) {
-        payment.setStatus(PaymentStatus.ERROR);
-        payment.setPaymentAttemptUsed(true);
-
-        paymentRepository.save(payment);
-
-        appLoggerService.error(
-                LogStrings.Feature.PAYMENT,
-                LogStrings.Action.CARD_PAYMENT_REJECTED,
-                "reason={} bankPaymentId={} error={}",
-                LogStrings.Reason.CARD_PAYMENT_PROCESSING_ERROR,
-                payment.getId(),
-                exception.getMessage()
-        );
-
-        paymentCallbackService.sendPaymentResultCallback(payment, "Payment processing error.");
-        return payment.getErrorUrl();
     }
 
 }

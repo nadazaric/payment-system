@@ -29,7 +29,7 @@ public final class LogStrings {
         public static final String PAYMENT_PAGE_NOT_FOUND = "PAYMENT PAGE NOT FOUND";
 
         public static final String CARD_PAYMENT_SUBMIT_RECEIVED = "CARD PAYMENT SUBMIT RECEIVED";
-        public static final String CARD_PAYMENT_REJECTED = "CARD PAYMENT REJECTED";
+        public static final String CARD_PAYMENT_REJECTED = "PAYMENT REJECTED";
         public static final String CARD_PAYMENT_COMPLETED = "CARD PAYMENT COMPLETED";
         public static final String PLUGIN_CALLBACK_RETRY = "PLUGIN CALLBACK RETRY";
         public static final String PLUGIN_CALLBACK_FAILED = "PLUGIN CALLBACK FAILED";

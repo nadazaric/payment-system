@@ -124,6 +124,29 @@
             word-break: break-word;
         }
 
+        .field {
+            margin-top: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .field label {
+            display: block;
+            margin-bottom: 8px;
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        .field select {
+            width: 100%;
+            border: 1px solid #d1d5db;
+            border-radius: 10px;
+            padding: 12px;
+            font-size: 14px;
+            background: white;
+            color: #111827;
+        }
+
         @media (max-width: 640px) {
             .card {
                 padding: 24px;
@@ -203,6 +226,13 @@
                   class="value"></span>
         </div>
 
+        <div class="field">
+            <label for="payerAccount">From account</label>
+            <select id="payerAccount">
+                <option value="">Select payer account</option>
+            </select>
+        </div>
+
         <div class="detail-row">
             <span class="label">Reference</span>
             <span id="paymentReference"
@@ -220,6 +250,7 @@
     const recipientName = document.getElementById("recipientName");
     const recipientAccount = document.getElementById("recipientAccount");
     const amount = document.getElementById("amount");
+    const payerAccount = document.getElementById("payerAccount");
     const paymentReference = document.getElementById("paymentReference");
 
     let html5QrCode = null;
@@ -327,7 +358,27 @@
         amount.textContent = `${formatAmount(data.amount)} ${data.currency}`;
         paymentReference.textContent = data.paymentReference;
 
+        renderPayerAccounts(data.payerAccounts);
+
         paymentDetails.classList.add("visible");
+    }
+
+    function renderPayerAccounts(accounts) {
+        payerAccount.innerHTML = "";
+
+        const placeholderOption = document.createElement("option");
+        placeholderOption.value = "";
+        placeholderOption.textContent = "Select payer account";
+        payerAccount.appendChild(placeholderOption);
+
+        accounts.forEach(account => {
+            const option = document.createElement("option");
+
+            option.value = account.accountId;
+            option.textContent = `${account.holderName} - ${account.accountNumber} (${formatAmount(account.balance)} ${account.currency})`;
+
+            payerAccount.appendChild(option);
+        });
     }
 
     function formatAmount(value) {
