@@ -21,6 +21,7 @@ import java.util.Map;
 public class SignatureVerificationFilter extends OncePerRequestFilter {
 
     private static final String CREATE_PAYMENT_PATH = "/api/bank/payments";
+    private static final String STATUS_CHECK_PATH = "/api/bank/payments/status-check";
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -38,8 +39,11 @@ public class SignatureVerificationFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
+        String servletPath = request.getServletPath();
+
         return !HttpMethod.POST.matches(request.getMethod())
-                || !CREATE_PAYMENT_PATH.equals(request.getServletPath());
+                || (!CREATE_PAYMENT_PATH.equals(servletPath)
+                && !STATUS_CHECK_PATH.equals(servletPath));
     }
 
     @Override

@@ -27,6 +27,7 @@ public class SignatureVerificationFilter extends OncePerRequestFilter {
     private static final String PLUGIN_CONFIGURATION_PATH = "/api/plugin/configurations";
     private static final String PLUGIN_PAYMENT_INITIATE_PATH = "/api/plugin/payments/initiate";
     private static final String PLUGIN_BANK_CALLBACK_PATH = "/api/plugin/payments/bank-callback";
+    private static final String PLUGIN_PAYMENT_STATUS_CHECK_PATH = "/api/plugin/payments/status-check";
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -201,7 +202,8 @@ public class SignatureVerificationFilter extends OncePerRequestFilter {
     private SignedEndpointType getSignedEndpointType(String servletPath) {
         if (PLUGIN_HEARTBEAT_PATH.equals(servletPath)
                 || PLUGIN_CONFIGURATION_PATH.equals(servletPath)
-                || PLUGIN_PAYMENT_INITIATE_PATH.equals(servletPath)) {
+                || PLUGIN_PAYMENT_INITIATE_PATH.equals(servletPath)
+                || PLUGIN_PAYMENT_STATUS_CHECK_PATH.equals(servletPath)) {
             return SignedEndpointType.PSP;
         }
 

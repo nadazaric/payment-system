@@ -1,6 +1,7 @@
 package com.sep.bank.plugin.back.feature_payment.client;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sep.bank.plugin.back.feature_payment.dto.bank.BankPaymentStatusCheckResponse;
 import com.sep.bank.plugin.back.feature_payment.dto.bank.CreateBankPaymentRequest;
 import com.sep.bank.plugin.back.feature_payment.dto.bank.CreateBankPaymentResponse;
 import com.sep.bank.plugin.back.shared.security.SignatureHeaders;
@@ -38,9 +39,7 @@ public class BankClient {
                 .build();
     }
 
-    public CreateBankPaymentResponse createPayment(
-            CreateBankPaymentRequest request
-    ) {
+    public CreateBankPaymentResponse createPayment(CreateBankPaymentRequest request) {
         String requestBody = writeJson(request);
         String timestamp = Instant.now().toString();
 
@@ -59,6 +58,21 @@ public class BankClient {
                 .body(requestBody)
                 .retrieve()
                 .body(CreateBankPaymentResponse.class);
+    }
+    public BankPaymentStatusCheckResponse checkPaymentStatus(
+            String timestamp,
+            String signature,
+            String requestBody
+    ) {
+        return restClient.post()
+                .uri("/api/bank/payments/status-check")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header(SignatureHeaders.PLUGIN_CODE, pluginCode)
+                .header(SignatureHeaders.TIMESTAMP, timestamp)
+                .header(SignatureHeaders.SIGNATURE, signature)
+                .body(requestBody)
+                .retrieve()
+                .body(BankPaymentStatusCheckResponse.class);
     }
 
     private String writeJson(Object value) {

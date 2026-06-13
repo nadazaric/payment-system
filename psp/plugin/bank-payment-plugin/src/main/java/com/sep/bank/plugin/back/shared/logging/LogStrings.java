@@ -44,6 +44,9 @@ public final class LogStrings {
         public static final String PAYMENT_CALLBACK_REJECTED = "PAYMENT CALLBACK REJECTED";
         public static final String PSP_CALLBACK_RETRY = "PSP CALLBACK RETRY";
         public static final String PSP_CALLBACK_FAILED = "PSP CALLBACK FAILED";
+
+        public static final String PAYMENT_STATUS_CHECK_COMPLETED = "PAYMENT STATUS CHECK COMPLETED";
+        public static final String PAYMENT_STATUS_CHECK_REJECTED = "PAYMENT STATUS CHECK REJECTED";
     }
 
     public static final class Reason {
