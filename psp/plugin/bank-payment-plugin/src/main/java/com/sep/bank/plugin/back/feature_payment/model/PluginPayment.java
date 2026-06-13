@@ -1,5 +1,6 @@
 package com.sep.bank.plugin.back.feature_payment.model;
 
+import com.sep.bank.plugin.back.feature_payment.enumeration.PaymentResultDeliveryStatus;
 import com.sep.bank.plugin.back.feature_payment.enumeration.PluginPaymentStatus;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -55,5 +56,15 @@ public class PluginPayment {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private PluginPaymentStatus status = PluginPaymentStatus.INITIATED;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private PaymentResultDeliveryStatus resultDeliveryStatus = PaymentResultDeliveryStatus.WAITING_BANK_RESULT;
+
+    private String globalTransactionId;
+
+    private LocalDateTime acquirerTimestamp;
+
+    private String resultMessage;
 
 }

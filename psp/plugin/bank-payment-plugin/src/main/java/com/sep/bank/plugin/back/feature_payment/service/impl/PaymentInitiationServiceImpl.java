@@ -5,6 +5,7 @@ import com.sep.bank.plugin.back.feature_payment.dto.bank.CreateBankPaymentReques
 import com.sep.bank.plugin.back.feature_payment.dto.bank.CreateBankPaymentResponse;
 import com.sep.bank.plugin.back.feature_payment.dto.psp.PluginPaymentInitiationRequest;
 import com.sep.bank.plugin.back.feature_payment.dto.psp.PluginPaymentInitiationResponse;
+import com.sep.bank.plugin.back.feature_payment.enumeration.PaymentResultDeliveryStatus;
 import com.sep.bank.plugin.back.feature_payment.enumeration.PluginPaymentStatus;
 import com.sep.bank.plugin.back.feature_payment.model.PluginPayment;
 import com.sep.bank.plugin.back.feature_payment.repository.PluginPaymentRepository;
@@ -118,6 +119,7 @@ public class PaymentInitiationServiceImpl implements PaymentInitiationService {
         pluginPayment.setAmount(request.amount());
         pluginPayment.setCurrency(request.currency());
         pluginPayment.setStatus(PluginPaymentStatus.INITIATED);
+        pluginPayment.setResultDeliveryStatus(PaymentResultDeliveryStatus.WAITING_BANK_RESULT);
 
         PluginPayment savedPluginPayment = pluginPaymentRepository.save(pluginPayment);
 

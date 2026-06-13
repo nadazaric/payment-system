@@ -39,6 +39,11 @@ public final class LogStrings {
         public static final String PAYMENT_INITIATE_COMPLETED = "INIT COMPLETED";
         public static final String PAYMENT_INITIATE_ALREADY_EXISTS = "INIT ALREADY EXISTS";
         public static final String BANK_PAYMENT_INITIATE_REJECTED = "BANK PAYMENT INIT REJECTED";
+
+        public static final String PAYMENT_CALLBACK_COMPLETED = "PAYMENT CALLBACK COMPLETED";
+        public static final String PAYMENT_CALLBACK_REJECTED = "PAYMENT CALLBACK REJECTED";
+        public static final String PSP_CALLBACK_RETRY = "PSP CALLBACK RETRY";
+        public static final String PSP_CALLBACK_FAILED = "PSP CALLBACK FAILED";
     }
 
     public static final class Reason {
@@ -56,6 +61,10 @@ public final class LogStrings {
 
         public static final String SELLER_PAYMENT_CONFIGURATION_NOT_FOUND = "seller_payment_configuration_not_found";
         public static final String BANK_PAYMENT_CREATE_FAILED = "bank_payment_create_failed";
+
+        public static final String PLUGIN_PAYMENT_NOT_FOUND = "plugin_payment_not_found";
+        public static final String STAN_MISMATCH = "stan_mismatch";
+        public static final String PSP_CALLBACK_FAILED = "psp_callback_failed";
     }
 
 }

@@ -12,6 +12,12 @@ public class PspClient {
 
     private final RestClient restClient;
 
+    @Value("${app.psp.sync_path}")
+    String paymentSyncPath;
+
+    @Value("${app.psp.payment-callback-path}")
+    String paymentCallbackPath;
+
     public PspClient(
             @Value("${app.psp.base-url}") String pspBaseUrl
     ) {
@@ -27,7 +33,7 @@ public class PspClient {
             String requestBody
     ) {
         return restClient.post()
-                .uri("/api/plugins/sync")
+                .uri(paymentSyncPath)
                 .contentType(MediaType.APPLICATION_JSON)
                 .header(SignatureHeaders.PLUGIN_CODE, pluginCode)
                 .header(SignatureHeaders.TIMESTAMP, timestamp)
@@ -35,6 +41,24 @@ public class PspClient {
                 .body(requestBody)
                 .retrieve()
                 .body(PluginSyncResponse.class);
+    }
+
+    public void sendPaymentCallback(
+            String paymentId,
+            String pluginCode,
+            String timestamp,
+            String signature,
+            String requestBody
+    ) {
+        restClient.post()
+                .uri(paymentCallbackPath, paymentId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .header(SignatureHeaders.PLUGIN_CODE, pluginCode)
+                .header(SignatureHeaders.TIMESTAMP, timestamp)
+                .header(SignatureHeaders.SIGNATURE, signature)
+                .body(requestBody)
+                .retrieve()
+                .toBodilessEntity();
     }
 
 }

@@ -10,4 +10,6 @@ public interface PluginPaymentRepository extends JpaRepository<PluginPayment, UU
 
     Optional<PluginPayment> findByPspPaymentId(String pspPaymentId);
 
+    Optional<PluginPayment> findByBankPaymentId(String bankPaymentId);
+
 }
