@@ -30,6 +30,8 @@ public final class LogStrings {
         public static final String CARD_PAYMENT_SUBMIT_RECEIVED = "CARD PAYMENT SUBMIT RECEIVED";
         public static final String CARD_PAYMENT_REJECTED = "CARD PAYMENT REJECTED";
         public static final String CARD_PAYMENT_COMPLETED = "CARD PAYMENT COMPLETED";
+        public static final String PLUGIN_CALLBACK_RETRY = "PLUGIN CALLBACK RETRY";
+        public static final String PLUGIN_CALLBACK_FAILED = "PLUGIN CALLBACK FAILED";
     }
 
     public static final class Reason {
@@ -58,6 +60,7 @@ public final class LogStrings {
         public static final String CURRENCY_MISMATCH = "currency_mismatch";
         public static final String INSUFFICIENT_FUNDS = "insufficient_funds";
         public static final String CARD_PAYMENT_PROCESSING_ERROR = "card_payment_processing_error";
+        public static final String PLUGIN_CALLBACK_FAILED = "max_num_of_attempts_reached";
 
     }
 

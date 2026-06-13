@@ -13,6 +13,7 @@ import com.sep.bank.back.feature_payment.repository.PaymentRepository;
 import com.sep.bank.back.feature_payment.service.interf.CardPanHashService;
 import com.sep.bank.back.feature_payment.service.interf.CardPaymentProcessingService;
 import com.sep.bank.back.feature_payment.service.interf.CardSecurityService;
+import com.sep.bank.back.feature_payment.service.interf.PaymentCallbackService;
 import com.sep.bank.back.shared.exception.CardPaymentRejectedException;
 import com.sep.bank.back.shared.logging.LogStrings;
 import com.sep.bank.back.shared.logging.service.interf.AppLoggerService;
@@ -44,6 +45,9 @@ public class CardPaymentProcessingServiceImpl implements CardPaymentProcessingSe
 
     @Autowired
     CardPanHashService cardPanHashService;
+
+    @Autowired
+    PaymentCallbackService paymentCallbackService;
 
     @Autowired
     AppLoggerService appLoggerService;
@@ -86,6 +90,7 @@ public class CardPaymentProcessingServiceImpl implements CardPaymentProcessingSe
             );
         }
 
+        paymentCallbackService.sendPaymentResultCallback(payment, "Payment completed successfully.");
         return payment.getSuccessUrl();
     }
 
@@ -219,10 +224,7 @@ public class CardPaymentProcessingServiceImpl implements CardPaymentProcessingSe
                 "Card was not found."
         );
 
-        throw new CardPaymentRejectedException(
-                "Card was not found.",
-                payment.getFailUrl()
-        );
+        throw new CardPaymentRejectedException("Card was not found.", payment.getFailUrl());
     }
 
     private void validateSecurityCode(
@@ -439,13 +441,11 @@ public class CardPaymentProcessingServiceImpl implements CardPaymentProcessingSe
                 payment.getId()
         );
 
+        paymentCallbackService.sendPaymentResultCallback(payment, message);
         throw new CardPaymentRejectedException(message, payment.getFailUrl());
     }
 
-    private String rejectPaymentAsError(
-            Payment payment,
-            Exception exception
-    ) {
+    private String rejectPaymentAsError(Payment payment, Exception exception) {
         payment.setStatus(PaymentStatus.ERROR);
         payment.setPaymentAttemptUsed(true);
 
@@ -460,6 +460,7 @@ public class CardPaymentProcessingServiceImpl implements CardPaymentProcessingSe
                 exception.getMessage()
         );
 
+        paymentCallbackService.sendPaymentResultCallback(payment, "Payment processing error.");
         return payment.getErrorUrl();
     }
 
