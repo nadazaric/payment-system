@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+    <title>Mock mBanking QR Scanner</title>
+
+    <script src="https://unpkg.com/html5-qrcode"
+            type="text/javascript"></script>
+
+    <style>
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: Arial, sans-serif;
+            background: #f3f4f6;
+            color: #111827;
+        }
+
+        .card {
+            width: 100%;
+            max-width: 560px;
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            box-shadow: 0 16px 40px rgba(15, 23, 42, 0.12);
+        }
+
+        .top-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: #dbeafe;
+            color: #1d4ed8;
+            font-size: 13px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .title {
+            font-size: 22px;
+            font-weight: 800;
+            color: #111827;
+            text-align: right;
+        }
+
+        .scanner-section.hidden {
+            display: none;
+        }
+
+        .scanner-frame {
+            overflow: hidden;
+            border: 2px dashed #9ca3af;
+            border-radius: 14px;
+            background: #111827;
+        }
+
+        #reader {
+            width: 100%;
+            min-height: 320px;
+        }
+
+        #reader video {
+            width: 100% !important;
+            height: 320px !important;
+            object-fit: cover;
+        }
+
+        .status {
+            margin-top: 16px;
+            padding: 14px;
+            border-radius: 12px;
+            background: #f9fafb;
+            color: #6b7280;
+            font-size: 13px;
+            line-height: 1.45;
+            word-break: break-word;
+        }
+
+        .status.error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .payment-details {
+            display: none;
+            margin-top: 20px;
+            border-top: 1px solid #e5e7eb;
+            padding-top: 20px;
+        }
+
+        .payment-details.visible {
+            display: block;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 12px 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .label {
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        .value {
+            font-weight: 700;
+            text-align: right;
+            word-break: break-word;
+        }
+
+        @media (max-width: 640px) {
+            .card {
+                padding: 24px;
+                border-radius: 0;
+                min-height: 100vh;
+                box-shadow: none;
+            }
+
+            .top-row {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .title {
+                text-align: left;
+            }
+
+            #reader {
+                min-height: 280px;
+            }
+
+            #reader video {
+                height: 280px !important;
+            }
+
+            .detail-row {
+                flex-direction: column;
+                gap: 4px;
+            }
+
+            .value {
+                text-align: left;
+            }
+        }
+    </style>
+</head>
+
+<body>
+<main class="card">
+    <div class="top-row">
+        <div class="badge">MOCK MBANKING</div>
+        <div id="pageTitle"
+             class="title">
+            QR Scanner
+        </div>
+    </div>
+
+    <section id="scannerSection"
+             class="scanner-section">
+        <div class="scanner-frame">
+            <div id="reader"></div>
+        </div>
+    </section>
+
+    <div id="status"
+         class="status">
+        Starting camera scanner...
+    </div>
+
+    <section id="paymentDetails"
+             class="payment-details">
+        <div class="detail-row">
+            <span class="label">Recipient</span>
+            <span id="recipientName"
+                  class="value"></span>
+        </div>
+
+        <div class="detail-row">
+            <span class="label">Recipient account</span>
+            <span id="recipientAccount"
+                  class="value"></span>
+        </div>
+
+        <div class="detail-row">
+            <span class="label">Amount</span>
+            <span id="amount"
+                  class="value"></span>
+        </div>
+
+        <div class="detail-row">
+            <span class="label">Reference</span>
+            <span id="paymentReference"
+                  class="value"></span>
+        </div>
+    </section>
+</main>
+
+<script>
+    const pageTitle = document.getElementById("pageTitle");
+    const scannerSection = document.getElementById("scannerSection");
+    const statusBox = document.getElementById("status");
+    const paymentDetails = document.getElementById("paymentDetails");
+
+    const recipientName = document.getElementById("recipientName");
+    const recipientAccount = document.getElementById("recipientAccount");
+    const amount = document.getElementById("amount");
+    const paymentReference = document.getElementById("paymentReference");
+
+    let html5QrCode = null;
+    let scannerRunning = false;
+    let scanInProgress = false;
+
+    document.addEventListener("DOMContentLoaded", startScanner);
+
+    async function startScanner() {
+        if (scannerRunning) {
+            return;
+        }
+
+        if (typeof Html5Qrcode === "undefined") {
+            showError("QR scanner library could not be loaded.");
+            return;
+        }
+
+        try {
+            html5QrCode = new Html5Qrcode("reader");
+
+            await html5QrCode.start(
+                { facingMode: "environment" },
+                {
+                    fps: 10,
+                    qrbox: {
+                        width: 240,
+                        height: 240
+                    }
+                },
+                handleQrScanned,
+                () => {}
+            );
+
+            scannerRunning = true;
+            scanInProgress = false;
+            paymentDetails.classList.remove("visible");
+
+            showInfo("Point the camera at the QR code shown on the bank payment page.");
+        } catch (error) {
+            showError("Camera could not be started. Check browser camera permissions.");
+        }
+    }
+
+    async function handleQrScanned(decodedText) {
+        if (!scannerRunning || scanInProgress) {
+            return;
+        }
+
+        scanInProgress = true;
+
+        await scanQrPayload(decodedText);
+    }
+
+    async function scanQrPayload(payload) {
+        showInfo("QR code scanned. Validating payment data...");
+
+        try {
+            const response = await fetch("/api/mock-mbanking/scan", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    payload
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error("QR code is not valid.");
+            }
+
+            const data = await response.json();
+
+            await stopScanner();
+            renderPaymentDetails(data);
+            showInfo("Review payment details before continuing.");
+        } catch (error) {
+            scanInProgress = false;
+            showError("QR code could not be validated. Please scan a valid IPS QR code.");
+        }
+    }
+
+    async function stopScanner() {
+        if (!html5QrCode || !scannerRunning) {
+            return;
+        }
+
+        try {
+            await html5QrCode.stop();
+            await html5QrCode.clear();
+        } catch (error) {
+            // Scanner cleanup failed, but valid payment data can still be displayed.
+        }
+
+        scannerRunning = false;
+    }
+
+    function renderPaymentDetails(data) {
+        pageTitle.textContent = "Payment Details";
+        scannerSection.classList.add("hidden");
+
+        recipientName.textContent = data.recipientName;
+        recipientAccount.textContent = data.recipientAccount;
+        amount.textContent = `${formatAmount(data.amount)} ${data.currency}`;
+        paymentReference.textContent = data.paymentReference;
+
+        paymentDetails.classList.add("visible");
+    }
+
+    function formatAmount(value) {
+        return Number(value).toFixed(2);
+    }
+
+    function showInfo(message) {
+        statusBox.className = "status";
+        statusBox.textContent = message;
+    }
+
+    function showError(message) {
+        statusBox.className = "status error";
+        statusBox.textContent = message;
+    }
+</script>
+</body>
+</html>

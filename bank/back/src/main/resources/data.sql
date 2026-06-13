@@ -152,7 +152,7 @@ VALUES (
            '77777777-7777-7777-7777-777777777777',
            'BANK_MERCHANT_001',
            100.00,
-           'RSD',
+           'EUR',
            'QRTEST001',
            CURRENT_TIMESTAMP,
            'QR',
