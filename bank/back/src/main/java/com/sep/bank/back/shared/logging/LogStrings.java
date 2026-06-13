@@ -12,6 +12,7 @@ public final class LogStrings {
 
         public static final String APP = "APP";
         public static final String PAYMENT = "PAYMENT";
+        public static final String SCHEDULING = "SCHEDULING";
     }
 
     public static final class Action {
@@ -32,6 +33,8 @@ public final class LogStrings {
         public static final String CARD_PAYMENT_COMPLETED = "CARD PAYMENT COMPLETED";
         public static final String PLUGIN_CALLBACK_RETRY = "PLUGIN CALLBACK RETRY";
         public static final String PLUGIN_CALLBACK_FAILED = "PLUGIN CALLBACK FAILED";
+        public static final String PAYMENT_EXPIRED = "PAYMENT EXPIRED";
+        public static final String EXPIRED_PAYMENT_CHECK_FAILED = "EXPIRED PAYMENT CHECK FAILED";
     }
 
     public static final class Reason {

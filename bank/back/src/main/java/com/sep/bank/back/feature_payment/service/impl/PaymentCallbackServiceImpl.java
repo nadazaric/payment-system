@@ -2,6 +2,7 @@ package com.sep.bank.back.feature_payment.service.impl;
 
 import com.sep.bank.back.feature_payment.client.PaymentPluginClient;
 import com.sep.bank.back.feature_payment.dto.BankPaymentCallbackRequest;
+import com.sep.bank.back.feature_payment.enumeration.PaymentStatus;
 import com.sep.bank.back.feature_payment.model.Payment;
 import com.sep.bank.back.feature_payment.service.interf.PaymentCallbackService;
 import com.sep.bank.back.shared.logging.LogStrings;
@@ -70,7 +71,7 @@ public class PaymentCallbackServiceImpl implements PaymentCallbackService {
         BankPaymentCallbackRequest request = new BankPaymentCallbackRequest(
                 payment.getId().toString(),
                 payment.getStan(),
-                payment.getStatus(),
+                mapStatusForPlugin(payment.getStatus()),
                 payment.getGlobalTransactionId(),
                 payment.getAcquirerTimestamp(),
                 message
@@ -80,6 +81,14 @@ public class PaymentCallbackServiceImpl implements PaymentCallbackService {
                 payment.getPluginCallbackUrl(),
                 request
         );
+    }
+
+    private PaymentStatus mapStatusForPlugin(PaymentStatus paymentStatus) {
+        if (PaymentStatus.EXPIRED.equals(paymentStatus)) {
+            return PaymentStatus.FAILED;
+        }
+
+        return paymentStatus;
     }
 
     private void sleepBeforeRetry() {
