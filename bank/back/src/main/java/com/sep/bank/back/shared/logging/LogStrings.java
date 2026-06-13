@@ -36,6 +36,10 @@ public final class LogStrings {
         public static final String PAYMENT_EXPIRED = "PAYMENT EXPIRED";
         public static final String EXPIRED_PAYMENT_CHECK_FAILED = "EXPIRED PAYMENT CHECK FAILED";
         public static final String PAYMENT_STATUS_CHECK_REJECTED = "PAYMENT STATUS CHECK REJECTED";
+
+        public static final String QR_PAYMENT_CONTENT_GENERATION_STARTED = "QR PAYMENT CONTENT GENERATION STARTED";
+        public static final String QR_PAYMENT_CONTENT_GENERATED = "QR PAYMENT CONTENT GENERATED";
+        public static final String QR_PAYMENT_CONTENT_GENERATION_REJECTED = "QR PAYMENT CONTENT GENERATION REJECTED";
     }
 
     public static final class Reason {

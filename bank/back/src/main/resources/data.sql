@@ -9,10 +9,10 @@ INSERT INTO bank_account (
 )
 VALUES (
            '11111111-1111-1111-1111-111111111111',
-           'RS35160000000000000001',
+           '845000000040484987',
            'Rent a Car Web Shop',
            0.00,
-           'EUR',
+           'RSD',
            true
        );
 
@@ -40,8 +40,8 @@ VALUES (
            '22222222-2222-2222-2222-222222222222',
            'RS35160000000000000002',
            'Nada Zaric',
-           10000.00,
-           'EUR',
+           1000000.00,
+           'RSD',
            true
        );
 
@@ -103,7 +103,7 @@ VALUES (
            'RS35160000000000000003',
            'Marko Markovic',
            250.00,
-           'EUR',
+           'RSD',
            true
        );
 
@@ -127,4 +127,42 @@ VALUES (
            2030,
            true,
            '33333333-3333-3333-3333-333333333333'
+       );
+
+------------------------------------------------------------------------------------------------------------------------ Test QR Payment
+INSERT INTO payment (
+    id,
+    bank_merchant_id,
+    amount,
+    currency,
+    stan,
+    psp_timestamp,
+    payment_method,
+    success_url,
+    fail_url,
+    error_url,
+    plugin_callback_url,
+    status,
+    created_at,
+    expires_at,
+    payment_attempt_used,
+    qr_payment_reference
+)
+VALUES (
+           '77777777-7777-7777-7777-777777777777',
+           'BANK_MERCHANT_001',
+           100.00,
+           'RSD',
+           'QRTEST001',
+           CURRENT_TIMESTAMP,
+           'QR',
+           'http://localhost:3000/payment/success',
+           'http://localhost:3000/payment/failed',
+           'http://localhost:3000/payment/error',
+           'http://localhost:8084/api/plugin/bank/callback',
+           'CREATED',
+           CURRENT_TIMESTAMP,
+           CURRENT_TIMESTAMP + INTERVAL '15 minutes',
+           false,
+           '2606132130000001'
        );

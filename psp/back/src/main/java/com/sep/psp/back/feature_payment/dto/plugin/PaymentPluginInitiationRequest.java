@@ -39,7 +39,7 @@ public record PaymentPluginInitiationRequest(
 
         @Schema(
                 description = "Payment currency.",
-                example = "EUR"
+                example = "RSD"
         )
         String currency,
 

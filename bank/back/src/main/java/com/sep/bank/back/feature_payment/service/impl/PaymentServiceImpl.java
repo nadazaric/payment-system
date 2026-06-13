@@ -3,6 +3,7 @@ package com.sep.bank.back.feature_payment.service.impl;
 import com.sep.bank.back.feature_payment.dto.CreatePaymentRequest;
 import com.sep.bank.back.feature_payment.dto.CreatePaymentResponse;
 import com.sep.bank.back.feature_payment.dto.PaymentPageDTO;
+import com.sep.bank.back.feature_payment.enumeration.PaymentMethod;
 import com.sep.bank.back.feature_payment.model.Payment;
 import com.sep.bank.back.feature_payment.repository.MerchantRepository;
 import com.sep.bank.back.feature_payment.repository.PaymentRepository;
@@ -14,8 +15,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
 
 @Service
 public class PaymentServiceImpl implements PaymentService {
@@ -34,6 +37,10 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Value("${app.bank.payment-url-expiration-minutes}")
     Long paymentUrlExpirationMinutes;
+
+    private static final DateTimeFormatter REFERENCE_DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyMMddHHmmss");
+    private static final int RANDOM_NUMBER_MIN = 1000;
+    private static final int RANDOM_NUMBER_MAX = 9999;
 
     @Override
     public CreatePaymentResponse createPayment(CreatePaymentRequest request) {
@@ -69,6 +76,10 @@ public class PaymentServiceImpl implements PaymentService {
         payment.setCreatedAt(now);
         payment.setExpiresAt(now.plusMinutes(paymentUrlExpirationMinutes));
         payment.setPaymentAttemptUsed(false);
+
+        if (PaymentMethod.QR.equals(request.paymentMethod())) {
+            payment.setQrPaymentReference(generateQrPaymentReference());
+        }
 
         Payment savedPayment = paymentRepository.save(payment);
         String paymentUrl = paymentPageBaseUrl + "/" + savedPayment.getId();
@@ -158,6 +169,19 @@ public class PaymentServiceImpl implements PaymentService {
                 payment.getPaymentAttemptUsed(),
                 expired
         ));
+    }
+
+    private String generateQrPaymentReference() {
+        String timestampPart = LocalDateTime.now().format(REFERENCE_DATE_TIME_FORMATTER);
+
+        while (true){
+            int randomPart = ThreadLocalRandom.current().nextInt(RANDOM_NUMBER_MIN, RANDOM_NUMBER_MAX + 1);
+            String reference = timestampPart + randomPart;
+
+            if (!paymentRepository.existsByQrPaymentReference(reference)) {
+                return reference;
+            }
+        }
     }
 
 }

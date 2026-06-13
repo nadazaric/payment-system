@@ -3,6 +3,9 @@ package com.sep.bank.back.feature_payment.page;
 import com.sep.bank.back.feature_payment.dto.PaymentPageDTO;
 import com.sep.bank.back.feature_payment.enumeration.PaymentMethod;
 import com.sep.bank.back.feature_payment.enumeration.PaymentStatus;
+import com.sep.bank.back.feature_qr.dto.QrPaymentPageContentDTO;
+import com.sep.bank.back.feature_qr.service.interf.QrPaymentPageContentService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Component;
@@ -21,6 +24,9 @@ public class PaymentPageRenderer {
 
     private final ResourceLoader resourceLoader;
 
+    @Autowired
+    QrPaymentPageContentService qrPaymentPageContentService;
+
     public PaymentPageRenderer(ResourceLoader resourceLoader) {
         this.resourceLoader = resourceLoader;
     }
@@ -34,12 +40,15 @@ public class PaymentPageRenderer {
             return loadTemplate(PAYMENT_USED_PAGE);
         }
 
-        String template = loadTemplate(getPaymentPageTemplatePath(payment.paymentMethod()));
-
-        return template
+        String template = loadTemplate(getPaymentPageTemplatePath(payment.paymentMethod()))
                 .replace("{{amount}}", payment.amount().toString())
-                .replace("{{currency}}", payment.currency())
-                .replace("{{paymentFormContent}}", buildPaymentFormContent(payment));
+                .replace("{{currency}}", payment.currency());
+
+        if (PaymentMethod.QR.equals(payment.paymentMethod())) {
+            return renderQrPaymentPage(template, payment);
+        }
+
+        return template.replace("{{paymentFormContent}}", buildPaymentFormContent(payment));
     }
 
     public String renderNotFoundPage() {
@@ -54,9 +63,7 @@ public class PaymentPageRenderer {
         return CARD_PAYMENT_PAGE;
     }
 
-    private String loadTemplate(
-            String path
-    ) {
+    private String loadTemplate(String path) {
         try {
             Resource resource = resourceLoader.getResource(path);
 
@@ -69,9 +76,21 @@ public class PaymentPageRenderer {
         }
     }
 
-    private String buildPaymentFormContent(
+    private String renderQrPaymentPage(
+            String template,
             PaymentPageDTO payment
     ) {
+        QrPaymentPageContentDTO qrContent = qrPaymentPageContentService.buildContent(
+                payment.paymentId()
+        );
+
+        return template.replace(
+                "{{qrImageBase64}}",
+                qrContent.qrImageBase64()
+        );
+    }
+
+    private String buildPaymentFormContent(PaymentPageDTO payment) {
         return """
             <form method="post" action="/api/bank/payments/%s/submit">
                 <div class="form-grid">

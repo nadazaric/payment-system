@@ -41,7 +41,7 @@ public record PaymentDetailsResponse(
 
         @Schema(
                 description = "Payment currency.",
-                example = "EUR"
+                example = "RSD"
         )
         String currency,
 

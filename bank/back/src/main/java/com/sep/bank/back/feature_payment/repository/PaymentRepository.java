@@ -25,4 +25,6 @@ public interface PaymentRepository extends JpaRepository<Payment, UUID> {
 
     List<Payment> findByStatusAndPaymentAttemptUsedFalseAndExpiresAtBefore(PaymentStatus status, LocalDateTime expiresAt);
 
+    boolean existsByQrPaymentReference(String qrPaymentReference);
+
 }

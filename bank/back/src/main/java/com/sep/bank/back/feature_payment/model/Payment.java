@@ -68,4 +68,7 @@ public class Payment {
 
     private LocalDateTime acquirerTimestamp;
 
+    @Column(unique = true, length = 32)
+    private String qrPaymentReference;
+
 }

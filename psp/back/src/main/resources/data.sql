@@ -27,7 +27,7 @@ VALUES (
            'MER-TEST0001',
            'Vehicle Rental Agency',
            '$2y$10$VVUV..VIlKxpt6Gf5kQI4ezeohwiA7x6.WMufSFqJkUDyKiKtHYuO',
-           'EUR',
+           'RSD',
            'http://localhost:3001/payment/success',
            'http://localhost:3001/payment/failed',
            'http://localhost:3001/payment/error',

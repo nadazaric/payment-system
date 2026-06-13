@@ -43,7 +43,7 @@ public record CreatePaymentRequest(
 
         @Schema(
                 description = "Payment currency.",
-                example = "EUR"
+                example = "RSD"
         )
         @NotBlank
         String currency,
