@@ -14,6 +14,7 @@ public final class LogStrings {
         public static final String PAYMENT_METHOD = "PAYMENT METHOD";
         public static final String PAYMENT_PLUGIN = "PAYMENT PLUGIN";
         public static final String PAYMENT = "PAYMENT";
+        public static final String SCHEDULING = "SCHEDULING";
 
         private Feature() {
         }
@@ -62,6 +63,9 @@ public final class LogStrings {
         public static final String PAYMENT_RESULT_REJECTED = "PAYMENT RESULT REJECTED";
         public static final String PAYMENT_NOTIFICATION_PUBLISH_FAILED = "PAYMENT NOTIFICATION PUBLISH FAILED";
 
+        public static final String PAYMENT_STATUS_CHECK_FAILED = "PAYMENT STATUS CHECK FAILED";
+        public static final String PAYMENT_STATUS_CHECK_SCHEDULER_FAILED = "PAYMENT STATUS CHECK SCHEDULER FAILED";
+
         private Action() {
         }
     }
@@ -95,6 +99,7 @@ public final class LogStrings {
         public static final String PAYMENT_METHOD_NOT_SELECTED = "payment_method_not_selected";
         public static final String SELECTED_PAYMENT_METHOD_NOT_AVAILABLE = "selected_payment_method_not_available";
         public static final String RABBITMQ_PUBLISH_FAILED = "rabbitmq_publish_failed";
+        public static final String PAYMENT_STATUS_CHECK_FAILED = "payment_status_check_failed";
 
         private Reason() {
         }

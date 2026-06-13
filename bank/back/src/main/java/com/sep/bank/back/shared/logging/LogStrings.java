@@ -35,6 +35,7 @@ public final class LogStrings {
         public static final String PLUGIN_CALLBACK_FAILED = "PLUGIN CALLBACK FAILED";
         public static final String PAYMENT_EXPIRED = "PAYMENT EXPIRED";
         public static final String EXPIRED_PAYMENT_CHECK_FAILED = "EXPIRED PAYMENT CHECK FAILED";
+        public static final String PAYMENT_STATUS_CHECK_REJECTED = "PAYMENT STATUS CHECK REJECTED";
     }
 
     public static final class Reason {

@@ -83,11 +83,10 @@ public class CardPaymentProcessingServiceImpl implements CardPaymentProcessingSe
             completePaymentSuccessfully(payment);
         } catch (CardPaymentRejectedException exception) {
             return exception.getRedirectUrl();
+        }catch (IllegalArgumentException exception) {
+            return "/payments/" + payment.getId();
         } catch (Exception exception) {
-            return rejectPaymentAsError(
-                    payment,
-                    exception
-            );
+            return rejectPaymentAsError(payment, exception);
         }
 
         paymentCallbackService.sendPaymentResultCallback(payment, "Payment completed successfully.");
