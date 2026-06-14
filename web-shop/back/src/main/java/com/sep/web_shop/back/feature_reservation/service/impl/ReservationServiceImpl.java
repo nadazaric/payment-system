@@ -239,7 +239,7 @@ public class ReservationServiceImpl implements ReservationService {
         appLoggerService.info(
                 LogStrings.Feature.PAYMENT,
                 LogStrings.Action.RESERVATION_PAYMENT_INITIATED,
-                "reservationId={} username={} vehicleId={} merchantOrderId={} pspPaymentId={} amount={} currency={} paymentStatus={} redirectUrl={}",
+                "reservationId={} username={} vehicleId={} merchantOrderId={} pspPaymentId={} amount={} currency={} paymentStatus={}",
                 savedReservation.getId(),
                 savedReservation.getUser().getUsername(),
                 savedReservation.getVehicle().getId(),
@@ -247,8 +247,7 @@ public class ReservationServiceImpl implements ReservationService {
                 savedReservation.getPspPaymentId(),
                 savedReservation.getTotalPrice(),
                 pspCurrency,
-                savedReservation.getPaymentStatus(),
-                savedReservation.getPaymentRedirectUrl()
+                savedReservation.getPaymentStatus()
         );
 
         return Optional.of(new CreateReservationResponse(

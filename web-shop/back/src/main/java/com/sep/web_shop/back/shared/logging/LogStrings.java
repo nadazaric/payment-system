@@ -54,6 +54,8 @@ public final class LogStrings {
         public static final String RESERVATION_PAYMENT_NOT_FOUND = "reservation_payment_not_found";
         public static final String RESERVATION_PAYMENT_ALREADY_COMPLETED = "reservation_payment_already_completed";
         public static final String MISSING_REQUIRED_RESERVATION_DATA = "missing_required_reservation_data";
+        public static final String PAYMENT_NOTIFICATION_AMOUNT_MISMATCH = "payment_notification_amount_mismatch";
+        public static final String PAYMENT_NOTIFICATION_CURRENCY_MISMATCH = "payment_notification_currency_mismatch";
 
         public static final String INVALID_CREDENTIALS = "invalid_credentials";
     }

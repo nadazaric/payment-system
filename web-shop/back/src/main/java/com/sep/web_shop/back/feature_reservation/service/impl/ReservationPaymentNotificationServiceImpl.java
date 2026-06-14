@@ -27,6 +27,9 @@ public class ReservationPaymentNotificationServiceImpl implements ReservationPay
     @Value("${app.psp.seller-reference}")
     String expectedSellerReference;
 
+    @Value("${app.psp.currency}")
+    String expectedCurrency;
+
     @Override
     @Transactional
     public void processPaymentResult(PaymentResultNotificationEvent event) {
@@ -113,9 +116,7 @@ public class ReservationPaymentNotificationServiceImpl implements ReservationPay
         throw new IllegalArgumentException("Payment notification seller does not match web-shop seller.");
     }
 
-    private void validateFinalPaymentStatus(
-            PaymentResultNotificationEvent event
-    ) {
+    private void validateFinalPaymentStatus(PaymentResultNotificationEvent event) {
         if (event.status() == PaymentStatus.SUCCESS
                 || event.status() == PaymentStatus.FAILED
                 || event.status() == PaymentStatus.ERROR) {
@@ -159,6 +160,43 @@ public class ReservationPaymentNotificationServiceImpl implements ReservationPay
         );
 
         throw new IllegalArgumentException("Reservation payment status cannot be changed.");
+    }
+
+    private void validatePaymentAmountAndCurrency(
+            Reservation reservation,
+            PaymentResultNotificationEvent event
+    ) {
+        if (event.amount() == null || event.amount().compareTo(reservation.getTotalPrice()) != 0) {
+            appLoggerService.warn(
+                    LogStrings.Feature.PAYMENT,
+                    LogStrings.Action.PAYMENT_NOTIFICATION_REJECTED,
+                    "reason={} reservationId={} paymentId={} merchantOrderId={} expectedAmount={} receivedAmount={}",
+                    LogStrings.Reason.PAYMENT_NOTIFICATION_AMOUNT_MISMATCH,
+                    reservation.getId(),
+                    event.paymentId(),
+                    event.merchantOrderId(),
+                    reservation.getTotalPrice(),
+                    event.amount()
+            );
+
+            throw new IllegalArgumentException("Payment notification amount does not match reservation amount.");
+        }
+
+        if (!expectedCurrency.equals(event.currency())) {
+            appLoggerService.warn(
+                    LogStrings.Feature.PAYMENT,
+                    LogStrings.Action.PAYMENT_NOTIFICATION_REJECTED,
+                    "reason={} reservationId={} paymentId={} merchantOrderId={} expectedCurrency={} receivedCurrency={}",
+                    LogStrings.Reason.PAYMENT_NOTIFICATION_CURRENCY_MISMATCH,
+                    reservation.getId(),
+                    event.paymentId(),
+                    event.merchantOrderId(),
+                    expectedCurrency,
+                    event.currency()
+            );
+
+            throw new IllegalArgumentException("Payment notification currency does not match expected currency.");
+        }
     }
 
 }

@@ -36,15 +36,6 @@ public class PaymentResultNotificationListener {
 
         try {
             reservationPaymentNotificationService.processPaymentResult(event);
-
-            appLoggerService.info(
-                    LogStrings.Feature.PAYMENT,
-                    LogStrings.Action.PAYMENT_NOTIFICATION_PROCESSED,
-                    "paymentId={} merchantOrderId={} status={}",
-                    event.paymentId(),
-                    event.merchantOrderId(),
-                    event.status()
-            );
         } catch (Exception exception) {
             appLoggerService.warn(
                     LogStrings.Feature.PAYMENT,
