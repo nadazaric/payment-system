@@ -36,6 +36,8 @@ public class RabbitPaymentResultNotificationPublisher implements PaymentResultNo
                 paymentTransaction.getMerchant().getMerchantId(),
                 paymentTransaction.getSellerAccount().getSellerReference(),
                 paymentTransaction.getMerchantOrderId(),
+                paymentTransaction.getAmount(),
+                paymentTransaction.getCurrency(),
                 paymentTransaction.getStatus(),
                 paymentTransaction.getSelectedPaymentMethodCode(),
                 message

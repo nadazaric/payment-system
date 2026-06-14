@@ -6,6 +6,8 @@ import com.sep.psp.back.feature_plugin.model.PaymentPlugin;
 import com.sep.psp.back.feature_plugin.repository.PaymentPluginRepository;
 import com.sep.psp.back.feature_plugin.service.interf.PluginHmacService;
 import com.sep.psp.back.feature_plugin.service.interf.PluginSecretEncryptionService;
+import com.sep.psp.back.shared.logging.LogStrings;
+import com.sep.psp.back.shared.logging.service.interf.AppLoggerService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -41,6 +43,9 @@ public class PluginSignatureVerificationFilter extends OncePerRequestFilter {
     @Autowired
     PluginHmacService pluginHmacService;
 
+    @Autowired
+    AppLoggerService appLoggerService;
+
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         return !HttpMethod.POST.matches(request.getMethod())
@@ -68,10 +73,16 @@ public class PluginSignatureVerificationFilter extends OncePerRequestFilter {
                     response
             );
         } catch (Exception exception) {
-            writeErrorResponse(
-                    response,
+            appLoggerService.warn(
+                    LogStrings.Feature.PAYMENT_PLUGIN,
+                    LogStrings.Action.PLUGIN_REQUEST_REJECTED,
+                    "path={} pluginCode={} reason={}",
+                    request.getServletPath(),
+                    request.getHeader(PluginSecurityHeaders.PLUGIN_CODE),
                     exception.getMessage()
             );
+
+            writeErrorResponse(response, exception.getMessage());
         }
     }
 

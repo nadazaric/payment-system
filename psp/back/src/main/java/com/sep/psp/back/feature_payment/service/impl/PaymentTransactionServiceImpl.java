@@ -129,12 +129,11 @@ public class PaymentTransactionServiceImpl implements PaymentTransactionService 
         appLoggerService.info(
                 LogStrings.Feature.PAYMENT,
                 LogStrings.Action.PAYMENT_INITIATED,
-                "paymentId={} merchantId={} sellerReference={} selectedPaymentMethodCode={} redirectUrl={}",
+                "paymentId={} merchantId={} sellerReference={} selectedPaymentMethodCode={}",
                 savedPaymentTransaction.getId(),
                 savedPaymentTransaction.getMerchant().getMerchantId(),
                 savedPaymentTransaction.getSellerAccount().getSellerReference(),
-                savedPaymentTransaction.getSelectedPaymentMethodCode(),
-                pluginResponse.redirectUrl()
+                savedPaymentTransaction.getSelectedPaymentMethodCode()
         );
 
         return new InitiatePaymentResponse(

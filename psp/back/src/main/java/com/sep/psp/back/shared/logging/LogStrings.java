@@ -50,6 +50,7 @@ public final class LogStrings {
         public static final String PLUGIN_STATUS_UPDATE_REJECTED = "PLUGIN STATUS UPDATE REJECTED";
         public static final String PLUGIN_HEALTH_CHECK_FAILED = "PLUGIN HEALTH CHECK FAILED";
         public static final String PLUGIN_REQUEST_FAILED = "PLUGIN REQUEST FAILED";
+        public static final String PLUGIN_REQUEST_REJECTED = "PLUGIN REQUEST REJECTED";
 
         public static final String PROFILE_UPDATED = "PROFILE UPDATED";
         public static final String ACTIVE_STATUS_CHANGED = "ACTIVE STATUS CHANGED";
