@@ -29,6 +29,7 @@ public class PaymentStatusCheckScheduler {
             );
 
             paymentStatusCheckService.checkInitiatedPayments();
+            paymentStatusCheckService.expireCreatedPayments();
         } catch (Exception exception) {
             appLoggerService.error(
                     LogStrings.Feature.SCHEDULING,

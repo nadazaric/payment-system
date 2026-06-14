@@ -159,8 +159,6 @@ export default function PaymentPage({
             setMessageOpen(true);
         } catch {
             setError("Failed to initiate payment.");
-        } finally {
-            setInitiatingMethodCode("");
         }
     };
 

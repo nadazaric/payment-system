@@ -4,4 +4,6 @@ public interface PaymentStatusCheckService {
 
     void checkInitiatedPayments();
 
+    void expireCreatedPayments();
+
 }

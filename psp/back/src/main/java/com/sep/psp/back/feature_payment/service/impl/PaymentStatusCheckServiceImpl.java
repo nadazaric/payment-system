@@ -8,6 +8,7 @@ import com.sep.psp.back.feature_payment.enumeration.PaymentStatus;
 import com.sep.psp.back.feature_payment.model.PaymentTransaction;
 import com.sep.psp.back.feature_payment.repository.PaymentTransactionRepository;
 import com.sep.psp.back.feature_payment.service.interf.PaymentPluginCallbackService;
+import com.sep.psp.back.feature_payment.service.interf.PaymentResultNotificationPublisher;
 import com.sep.psp.back.feature_payment.service.interf.PaymentStatusCheckService;
 import com.sep.psp.back.feature_plugin.client.interf.PluginHttpClient;
 import com.sep.psp.back.feature_plugin.model.PaymentPlugin;
@@ -37,10 +38,16 @@ public class PaymentStatusCheckServiceImpl implements PaymentStatusCheckService 
     PaymentPluginCallbackService paymentPluginCallbackService;
 
     @Autowired
+    PaymentResultNotificationPublisher paymentResultNotificationPublisher;
+
+    @Autowired
     AppLoggerService appLoggerService;
 
     @Value("${app.payment.status-check-min-age-seconds:30}")
     long statusCheckMinAgeSeconds;
+
+    @Value("${app.payment.created-expiration-minutes:15}")
+    long createdExpirationMinutes;
 
     @Override
     @Transactional
@@ -142,6 +149,41 @@ public class PaymentStatusCheckServiceImpl implements PaymentStatusCheckService 
 
                     return new BadRequestException("Selected payment method is not available.");
                 });
+    }
+
+    @Override
+    @Transactional
+    public void expireCreatedPayments() {
+        LocalDateTime createdBefore = LocalDateTime.now().minusMinutes(createdExpirationMinutes);
+
+        List<PaymentTransaction> expiredPayments =
+                paymentTransactionRepository.findByStatusAndSelectedPaymentMethodCodeIsNullAndCreatedAtBefore(
+                        PaymentStatus.CREATED,
+                        createdBefore
+                );
+
+        expiredPayments.forEach(this::expireCreatedPayment);
+    }
+
+    private void expireCreatedPayment(PaymentTransaction paymentTransaction) {
+        paymentTransaction.setStatus(PaymentStatus.FAILED);
+
+        PaymentTransaction savedPaymentTransaction = paymentTransactionRepository.save(paymentTransaction);
+
+        String message = "Payment expired before payment method was selected.";
+        paymentResultNotificationPublisher.publishPaymentResult(savedPaymentTransaction, message);
+
+        appLoggerService.warn(
+                LogStrings.Feature.PAYMENT,
+                LogStrings.Action.PAYMENT_CREATED_EXPIRED,
+                "reason={} paymentId={} merchantId={} sellerReference={} merchantOrderId={} createdAt={}",
+                LogStrings.Reason.PAYMENT_CREATED_TIMEOUT,
+                savedPaymentTransaction.getId(),
+                savedPaymentTransaction.getMerchant().getMerchantId(),
+                savedPaymentTransaction.getSellerAccount().getSellerReference(),
+                savedPaymentTransaction.getMerchantOrderId(),
+                savedPaymentTransaction.getCreatedAt()
+        );
     }
 
 }

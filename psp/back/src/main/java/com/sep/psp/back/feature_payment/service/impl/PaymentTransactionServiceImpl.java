@@ -12,6 +12,7 @@ import com.sep.psp.back.feature_payment.mapper.PaymentTransactionMapper;
 import com.sep.psp.back.feature_payment.model.PaymentTransaction;
 import com.sep.psp.back.feature_payment.repository.PaymentTransactionRepository;
 import com.sep.psp.back.feature_payment.service.interf.PaymentPluginInitiationService;
+import com.sep.psp.back.feature_payment.service.interf.PaymentResultNotificationPublisher;
 import com.sep.psp.back.feature_payment.service.interf.PaymentTransactionService;
 import com.sep.psp.back.shared.error.exception.BadRequestException;
 import com.sep.psp.back.shared.logging.LogStrings;
@@ -47,6 +48,9 @@ public class PaymentTransactionServiceImpl implements PaymentTransactionService 
 
     @Autowired
     PaymentPluginInitiationService paymentPluginInitiationService;
+
+    @Autowired
+    PaymentResultNotificationPublisher paymentResultNotificationPublisher;
 
     @Value("${app.psp.payment-page-base-url}")
     String paymentPageBaseUrl;
@@ -115,32 +119,89 @@ public class PaymentTransactionServiceImpl implements PaymentTransactionService 
         PaymentTransaction paymentTransaction = paymentTransactionRepository.findById(paymentId)
                 .orElseThrow(() -> new BadRequestException("Payment transaction not found."));
 
+        InitiatePaymentResponse paymentResponse = redirectIfPaymentAlreadyFailed(paymentTransaction);
+        if (paymentResponse != null) {
+            return paymentResponse;
+        }
+
         validatePaymentCanBeInitiated(paymentTransaction, request.paymentMethodCode());
 
         MerchantSellerPaymentMethod sellerPaymentMethod = getAvailableSellerPaymentMethodOrThrow(paymentTransaction, request.paymentMethodCode());
 
-        PaymentPluginInitiationResponse pluginResponse = paymentPluginInitiationService.initiatePayment(paymentTransaction, sellerPaymentMethod);
 
         paymentTransaction.setSelectedPaymentMethodCode(sellerPaymentMethod.getPaymentMethod().getCode());
-        paymentTransaction.setStatus(PaymentStatus.INITIATED);
 
-        PaymentTransaction savedPaymentTransaction = paymentTransactionRepository.save(paymentTransaction);
+        try {
+            PaymentPluginInitiationResponse pluginResponse = paymentPluginInitiationService.initiatePayment(paymentTransaction, sellerPaymentMethod);
 
-        appLoggerService.info(
+            paymentTransaction.setStatus(PaymentStatus.INITIATED);
+
+            PaymentTransaction savedPaymentTransaction = paymentTransactionRepository.save(paymentTransaction);
+
+            appLoggerService.info(
+                    LogStrings.Feature.PAYMENT,
+                    LogStrings.Action.PAYMENT_INITIATED,
+                    "paymentId={} merchantId={} sellerReference={} selectedPaymentMethodCode={}",
+                    savedPaymentTransaction.getId(),
+                    savedPaymentTransaction.getMerchant().getMerchantId(),
+                    savedPaymentTransaction.getSellerAccount().getSellerReference(),
+                    savedPaymentTransaction.getSelectedPaymentMethodCode()
+            );
+
+            return new InitiatePaymentResponse(
+                    savedPaymentTransaction.getId(),
+                    savedPaymentTransaction.getSelectedPaymentMethodCode(),
+                    savedPaymentTransaction.getStatus(),
+                    pluginResponse.redirectUrl()
+            );
+        } catch (Exception exception) {
+            paymentTransaction.setStatus(PaymentStatus.FAILED);
+
+            PaymentTransaction savedPaymentTransaction = paymentTransactionRepository.save(paymentTransaction);
+
+            String message = "Payment could not be initiated.";
+            paymentResultNotificationPublisher.publishPaymentResult(savedPaymentTransaction, message);
+
+            appLoggerService.warn(
+                    LogStrings.Feature.PAYMENT,
+                    LogStrings.Action.PAYMENT_INITIATE_REJECTED,
+                    "reason={} paymentId={} merchantId={} sellerReference={} selectedPaymentMethodCode={} error={}",
+                    LogStrings.Reason.PAYMENT_INITIATION_FAILED,
+                    savedPaymentTransaction.getId(),
+                    savedPaymentTransaction.getMerchant().getMerchantId(),
+                    savedPaymentTransaction.getSellerAccount().getSellerReference(),
+                    savedPaymentTransaction.getSelectedPaymentMethodCode(),
+                    exception.getMessage()
+            );
+
+            return new InitiatePaymentResponse(
+                    savedPaymentTransaction.getId(),
+                    savedPaymentTransaction.getSelectedPaymentMethodCode(),
+                    savedPaymentTransaction.getStatus(),
+                    savedPaymentTransaction.getMerchant().getFailUrl()
+            );
+        }
+    }
+
+    private InitiatePaymentResponse redirectIfPaymentAlreadyFailed(PaymentTransaction paymentTransaction) {
+        if (paymentTransaction.getStatus() != PaymentStatus.FAILED) {
+            return null;
+        }
+
+        appLoggerService.warn(
                 LogStrings.Feature.PAYMENT,
-                LogStrings.Action.PAYMENT_INITIATED,
-                "paymentId={} merchantId={} sellerReference={} selectedPaymentMethodCode={}",
-                savedPaymentTransaction.getId(),
-                savedPaymentTransaction.getMerchant().getMerchantId(),
-                savedPaymentTransaction.getSellerAccount().getSellerReference(),
-                savedPaymentTransaction.getSelectedPaymentMethodCode()
+                LogStrings.Action.PAYMENT_INITIATE_REJECTED,
+                "reason={} paymentId={} status={}",
+                LogStrings.Reason.PAYMENT_ALREADY_FAILED,
+                paymentTransaction.getId(),
+                paymentTransaction.getStatus()
         );
 
         return new InitiatePaymentResponse(
-                savedPaymentTransaction.getId(),
-                savedPaymentTransaction.getSelectedPaymentMethodCode(),
-                savedPaymentTransaction.getStatus(),
-                pluginResponse.redirectUrl()
+                paymentTransaction.getId(),
+                paymentTransaction.getSelectedPaymentMethodCode(),
+                paymentTransaction.getStatus(),
+                paymentTransaction.getMerchant().getFailUrl()
         );
     }
 

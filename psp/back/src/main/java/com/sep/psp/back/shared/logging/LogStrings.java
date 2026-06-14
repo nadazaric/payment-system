@@ -66,6 +66,7 @@ public final class LogStrings {
 
         public static final String PAYMENT_STATUS_CHECK_FAILED = "PAYMENT STATUS CHECK FAILED";
         public static final String PAYMENT_STATUS_CHECK_SCHEDULER_FAILED = "PAYMENT STATUS CHECK SCHEDULER FAILED";
+        public static final String PAYMENT_CREATED_EXPIRED = "PAYMENT CREATED EXPIRED";
 
         private Action() {
         }
@@ -101,6 +102,9 @@ public final class LogStrings {
         public static final String SELECTED_PAYMENT_METHOD_NOT_AVAILABLE = "selected_payment_method_not_available";
         public static final String RABBITMQ_PUBLISH_FAILED = "rabbitmq_publish_failed";
         public static final String PAYMENT_STATUS_CHECK_FAILED = "payment_status_check_failed";
+        public static final String PAYMENT_CREATED_TIMEOUT = "payment_created_timeout";
+        public static final String PAYMENT_ALREADY_FAILED = "payment_already_failed";
+        public static final String PAYMENT_INITIATION_FAILED = "payment_initiation_failed";
 
         private Reason() {
         }

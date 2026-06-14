@@ -14,4 +14,9 @@ public interface PaymentTransactionRepository extends JpaRepository<PaymentTrans
 
     List<PaymentTransaction> findByStatusAndUpdatedAtBefore(PaymentStatus status, LocalDateTime updatedAt);
 
+    List<PaymentTransaction> findByStatusAndSelectedPaymentMethodCodeIsNullAndCreatedAtBefore(
+            PaymentStatus status,
+            LocalDateTime createdAt
+    );
+
 }
