@@ -87,11 +87,10 @@ public class PaymentServiceImpl implements PaymentService {
         appLoggerService.info(
                 LogStrings.Feature.PAYMENT,
                 LogStrings.Action.PAYMENT_CREATED,
-                "bankPaymentId={} bankMerchantId={} stan={} paymentUrl={} expiresAt={}",
+                "bankPaymentId={} bankMerchantId={} stan={} expiresAt={}",
                 savedPayment.getId(),
                 savedPayment.getBankMerchantId(),
                 savedPayment.getStan(),
-                paymentUrl,
                 savedPayment.getExpiresAt()
         );
 

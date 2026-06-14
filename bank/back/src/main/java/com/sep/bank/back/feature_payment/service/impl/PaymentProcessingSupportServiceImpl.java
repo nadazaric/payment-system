@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Service
 public class PaymentProcessingSupportServiceImpl implements PaymentProcessingSupportService {
@@ -160,6 +161,7 @@ public class PaymentProcessingSupportServiceImpl implements PaymentProcessingSup
     ) {
         payment.setStatus(PaymentStatus.FAILED);
         payment.setPaymentAttemptUsed(true);
+        ensureAcquirerData(payment);
 
         paymentRepository.save(payment);
 
@@ -197,6 +199,7 @@ public class PaymentProcessingSupportServiceImpl implements PaymentProcessingSup
 
         payment.setStatus(PaymentStatus.ERROR);
         payment.setPaymentAttemptUsed(true);
+        ensureAcquirerData(payment);
 
         paymentRepository.save(payment);
 
@@ -211,6 +214,16 @@ public class PaymentProcessingSupportServiceImpl implements PaymentProcessingSup
 
         paymentCallbackService.sendPaymentResultCallback(payment, "Payment processing error.");
         return payment.getErrorUrl();
+    }
+
+    private void ensureAcquirerData(Payment payment) {
+        if (payment.getGlobalTransactionId() == null || payment.getGlobalTransactionId().isBlank()) {
+            payment.setGlobalTransactionId(UUID.randomUUID().toString());
+        }
+
+        if (payment.getAcquirerTimestamp() == null) {
+            payment.setAcquirerTimestamp(LocalDateTime.now());
+        }
     }
 
 }

@@ -99,7 +99,9 @@ public class PaymentStatusCheckServiceImpl implements PaymentStatusCheckService 
         return new PspPaymentStatusCheckResponse(
                 pluginPayment.getPspPaymentId(),
                 pluginPayment.getStatus(),
-                pluginPayment.getResultMessage()
+                pluginPayment.getResultMessage(),
+                pluginPayment.getGlobalTransactionId(),
+                pluginPayment.getAcquirerTimestamp()
         );
     }
 

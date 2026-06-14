@@ -55,6 +55,7 @@ public class ReservationPaymentNotificationServiceImpl implements ReservationPay
                     return new IllegalArgumentException("Reservation payment not found.");
                 });
 
+        validatePaymentAmountAndCurrency(reservation, event);
         validatePaymentStatusTransition(reservation, event.status());
 
         if (reservation.getPaymentStatus() == event.status()) {

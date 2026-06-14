@@ -22,6 +22,7 @@ public final class LogStrings {
 
         public static final String STARTED = "STARTED";
         public static final String STOPPED = "STOPPED";
+        public static final String REQUEST_REJECTED = "REQUEST REJECTED";
 
         public static final String PAYMENT_CREATE_REQUEST_RECEIVED = "PAYMENT INIT REQ RECEIVED";
         public static final String PAYMENT_CREATE_REJECTED = "PAYMENT INIT REJECTED";
@@ -41,6 +42,8 @@ public final class LogStrings {
         public static final String QR_PAYMENT_SUBMIT_RECEIVED = "QR PAYMENT SUBMIT RECEIVED";
         public static final String QR_PAYMENT_COMPLETED = "QR PAYMENT COMPLETED";
         public static final String QR_PAYMENT_REJECTED = "QR PAYMENT REJECTED";
+        public static final String QR_GENERATION_REJECTED = "QR GENERATION REJECTED";
+
     }
 
     public static final class Reason {
@@ -77,6 +80,7 @@ public final class LogStrings {
         public static final String PAYER_ACCOUNT_NOT_FOUND = "payer_account_not_found";
         public static final String QR_PAYMENT_PROCESSING_ERROR = "qr_payment_processing_error";
         public static final String PAYER_ACCOUNT_NOT_ALLOWED = "payer_account_not_allowed";
+        public static final String QR_PAYMENT_CONTENT_GENERATION_FAILED = "qr_payment_content_generation_failed";
 
     }
 

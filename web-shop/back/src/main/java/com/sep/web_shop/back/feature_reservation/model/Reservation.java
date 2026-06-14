@@ -14,11 +14,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Entity
-//@Getter
-//@Setter
-//@NoArgsConstructor
-//@AllArgsConstructor
-//@Builder
 public class Reservation {
 
     @Id
@@ -41,8 +36,6 @@ public class Reservation {
     private String paymentRedirectUrl;
 
     private String paymentMethodCode;
-
-    private String globalTransactionId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(nullable = false)
@@ -133,14 +126,6 @@ public class Reservation {
 
     public void setPaymentMethodCode(String paymentMethodCode) {
         this.paymentMethodCode = paymentMethodCode;
-    }
-
-    public String getGlobalTransactionId() {
-        return globalTransactionId;
-    }
-
-    public void setGlobalTransactionId(String globalTransactionId) {
-        this.globalTransactionId = globalTransactionId;
     }
 
     public Vehicle getVehicle() {

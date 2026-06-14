@@ -57,10 +57,8 @@ public class CardPaymentProcessingServiceImpl implements CardPaymentProcessingSe
         appLoggerService.info(
                 LogStrings.Feature.PAYMENT,
                 LogStrings.Action.CARD_PAYMENT_SUBMIT_RECEIVED,
-                "bankPaymentId={} cardHolderName={} expirationDate={}",
-                paymentId,
-                request.cardHolderName(),
-                request.expirationDate()
+                "bankPaymentId={}",
+                paymentId
         );
 
         Payment payment = findPayment(paymentId);

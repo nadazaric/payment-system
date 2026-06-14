@@ -1,6 +1,8 @@
 package com.sep.bank.back.shared.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sep.bank.back.shared.logging.LogStrings;
+import com.sep.bank.back.shared.logging.service.interf.AppLoggerService;
 import com.sep.bank.back.shared.security.service.interf.HmacService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -37,6 +39,9 @@ public class SignatureVerificationFilter extends OncePerRequestFilter {
     @Autowired
     HmacService hmacService;
 
+    @Autowired
+    AppLoggerService appLoggerService;
+
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String servletPath = request.getServletPath();
@@ -67,10 +72,16 @@ public class SignatureVerificationFilter extends OncePerRequestFilter {
                     response
             );
         } catch (Exception exception) {
-            writeErrorResponse(
-                    response,
+            appLoggerService.warn(
+                    LogStrings.Feature.PAYMENT,
+                    LogStrings.Action.REQUEST_REJECTED,
+                    "path={} pluginCode={} reason={}",
+                    request.getServletPath(),
+                    request.getHeader(SignatureHeaders.PLUGIN_CODE),
                     exception.getMessage()
             );
+
+            writeErrorResponse(response, exception.getMessage());
         }
     }
 
