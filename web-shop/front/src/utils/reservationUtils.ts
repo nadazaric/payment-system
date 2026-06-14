@@ -83,3 +83,16 @@ export const getPaymentStatusLabel = (
             return status;
     }
 };
+
+export const getPaymentMethodCodeLabel = (
+    status: string
+) => {
+    switch (status) {
+        case "CARD":
+            return "Card";
+        case "QR_CODE":
+            return "QR";
+        default:
+            return status;
+    }
+};

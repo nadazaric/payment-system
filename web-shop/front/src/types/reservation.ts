@@ -51,4 +51,5 @@ export type ReservationHistory = {
     additionalServiceNames: string[];
     totalPrice: number;
     paymentStatus: PaymentStatus;
+    paymentMethodCode: string;
 };
