@@ -57,28 +57,28 @@ public record CreatePaymentRequest(
 
         @Schema(
                 description = "Browser redirect URL after successful payment.",
-                example = "http://localhost:3001/payment/success"
+                example = "https://localhost:3001/payment/success"
         )
         @NotBlank
                 String successUrl,
 
         @Schema(
                 description = "Browser redirect URL after failed payment.",
-                example = "http://localhost:3001/payment/failed"
+                example = "https://localhost:3001/payment/failed"
         )
         @NotBlank
         String failUrl,
 
         @Schema(
                 description = "Browser redirect URL after technical payment error.",
-                example = "http://localhost:3001/payment/error"
+                example = "https://localhost:3001/payment/error"
         )
         @NotBlank
         String errorUrl,
 
         @Schema(
                 description = "Plugin callback URL used by the bank to notify plugin/PSP about final payment result.",
-                example = "http://localhost:8086/api/plugin/payments/bank-callback"
+                example = "https://localhost:8086/api/plugin/payments/bank-callback"
         )
         @NotBlank
         String pluginCallbackUrl

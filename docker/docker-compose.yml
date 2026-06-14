@@ -79,14 +79,15 @@ services:
   nginx:
     image: nginx:alpine
     container_name: ws-nginx
+    restart: unless-stopped
     ports:
-      - ${NGINX_PORT}:80
+      - ${NGINX_HTTPS_PORT}:443
     volumes:
       - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./nginx/certs:/etc/nginx/certs:ro
       - ./vehicles:/usr/share/nginx/html/images/vehicles:ro
     networks:
       - app-network
-    restart: unless-stopped
 
   rabbitmq:
     image: rabbitmq:3-management

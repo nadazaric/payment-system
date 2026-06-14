@@ -13,7 +13,7 @@ public record CreatePaymentResponse(
 
         @Schema(
                 description = "Bank payment page URL where customer should be redirected.",
-                example = "http://localhost:8083/payments/5f2f3b2c-0c5f-4c1a-9b28-7fcb8d4a5f90"
+                example = "https://localhost:8083/payments/5f2f3b2c-0c5f-4c1a-9b28-7fcb8d4a5f90"
         )
         String paymentUrl
 ) {

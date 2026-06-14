@@ -28,9 +28,9 @@ VALUES (
            'Vehicle Rental Agency',
            '$2y$10$VVUV..VIlKxpt6Gf5kQI4ezeohwiA7x6.WMufSFqJkUDyKiKtHYuO',
            'RSD',
-           'http://localhost:3001/payment/success',
-           'http://localhost:3001/payment/failed',
-           'http://localhost:3001/payment/error',
+           'https://localhost:3001/payment/success',
+           'https://localhost:3001/payment/failed',
+           'https://localhost:3001/payment/error',
            true,
            CURRENT_TIMESTAMP,
            CURRENT_TIMESTAMP
@@ -79,7 +79,7 @@ INSERT INTO payment_plugin (
 VALUES (
            'BANK_PLUGIN',
            'Bank Payment Plugin',
-           'http://localhost:8086',
+           'https://localhost:5103/',
            true,
            true,
            'JG/CXiRyNO1sSYmt9EJsxSGIQK6T96VTGeVBYqd6l3LIJTdl23ptfiY/lgJ7DXspsme64QWwmwvIZikpTmuTacyXJfGDyA=='
