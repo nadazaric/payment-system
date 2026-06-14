@@ -70,11 +70,24 @@
             object-fit: contain;
         }
 
-        .note {
+        .status {
             margin-top: 16px;
-            font-size: 13px;
+            padding: 14px;
+            border-radius: 12px;
+            background: #f9fafb;
             color: #6b7280;
+            font-size: 13px;
             line-height: 1.45;
+        }
+
+        .status.success {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status.error {
+            background: #fee2e2;
+            color: #991b1b;
         }
 
         @media (max-width: 640px) {
@@ -116,9 +129,121 @@
                 alt="QR code for payment">
     </div>
 
-    <div class="note">
-        Scan this QR code using the mock mBanking scanner page.
+    <div id="status"
+         class="status">
+        Scan this QR code using the mock mBanking scanner page. Waiting for payment confirmation...
     </div>
 </main>
+
+<script>
+    const statusBox = document.getElementById("status");
+
+    const POLLING_INTERVAL_MS = 2000;
+
+    let pollingIntervalId = null;
+    let redirecting = false;
+
+    document.addEventListener("DOMContentLoaded", startPaymentStatusPolling);
+
+    function startPaymentStatusPolling() {
+        checkPaymentStatus();
+
+        pollingIntervalId = setInterval(
+            checkPaymentStatus,
+            POLLING_INTERVAL_MS
+        );
+    }
+
+    async function checkPaymentStatus() {
+        if (redirecting) {
+            return;
+        }
+
+        const paymentId = getPaymentIdFromUrl();
+
+        if (!paymentId) {
+            stopPolling();
+            showError("Payment ID could not be resolved from the current URL.");
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/bank/qr/payments/${paymentId}/status`, {
+                method: "GET",
+                headers: {
+                    "Accept": "application/json"
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error("Payment status could not be checked.");
+            }
+
+            const data = await response.json();
+
+            handlePaymentStatus(data);
+        } catch (error) {
+            showInfo("Waiting for payment confirmation...");
+        }
+    }
+
+    function handlePaymentStatus(data) {
+        if (!data || !data.status) {
+            showInfo("Waiting for payment confirmation...");
+            return;
+        }
+
+        if (data.status === "CREATED") {
+            showInfo(data.message || "Waiting for payment confirmation...");
+            return;
+        }
+
+        if (data.redirectUrl) {
+            redirecting = true;
+            stopPolling();
+
+            if (data.status === "SUCCESS") {
+                showSuccess(data.message || "Payment completed successfully. Redirecting...");
+            } else {
+                showError(data.message || "Payment finished. Redirecting...");
+            }
+
+            window.location.href = data.redirectUrl;
+            return;
+        }
+
+        showError(data.message || "Payment status could not be processed.");
+    }
+
+    function getPaymentIdFromUrl() {
+        const parts = window.location.pathname
+            .split("/")
+            .filter(Boolean);
+
+        return parts.length === 0 ? null : parts[parts.length - 1];
+    }
+
+    function stopPolling() {
+        if (pollingIntervalId) {
+            clearInterval(pollingIntervalId);
+            pollingIntervalId = null;
+        }
+    }
+
+    function showInfo(message) {
+        statusBox.className = "status";
+        statusBox.textContent = message;
+    }
+
+    function showSuccess(message) {
+        statusBox.className = "status success";
+        statusBox.textContent = message;
+    }
+
+    function showError(message) {
+        statusBox.className = "status error";
+        statusBox.textContent = message;
+    }
+</script>
 </body>
 </html>

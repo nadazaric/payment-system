@@ -89,6 +89,11 @@
             word-break: break-word;
         }
 
+        .status.success {
+            background: #dcfce7;
+            color: #166534;
+        }
+
         .status.error {
             background: #fee2e2;
             color: #991b1b;
@@ -126,8 +131,6 @@
 
         .field {
             margin-top: 16px;
-            padding-bottom: 12px;
-            border-bottom: 1px solid #e5e7eb;
         }
 
         .field label {
@@ -145,6 +148,31 @@
             font-size: 14px;
             background: white;
             color: #111827;
+        }
+
+        .actions {
+            margin-top: 24px;
+        }
+
+        .button {
+            width: 100%;
+            border: none;
+            border-radius: 10px;
+            padding: 14px 18px;
+            background: #2563eb;
+            color: white;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .button:hover:not(:disabled) {
+            background: #1d4ed8;
+        }
+
+        .button:disabled {
+            cursor: not-allowed;
+            opacity: 0.55;
         }
 
         @media (max-width: 640px) {
@@ -226,6 +254,12 @@
                   class="value"></span>
         </div>
 
+        <div class="detail-row">
+            <span class="label">Reference</span>
+            <span id="paymentReference"
+                  class="value"></span>
+        </div>
+
         <div class="field">
             <label for="payerAccount">From account</label>
             <select id="payerAccount">
@@ -233,10 +267,13 @@
             </select>
         </div>
 
-        <div class="detail-row">
-            <span class="label">Reference</span>
-            <span id="paymentReference"
-                  class="value"></span>
+        <div class="actions">
+            <button id="payButton"
+                    class="button"
+                    type="button"
+                    disabled>
+                Pay
+            </button>
         </div>
     </section>
 </main>
@@ -250,14 +287,19 @@
     const recipientName = document.getElementById("recipientName");
     const recipientAccount = document.getElementById("recipientAccount");
     const amount = document.getElementById("amount");
-    const payerAccount = document.getElementById("payerAccount");
     const paymentReference = document.getElementById("paymentReference");
+    const payerAccount = document.getElementById("payerAccount");
+    const payButton = document.getElementById("payButton");
 
     let html5QrCode = null;
     let scannerRunning = false;
     let scanInProgress = false;
+    let paymentSubmitting = false;
+    let scannedPayload = "";
 
     document.addEventListener("DOMContentLoaded", startScanner);
+    payerAccount.addEventListener("change", updatePayButtonState);
+    payButton.addEventListener("click", submitPayment);
 
     async function startScanner() {
         if (scannerRunning) {
@@ -287,6 +329,7 @@
 
             scannerRunning = true;
             scanInProgress = false;
+            paymentSubmitting = false;
             paymentDetails.classList.remove("visible");
 
             showInfo("Point the camera at the QR code shown on the bank payment page.");
@@ -325,12 +368,61 @@
 
             const data = await response.json();
 
+            scannedPayload = payload;
+
             await stopScanner();
             renderPaymentDetails(data);
             showInfo("Review payment details before continuing.");
         } catch (error) {
             scanInProgress = false;
             showError("QR code could not be validated. Please scan a valid IPS QR code.");
+        }
+    }
+
+    async function submitPayment() {
+        if (paymentSubmitting || !payerAccount.value || !scannedPayload) {
+            return;
+        }
+
+        paymentSubmitting = true;
+        payerAccount.disabled = true;
+        payButton.disabled = true;
+        payButton.textContent = "Processing payment...";
+
+        showInfo("Processing QR payment...");
+
+        try {
+            const response = await fetch("/api/mock-mbanking/pay", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    payload: scannedPayload,
+                    payerAccountId: payerAccount.value
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error("QR payment request failed.");
+            }
+
+            const data = await response.json();
+
+            if (data.status === "SUCCESS") {
+                pageTitle.textContent = "Payment Completed";
+                paymentDetails.classList.remove("visible");
+                showSuccess(data.message || "QR payment completed successfully.");
+                return;
+            }
+
+            pageTitle.textContent = "Payment Failed";
+            paymentDetails.classList.remove("visible");
+            showError(data.message || "QR payment failed.");
+        } catch (error) {
+            pageTitle.textContent = "Payment Failed";
+            paymentDetails.classList.remove("visible");
+            showError("QR payment could not be processed.");
         }
     }
 
@@ -361,6 +453,7 @@
         renderPayerAccounts(data.payerAccounts);
 
         paymentDetails.classList.add("visible");
+        updatePayButtonState();
     }
 
     function renderPayerAccounts(accounts) {
@@ -381,12 +474,21 @@
         });
     }
 
+    function updatePayButtonState() {
+        payButton.disabled = paymentSubmitting || !payerAccount.value || !scannedPayload;
+    }
+
     function formatAmount(value) {
         return Number(value).toFixed(2);
     }
 
     function showInfo(message) {
         statusBox.className = "status";
+        statusBox.textContent = message;
+    }
+
+    function showSuccess(message) {
+        statusBox.className = "status success";
         statusBox.textContent = message;
     }
 

@@ -310,6 +310,13 @@ public class CardPaymentProcessingServiceImpl implements CardPaymentProcessingSe
         Merchant merchant = findMerchant(payment);
         BankAccount merchantAccount = merchant.getBankAccount();
 
+        paymentProcessingSupportService.validatePayerAccountIsDifferentFromMerchantAccount(
+                payment,
+                customerAccount,
+                merchantAccount,
+                LogStrings.Action.CARD_PAYMENT_REJECTED
+        );
+
         paymentProcessingSupportService.validateCurrency(
                 payment,
                 customerAccount,

@@ -133,6 +133,25 @@ public class PaymentProcessingSupportServiceImpl implements PaymentProcessingSup
     }
 
     @Override
+    public void validatePayerAccountIsDifferentFromMerchantAccount(
+            Payment payment,
+            BankAccount payerAccount,
+            BankAccount merchantAccount,
+            String rejectionAction
+    ) {
+        if (!payerAccount.getId().equals(merchantAccount.getId())) {
+            return;
+        }
+
+        rejectPaymentAsFailed(
+                payment,
+                rejectionAction,
+                LogStrings.Reason.PAYER_ACCOUNT_NOT_ALLOWED,
+                "Payer account cannot be the same as merchant account."
+        );
+    }
+
+    @Override
     public void rejectPaymentAsFailed(
             Payment payment,
             String rejectionAction,
@@ -163,6 +182,19 @@ public class PaymentProcessingSupportServiceImpl implements PaymentProcessingSup
             String rejectionAction,
             String errorReason
     ) {
+        if (payment == null) {
+            appLoggerService.error(
+                    LogStrings.Feature.PAYMENT,
+                    rejectionAction,
+                    "reason={} bankPaymentId={} error={}",
+                    errorReason,
+                    null,
+                    exception.getMessage()
+            );
+
+            return null;
+        }
+
         payment.setStatus(PaymentStatus.ERROR);
         payment.setPaymentAttemptUsed(true);
 

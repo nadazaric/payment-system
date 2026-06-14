@@ -27,4 +27,6 @@ public interface PaymentRepository extends JpaRepository<Payment, UUID> {
 
     boolean existsByQrPaymentReference(String qrPaymentReference);
 
+    Optional<Payment> findByQrPaymentReference(String qrPaymentReference);
+
 }

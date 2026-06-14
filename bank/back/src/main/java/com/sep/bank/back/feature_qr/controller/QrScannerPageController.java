@@ -1,7 +1,10 @@
 package com.sep.bank.back.feature_qr.controller;
 
+import com.sep.bank.back.feature_qr.dto.QrPaymentRequest;
+import com.sep.bank.back.feature_qr.dto.QrPaymentResponse;
 import com.sep.bank.back.feature_qr.dto.QrScanRequest;
 import com.sep.bank.back.feature_qr.dto.QrScanResponse;
+import com.sep.bank.back.feature_qr.service.interf.QrPaymentProcessingService;
 import com.sep.bank.back.feature_qr.service.interf.QrScanService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +29,9 @@ public class QrScannerPageController {
 
     @Autowired
     QrScanService qrScanService;
+
+    @Autowired
+    QrPaymentProcessingService qrPaymentProcessingService;
 
     public QrScannerPageController(ResourceLoader resourceLoader) {
         this.resourceLoader = resourceLoader;
@@ -62,6 +68,15 @@ public class QrScannerPageController {
             @Valid @RequestBody QrScanRequest request
     ) {
         QrScanResponse response = qrScanService.scan(request.payload());
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/pay")
+    public ResponseEntity<QrPaymentResponse> pay(
+            @Valid @RequestBody QrPaymentRequest request
+    ) {
+        QrPaymentResponse response = qrPaymentProcessingService.submitQrPayment(request);
 
         return ResponseEntity.ok(response);
     }

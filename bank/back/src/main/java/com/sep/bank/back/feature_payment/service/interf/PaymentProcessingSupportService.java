@@ -29,6 +29,13 @@ public interface PaymentProcessingSupportService {
             String rejectionAction
     );
 
+    void validatePayerAccountIsDifferentFromMerchantAccount(
+            Payment payment,
+            BankAccount payerAccount,
+            BankAccount merchantAccount,
+            String rejectionAction
+    );
+
     void rejectPaymentAsFailed(
             Payment payment,
             String rejectionAction,
