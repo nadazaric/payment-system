@@ -47,6 +47,8 @@ public final class LogStrings {
 
         public static final String PAYMENT_STATUS_CHECK_COMPLETED = "PAYMENT STATUS CHECK COMPLETED";
         public static final String PAYMENT_STATUS_CHECK_REJECTED = "PAYMENT STATUS CHECK REJECTED";
+
+        public static final String REQUEST_REJECTED = "REQUEST REJECTED";
     }
 
     public static final class Reason {

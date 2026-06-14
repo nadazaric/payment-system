@@ -63,10 +63,9 @@ public class PaymentInitiationServiceImpl implements PaymentInitiationService {
             appLoggerService.info(
                     LogStrings.Feature.PAYMENT,
                     LogStrings.Action.PAYMENT_INITIATE_ALREADY_EXISTS,
-                    "paymentId={} bankPaymentId={} redirectUrl={}",
+                    "paymentId={} bankPaymentId={}",
                     existingPayment.getPspPaymentId(),
-                    existingPayment.getBankPaymentId(),
-                    existingPayment.getBankPaymentUrl()
+                    existingPayment.getBankPaymentId()
             );
 
             return new PluginPaymentInitiationResponse(
@@ -126,12 +125,11 @@ public class PaymentInitiationServiceImpl implements PaymentInitiationService {
         appLoggerService.info(
                 LogStrings.Feature.PAYMENT,
                 LogStrings.Action.PAYMENT_INITIATE_COMPLETED,
-                "paymentId={} bankPaymentId={} stan={} pspTimestamp={} redirectUrl={}",
+                "paymentId={} bankPaymentId={} stan={} pspTimestamp={}",
                 savedPluginPayment.getPspPaymentId(),
                 savedPluginPayment.getBankPaymentId(),
                 savedPluginPayment.getStan(),
-                savedPluginPayment.getPspTimestamp(),
-                savedPluginPayment.getBankPaymentUrl()
+                savedPluginPayment.getPspTimestamp()
         );
 
         return new PluginPaymentInitiationResponse(savedPluginPayment.getBankPaymentUrl());
