@@ -25,7 +25,7 @@ public record MerchantRegistrationResponse(
 
         @Schema(
                 description = "Default merchant currency.",
-                example = "EUR"
+                example = "RSD"
         )
         String currency,
 

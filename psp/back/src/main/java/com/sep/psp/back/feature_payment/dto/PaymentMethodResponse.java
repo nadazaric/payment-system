@@ -7,7 +7,7 @@ public record PaymentMethodResponse(
 
         @Schema(
                 description = "Payment method code.",
-                example = "CARD"
+                example = "MOCK_PAY"
         )
         String code,
 

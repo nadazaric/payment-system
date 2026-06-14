@@ -17,6 +17,7 @@ public record ReservationHistoryDTO(
         String insurancePackageName,
         List<String> additionalServiceNames,
         BigDecimal totalPrice,
-        PaymentStatus paymentStatus
+        PaymentStatus paymentStatus,
+        String paymentMethodCode
 ) {
 }

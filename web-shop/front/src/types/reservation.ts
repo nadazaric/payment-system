@@ -1,4 +1,11 @@
-export type PaymentStatus = "PENDING" | "PAID" | "FAILED";
+export type PaymentStatus =
+    | "CREATED"
+    | "INITIATED"
+    | "SUCCESS"
+    | "FAILED"
+    | "ERROR"
+    | "EXPIRED"
+    | "CANCELLED";
 
 export type ReservationTimeStatus = "ACTIVE" | "UPCOMING" | "COMPLETED";
 
@@ -13,6 +20,12 @@ export type CreateReservationRequest = {
     endDate: string;
     insurancePackageId: number;
     additionalServiceIds: number[];
+};
+
+export type CreateReservationResponse = {
+    reservationId: number;
+    redirectUrl: string;
+    paymentStatus: PaymentStatus;
 };
 
 export type ReservationDetails = {
@@ -38,4 +51,5 @@ export type ReservationHistory = {
     additionalServiceNames: string[];
     totalPrice: number;
     paymentStatus: PaymentStatus;
+    paymentMethodCode: string;
 };

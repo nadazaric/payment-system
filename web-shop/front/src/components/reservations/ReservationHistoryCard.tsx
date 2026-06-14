@@ -18,7 +18,7 @@ import {
     ReservationTimeStatus
 } from "@/types/reservation";
 
-import { getPaymentStatusLabel } from "@/utils/reservationUtils";
+import { getPaymentMethodCodeLabel, getPaymentStatusLabel } from "@/utils/reservationUtils";
 import { RENTAL_HISTORY_PAGE_LABELS } from "@/const/label";
 
 type ReservationHistoryCardProps = {
@@ -32,19 +32,21 @@ const getPaymentStatusStyles = (
     status: PaymentStatus
 ) => {
     switch (status) {
-        case "PAID":
+        case "SUCCESS":
             return {
                 bgcolor: "rgba(34, 197, 94, 0.12)",
                 color: "#15803D",
                 borderColor: "rgba(34, 197, 94, 0.28)"
             };
-        case "PENDING":
+        case "CREATED":
+        case "INITIATED":
             return {
                 bgcolor: "rgba(245, 158, 11, 0.12)",
                 color: "#B45309",
                 borderColor: "rgba(245, 158, 11, 0.28)"
             };
         case "FAILED":
+        case "ERROR":
             return {
                 bgcolor: "rgba(239, 68, 68, 0.12)",
                 color: "#B91C1C",
@@ -146,20 +148,41 @@ export default function ReservationHistoryCard({
                         </Box>
                     </Box>
 
-                    <Chip
-                        label={getPaymentStatusLabel(reservation.paymentStatus)}
-                        size="medium"
-                        variant="outlined"
-                        sx={{
-                            fontWeight: 700,
-                            flexShrink: 0,
-                            bgcolor: paymentStatusStyles.bgcolor,
-                            color: paymentStatusStyles.color,
-                            borderColor: paymentStatusStyles.borderColor,
-                            "& .MuiChip-label": {
-                                px: 1
-                            }
-                        }} />
+                    <div>
+                        {reservation.paymentMethodCode &&
+                            <Chip
+                                label={getPaymentMethodCodeLabel(reservation.paymentMethodCode)}
+                                size="medium"
+                                variant="outlined"
+                                sx={{
+                                    fontWeight: 700,
+                                    flexShrink: 0,
+                                    bgcolor: paymentStatusStyles.bgcolor,
+                                    color: paymentStatusStyles.color,
+                                    borderColor: paymentStatusStyles.borderColor,
+                                    mr: 1,
+                                    "& .MuiChip-label": {
+                                        px: 1
+                                    }
+                                }} />
+                        }
+
+
+                        <Chip
+                            label={getPaymentStatusLabel(reservation.paymentStatus)}
+                            size="medium"
+                            variant="outlined"
+                            sx={{
+                                fontWeight: 700,
+                                flexShrink: 0,
+                                bgcolor: paymentStatusStyles.bgcolor,
+                                color: paymentStatusStyles.color,
+                                borderColor: paymentStatusStyles.borderColor,
+                                "& .MuiChip-label": {
+                                    px: 1
+                                }
+                            }} />
+                    </div>
                 </Box>
 
                 <Divider

@@ -118,7 +118,7 @@ public class SellerPaymentMethodServiceImpl implements SellerPaymentMethodServic
         appLoggerService.info(
                 LogStrings.Feature.PAYMENT_METHOD,
                 LogStrings.Action.PAYMENT_METHOD_CONFIGURED,
-                "merchantId={} sellerId={} paymentMethodCode={}",
+                "merchantId={} sellerId={} selectedPaymentMethodCode={}",
                 merchant.getMerchantId(),
                 sellerAccount.getId(),
                 paymentMethod.getCode()
@@ -165,7 +165,7 @@ public class SellerPaymentMethodServiceImpl implements SellerPaymentMethodServic
         appLoggerService.info(
                 LogStrings.Feature.PAYMENT_METHOD,
                 LogStrings.Action.PAYMENT_METHOD_REMOVED,
-                "merchantId={} sellerId={} paymentMethodCode={}",
+                "merchantId={} sellerId={} selectedPaymentMethodCode={}",
                 merchant.getMerchantId(),
                 sellerAccount.getId(),
                 paymentMethod.getCode()

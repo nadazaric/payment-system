@@ -31,6 +31,34 @@ services:
     networks:
       - app-network
 
+  bank-postgres:
+    image: postgres:17
+    container_name: bank-postgres
+    environment:
+      - POSTGRES_USER=${BANK_DB_USERNAME}
+      - POSTGRES_PASSWORD=${BANK_DB_PASSWORD}
+      - POSTGRES_DB=${BANK_DB_NAME}
+    volumes:
+      - bank-postgres-data:/var/lib/postgresql/data
+    ports:
+      - ${BANK_DB_PORT}:5432
+    networks:
+      - app-network
+
+  bank-plugin-postgres:
+    image: postgres:17
+    container_name: bank_plugin_postgres
+    environment:
+      - POSTGRES_USER=${BANK_PLUGIN_DB_USERNAME}
+      - POSTGRES_PASSWORD=${BANK_PLUGIN_DB_PASSWORD}
+      - POSTGRES_DB=${BANK_PLUGIN_DB_NAME}
+    volumes:
+      - bank-plugin-postgres-data:/var/lib/postgresql/data
+    ports:
+      - ${BANK_PLUGIN_DB_PORT}:5432
+    networks:
+      - app-network
+
   pgadmin:
     image: dpage/pgadmin4
     container_name: pgadmin
@@ -51,11 +79,27 @@ services:
   nginx:
     image: nginx:alpine
     container_name: ws-nginx
+    restart: unless-stopped
     ports:
-      - ${NGINX_PORT}:80
+      - ${NGINX_HTTPS_PORT}:443
     volumes:
       - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./nginx/certs:/etc/nginx/certs:ro
       - ./vehicles:/usr/share/nginx/html/images/vehicles:ro
+    networks:
+      - app-network
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: sep-rabbitmq
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USERNAME}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD}
+    ports:
+      - ${RABBITMQ_PORT}:5672
+      - ${RABBITMQ_MANAGEMENT_PORT}:15672
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
     networks:
       - app-network
     restart: unless-stopped
@@ -64,6 +108,9 @@ volumes:
   ws-postgres-data:
   psp-postgres-data:
   pgadmin-data:
+  rabbitmq-data:
+  bank-postgres-data:
+  bank-plugin-postgres-data:
 
 networks:
   app-network:

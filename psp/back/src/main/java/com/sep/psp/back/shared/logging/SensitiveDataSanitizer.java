@@ -20,7 +20,12 @@ public final class SensitiveDataSanitizer {
             "pan",
             "securityCode",
             "cvv",
-            "cvc"
+            "cvc",
+            "pluginSecret",
+            "encryptedPluginSecret",
+            "merchantPasswordHash",
+            "passwordHash",
+            "signature"
     );
 
     private static final Pattern AUTHORIZATION_BEARER_PATTERN = Pattern.compile(

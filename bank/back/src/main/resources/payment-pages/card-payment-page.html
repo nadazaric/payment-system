@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+    <title>Card Payment</title>
+
+    <style>
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: Arial, sans-serif;
+            background: #f3f4f6;
+            color: #111827;
+        }
+
+        .card {
+            width: 100%;
+            max-width: 560px;
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            box-shadow: 0 16px 40px rgba(15, 23, 42, 0.12);
+        }
+
+        .top-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: #e0f2fe;
+            color: #0369a1;
+            font-size: 13px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .amount {
+            font-size: 22px;
+            font-weight: 800;
+            color: #111827;
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        .card-logos {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .card-logo-box {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 92px;
+            height: 52px;
+            border-radius: 10px;
+            border: 1px solid #d1d5db;
+            background: #ffffff;
+        }
+
+        .card-logo {
+            max-width: 64px;
+            max-height: 34px;
+            object-fit: contain;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 16px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        label {
+            font-size: 14px;
+            font-weight: 700;
+            color: #374151;
+        }
+
+        input {
+            border: 1px solid #d1d5db;
+            border-radius: 10px;
+            padding: 12px 14px;
+            font-size: 15px;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+        }
+
+        input.invalid {
+            border-color: #dc2626;
+            box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.10);
+        }
+
+        .error-text {
+            display: none;
+            font-size: 12px;
+            color: #dc2626;
+        }
+
+        .error-text.visible {
+            display: block;
+        }
+
+        .actions {
+            margin-top: 24px;
+        }
+
+        .button {
+            width: 100%;
+            border: none;
+            border-radius: 10px;
+            padding: 14px 18px;
+            background: #2563eb;
+            color: white;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .button:hover:not(:disabled) {
+            background: #1d4ed8;
+        }
+
+        .button:disabled {
+            cursor: not-allowed;
+            opacity: 0.55;
+        }
+
+        .disabled-box {
+            margin-top: 8px;
+            padding: 16px;
+            border-radius: 12px;
+            background: #fee2e2;
+            color: #991b1b;
+            font-weight: 700;
+        }
+
+        .note {
+            margin-top: 16px;
+            font-size: 13px;
+            color: #6b7280;
+        }
+
+        @media (max-width: 640px) {
+            .card {
+                padding: 24px;
+                border-radius: 0;
+                min-height: 100vh;
+                box-shadow: none;
+            }
+
+            .top-row {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .amount {
+                text-align: left;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+<main class="card">
+    <div class="top-row">
+        <div class="badge">CARD PAYMENT</div>
+        <div class="amount">{{amount}} {{currency}}</div>
+    </div>
+
+    <div class="card-logos" aria-label="Accepted card brands">
+        <div class="card-logo-box" aria-label="Visa">
+            <img
+                    class="card-logo"
+                    src="/payment-assets/visa.png"
+                    alt="Visa">
+        </div>
+
+        <div class="card-logo-box" aria-label="Mastercard">
+            <img
+                    class="card-logo"
+                    src="/payment-assets/mastercard.png"
+                    alt="Mastercard">
+        </div>
+    </div>
+
+    {{paymentFormContent}}
+</main>
+
+<script>
+    const paymentForm = document.querySelector("form");
+
+    const panInput = document.getElementById("pan");
+    const expirationDateInput = document.getElementById("expirationDate");
+    const securityCodeInput = document.getElementById("securityCode");
+    const cardHolderNameInput = document.getElementById("cardHolderName");
+    const submitButton = document.getElementById("submitPaymentButton");
+
+    const panError = document.getElementById("panError");
+    const expirationDateError = document.getElementById("expirationDateError");
+    const securityCodeError = document.getElementById("securityCodeError");
+    const cardHolderNameError = document.getElementById("cardHolderNameError");
+
+    let paymentSubmitting = false;
+
+    function digitsOnly(value) {
+        return value.replace(/\D/g, "");
+    }
+
+    function formatPan(value) {
+        return digitsOnly(value)
+            .slice(0, 16)
+            .replace(/(.{4})/g, "$1 ")
+            .trim();
+    }
+
+    function formatExpirationDate(value) {
+        const digits = digitsOnly(value).slice(0, 4);
+
+        if (digits.length <= 2) {
+            return digits;
+        }
+
+        return digits.slice(0, 2) + "/" + digits.slice(2);
+    }
+
+    function isLuhnValid(value) {
+        let sum = 0;
+        let shouldDouble = false;
+
+        for (let i = value.length - 1; i >= 0; i--) {
+            let digit = Number(value.charAt(i));
+
+            if (shouldDouble) {
+                digit *= 2;
+
+                if (digit > 9) {
+                    digit -= 9;
+                }
+            }
+
+            sum += digit;
+            shouldDouble = !shouldDouble;
+        }
+
+        return sum % 10 === 0;
+    }
+
+    function isExpirationDateValid(value) {
+        if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(value)) {
+            return false;
+        }
+
+        const month = Number(value.substring(0, 2));
+        const year = Number("20" + value.substring(3, 5));
+
+        const now = new Date();
+        const currentMonth = now.getMonth() + 1;
+        const currentYear = now.getFullYear();
+
+        return year > currentYear || (year === currentYear && month >= currentMonth);
+    }
+
+    function setFieldState(input, error, valid, touched) {
+        if (!input || !error) {
+            return;
+        }
+
+        if (!touched || valid) {
+            input.classList.remove("invalid");
+            error.classList.remove("visible");
+            return;
+        }
+
+        input.classList.add("invalid");
+        error.classList.add("visible");
+    }
+
+    function validateForm() {
+        const pan = digitsOnly(panInput ? panInput.value : "");
+        const expirationDate = expirationDateInput ? expirationDateInput.value : "";
+        const securityCode = securityCodeInput ? securityCodeInput.value : "";
+        const cardHolderName = cardHolderNameInput ? cardHolderNameInput.value.trim() : "";
+
+        const panValid = pan.length === 16 && isLuhnValid(pan);
+        const expirationDateValid = isExpirationDateValid(expirationDate);
+        const securityCodeValid = /^\d{3}$/.test(securityCode);
+        const cardHolderNameValid = cardHolderName.length >= 2;
+
+        const formValid = panValid
+            && expirationDateValid
+            && securityCodeValid
+            && cardHolderNameValid;
+
+        setFieldState(panInput, panError, panValid, pan.length > 0);
+        setFieldState(expirationDateInput, expirationDateError, expirationDateValid, expirationDate.length > 0);
+        setFieldState(securityCodeInput, securityCodeError, securityCodeValid, securityCode.length > 0);
+        setFieldState(cardHolderNameInput, cardHolderNameError, cardHolderNameValid, cardHolderName.length > 0);
+
+        if (submitButton) {
+            submitButton.disabled = paymentSubmitting || !formValid;
+        }
+
+        return formValid;
+    }
+
+    if (paymentForm) {
+        paymentForm.addEventListener("submit", function (event) {
+            const formValid = validateForm();
+
+            if (!formValid || paymentSubmitting) {
+                event.preventDefault();
+                return;
+            }
+
+            paymentSubmitting = true;
+
+            if (submitButton) {
+                submitButton.disabled = true;
+                submitButton.textContent = "Processing payment...";
+            }
+        });
+    }
+
+    if (panInput) {
+        panInput.addEventListener("input", function () {
+            this.value = formatPan(this.value);
+            validateForm();
+        });
+    }
+
+    if (expirationDateInput) {
+        expirationDateInput.addEventListener("input", function () {
+            this.value = formatExpirationDate(this.value);
+            validateForm();
+        });
+    }
+
+    if (securityCodeInput) {
+        securityCodeInput.addEventListener("input", function () {
+            this.value = digitsOnly(this.value).slice(0, 3);
+            validateForm();
+        });
+    }
+
+    if (cardHolderNameInput) {
+        cardHolderNameInput.addEventListener("input", validateForm);
+    }
+
+    validateForm();
+</script>
+</body>
+</html>

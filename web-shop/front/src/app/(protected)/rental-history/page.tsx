@@ -26,34 +26,37 @@ import {
 } from "@/types/reservation";
 
 import { Vehicle } from "@/types/vehicle";
-import { getReservationTimeStatus } from "@/utils/reservationUtils";
+import {
+    getReservationTimeStatus,
+    isFinalFailedPaymentStatus
+} from "@/utils/reservationUtils";
 import { RENTAL_HISTORY_PAGE_LABELS } from "@/const/label";
 
 type ReservationFilter =
     | ReservationTimeStatus
-    | "PAYMENT_FAILED";
+    | "PAYMENT_ISSUES";
 
 const RESERVATION_FILTERS: {
     label: string;
     value: ReservationFilter;
 }[] = [
-    {
-        label: RENTAL_HISTORY_PAGE_LABELS.activeChip,
-        value: "ACTIVE"
-    },
-    {
-        label: RENTAL_HISTORY_PAGE_LABELS.upcomingChip,
-        value: "UPCOMING"
-    },
-    {
-        label: RENTAL_HISTORY_PAGE_LABELS.completedChip,
-        value: "COMPLETED"
-    },
-    {
-        label: RENTAL_HISTORY_PAGE_LABELS.paymentFailedChip,
-        value: "PAYMENT_FAILED"
-    }
-];
+        {
+            label: RENTAL_HISTORY_PAGE_LABELS.activeChip,
+            value: "ACTIVE"
+        },
+        {
+            label: RENTAL_HISTORY_PAGE_LABELS.upcomingChip,
+            value: "UPCOMING"
+        },
+        {
+            label: RENTAL_HISTORY_PAGE_LABELS.completedChip,
+            value: "COMPLETED"
+        },
+        {
+            label: RENTAL_HISTORY_PAGE_LABELS.paymentFailedChip,
+            value: "PAYMENT_ISSUES"
+        }
+    ];
 
 export default function RentalHistoryPage() {
     const authState = useAuthState();
@@ -171,14 +174,14 @@ export default function RentalHistoryPage() {
     }, [reservations]);
 
     const filteredReservations = useMemo(() => {
-        if (selectedFilter === "PAYMENT_FAILED") {
+        if (selectedFilter === "PAYMENT_ISSUES") {
             return reservationsWithStatus.filter(({ reservation }) =>
-                reservation.paymentStatus === "FAILED"
+                isFinalFailedPaymentStatus(reservation.paymentStatus)
             );
         }
 
         return reservationsWithStatus.filter(({ reservation, timeStatus }) =>
-            reservation.paymentStatus !== "FAILED"
+            reservation.paymentStatus === "SUCCESS"
             && timeStatus === selectedFilter
         );
     }, [

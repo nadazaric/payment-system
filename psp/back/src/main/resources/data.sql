@@ -26,12 +26,12 @@ INSERT INTO merchant (
 VALUES (
            'MER-TEST0001',
            'Vehicle Rental Agency',
-           '$2y$10$GTRDoOGd27/Md.qaGZ/SReN5oSIVBtTVuIJDYspHwM5AeC9O3LsyK',
-           'EUR',
-           'http://localhost:3000/payment/success',
-           'http://localhost:3000/payment/failed',
-           'http://localhost:3000/payment/error',
-           false,
+           '$2y$10$VVUV..VIlKxpt6Gf5kQI4ezeohwiA7x6.WMufSFqJkUDyKiKtHYuO',
+           'RSD',
+           'https://localhost:3001/payment/success',
+           'https://localhost:3001/payment/failed',
+           'https://localhost:3001/payment/error',
+           true,
            CURRENT_TIMESTAMP,
            CURRENT_TIMESTAMP
        );
@@ -65,22 +65,7 @@ VALUES (
            'MER-TEST0001',
            'MAIN_SELLER',
            'Main seller',
-           false
-       );
-
-INSERT INTO merchant_seller_account (
-    id,
-    merchant_id,
-    seller_reference,
-    display_name,
-    active
-)
-VALUES (
-           'seller-test-002',
-           'MER-TEST0001',
-           'SELLER_TWO',
-           'Seller Two',
-           false
+           true
        );
 
 INSERT INTO payment_plugin (
@@ -92,10 +77,66 @@ INSERT INTO payment_plugin (
     encrypted_plugin_secret
 )
 VALUES (
-           'MOCK_PLUGIN',
-           'Mock Payment Plugin',
-           NULL,
+           'BANK_PLUGIN',
+           'Bank Payment Plugin',
+           'https://localhost:5103/',
            true,
-           false,
-           'LluElvujwjREXdPz1Z0ClqafYEEdUbzE8R1MqTRB0mbxix6R611K5wx/OGLh/vi5RuPImKjKjwYTgMtTx8FIbegjh38Aew=='
+           true,
+           'JG/CXiRyNO1sSYmt9EJsxSGIQK6T96VTGeVBYqd6l3LIJTdl23ptfiY/lgJ7DXspsme64QWwmwvIZikpTmuTacyXJfGDyA=='
+       );
+
+INSERT INTO payment_method (
+    code,
+    display_name,
+    active,
+    plugin_code,
+    config_schema_json
+)
+VALUES (
+           'CARD',
+           'Payment card',
+           true,
+           'BANK_PLUGIN',
+           '[{"fieldName":"bankMerchantId","fieldType":"TEXT"}]'
+       );
+
+INSERT INTO payment_method (
+    code,
+    display_name,
+    active,
+    plugin_code,
+    config_schema_json
+)
+VALUES (
+           'QR',
+           'QR payment',
+           true,
+           'BANK_PLUGIN',
+           '[{"fieldName":"bankMerchantId","fieldType":"TEXT"}]'
+       );
+
+INSERT INTO merchant_seller_payment_method (
+    id,
+    seller_account_id,
+    payment_method_code,
+    configured
+)
+VALUES (
+           'seller-method-card-001',
+           'seller-test-001',
+           'CARD',
+           true
+       );
+
+INSERT INTO merchant_seller_payment_method (
+    id,
+    seller_account_id,
+    payment_method_code,
+    configured
+)
+VALUES (
+           'seller-method-qr-001',
+           'seller-test-001',
+           'QR',
+           true
        );

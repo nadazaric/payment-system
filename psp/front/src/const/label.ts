@@ -136,3 +136,18 @@ export const SUPER_ADMIN_LABELS = {
     pluginStatusUpdated: "Plugin status updated.",
     saveFailed: "Action failed. Please check the entered data.",
 };
+
+export const PAYMENT_LABELS = {
+    title: "Payment",
+    subtitle: "Choose a payment method to continue.",
+    merchant: "Merchant",
+    seller: "Seller",
+    amount: "Amount",
+    status: "Status",
+    noPaymentMethods: "No payment methods are currently available for this seller.",
+    loadingError: "Failed to load payment.",
+    notFound: "Payment not found.",
+    continue: "Continue",
+    methodSelected: "Payment method selected.",
+    processing: "Processing...",
+};

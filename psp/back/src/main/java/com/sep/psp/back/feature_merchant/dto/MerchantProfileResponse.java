@@ -19,7 +19,7 @@ public record MerchantProfileResponse(
 
         @Schema(
                 description = "Default merchant currency.",
-                example = "EUR"
+                example = "RSD"
         )
         String currency,
 

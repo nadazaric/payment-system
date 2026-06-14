@@ -1,14 +1,33 @@
 import dayjs from "dayjs";
 
 import {
+    PaymentStatus,
     ReservationHistory,
     ReservationTimeStatus
 } from "@/types/reservation";
 
+export const isFinalFailedPaymentStatus = (
+    status: PaymentStatus
+) => {
+    return status === "FAILED" || status === "ERROR";
+};
+
+export const isPaymentConfirmed = (
+    status: PaymentStatus
+) => {
+    return status === "SUCCESS";
+};
+
+export const isPaymentPending = (
+    status: PaymentStatus
+) => {
+    return status === "CREATED" || status === "INITIATED";
+};
+
 export const getReservationTimeStatus = (
     reservation: ReservationHistory
 ): ReservationTimeStatus | null => {
-    if (reservation.paymentStatus === "FAILED") {
+    if (!isPaymentConfirmed(reservation.paymentStatus)) {
         return null;
     }
 
@@ -43,15 +62,36 @@ export const getReservationTimeStatusLabel = (
 };
 
 export const getPaymentStatusLabel = (
+    status: PaymentStatus
+) => {
+    switch (status) {
+        case "CREATED":
+            return "Created";
+        case "INITIATED":
+            return "Payment pending";
+        case "SUCCESS":
+            return "Paid";
+        case "FAILED":
+            return "Payment failed";
+        case "ERROR":
+            return "Payment error";
+        case "EXPIRED":
+            return "Expired";
+        case "CANCELLED":
+            return "Cancelled";
+        default:
+            return status;
+    }
+};
+
+export const getPaymentMethodCodeLabel = (
     status: string
 ) => {
     switch (status) {
-        case "PENDING":
-            return "Pending";
-        case "PAID":
-            return "Paid";
-        case "FAILED":
-            return "Failed";
+        case "CARD":
+            return "Card";
+        case "QR_CODE":
+            return "QR";
         default:
             return status;
     }

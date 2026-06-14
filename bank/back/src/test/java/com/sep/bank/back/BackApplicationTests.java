@@ -1,4 +1,4 @@
-package com.sep.web_shop.back;
+package com.sep.bank.back;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

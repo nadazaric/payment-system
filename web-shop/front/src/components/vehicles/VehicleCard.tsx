@@ -18,7 +18,7 @@ type VehicleCardProps = {
 
 const VEHICLE_CARD_LABELS = {
     pricePerDay: "Price per day",
-    currency: "EUR",
+    currency: "RSD",
     detailsButton: "View Details"
 };
 

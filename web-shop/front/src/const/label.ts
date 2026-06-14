@@ -29,13 +29,13 @@ export const NAVBAR_LABELS = {
 
 export const VEHICLE_CARD_LABELS = {
     pricePerDay: "Price per day",
-    currency: "EUR",
+    currency: "RSD",
     detailsButton: "View Details"
 };
 
 export const VEHICLE_DETAILS_PAGE_LABELS = {
     pageTitle: "Vehicle details",
-    currency: "EUR",
+    currency: "RSD",
     rentalPeriodTitle: "Rental period",
     startDate: "Start date",
     endDate: "End date",
@@ -86,7 +86,21 @@ export const RENTAL_HISTORY_PAGE_LABELS = {
     additionalServices: "Additional services",
     noAdditionalServices: "No additional services",
     total: "Total",
-    currency: "EUR",
+    currency: "RSD",
     loadingVehiclesError: "Failed to load vehicles.",
     noVehicles: "No vehicles are currently available."
+};
+
+export const PAYMENT_RESULT_PAGE_LABELS = {
+    successTitle: "Payment successful",
+    successDescription: "Your payment has been processed successfully. You can view your reservation in rental history.",
+
+    failedTitle: "Payment failed",
+    failedDescription: "Unfortunately, your payment could not be completed. Please try again later.",
+
+    errorTitle: "Payment error",
+    errorDescription: "An error occurred while processing your payment. Please try again later.",
+
+    viewHistoryButton: "View rental history",
+    vehiclesButton: "Back to vehicles"
 };

@@ -270,7 +270,7 @@ export default function VehicleBookingCard({
             setSaving(true);
             setReservationError("");
 
-            await createReservation({
+            const response = await createReservation({
                 vehicleId,
                 startDate: startDate.format("YYYY-MM-DD"),
                 endDate: endDate.format("YYYY-MM-DD"),
@@ -278,10 +278,14 @@ export default function VehicleBookingCard({
                 additionalServiceIds: selectedAdditionalServiceIds
             });
 
-            router.push("/vehicles");
+            if (!response.redirectUrl) {
+                setReservationError("Payment redirect URL is missing.");
+                return;
+            }
+
+            window.location.href = response.redirectUrl;
         } catch {
             setReservationError("Failed to create reservation.");
-        } finally {
             setSaving(false);
         }
     };

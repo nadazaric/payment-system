@@ -46,7 +46,7 @@ def generate_signature(
         .rstrip("=")
 
 
-def build_sync_headers(
+def build_signed_headers(
         plugin_code: str,
         request_body: str
 ) -> dict[str, str]:
@@ -67,6 +67,16 @@ def build_sync_headers(
         "X-Timestamp": timestamp,
         "X-Signature": signature
     }
+
+
+def build_sync_headers(
+        plugin_code: str,
+        request_body: str
+) -> dict[str, str]:
+    return build_signed_headers(
+        plugin_code,
+        request_body
+    )
 
 
 async def verify_signed_request(request: Request) -> str:

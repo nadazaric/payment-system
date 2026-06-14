@@ -53,6 +53,10 @@ public class SecurityConfiguration {
                         .requestMatchers("/api/auth/login").permitAll()
                         .requestMatchers("/api/merchant/register").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/plugins/sync").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/payments").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/payments/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/payments/*/initiate").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/payments/*/plugin-callback").permitAll()
                         .requestMatchers("/api/super-admin/**").hasAuthority(UserRole.SUPER_ADMIN.authority())
                         .anyRequest().authenticated() )
                 .csrf(AbstractHttpConfigurer::disable)
@@ -84,9 +88,7 @@ public class SecurityConfiguration {
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of(
-                "http://localhost:3000"
-        ));
+        configuration.setAllowedOrigins(List.of("https://localhost:3000"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setExposedHeaders(List.of("Authorization", "Content-Type"));

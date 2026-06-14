@@ -29,6 +29,11 @@ CONFIGURATIONS_FILE_PATH = os.getenv(
     "plugin-configurations.json"
 )
 
+PAYMENT_SESSIONS_FILE_PATH = os.getenv(
+    "PAYMENT_SESSIONS_FILE_PATH",
+    "mock-payment-sessions.json"
+)
+
 PLUGIN_HOST = os.getenv(
     "PLUGIN_HOST",
     "0.0.0.0"

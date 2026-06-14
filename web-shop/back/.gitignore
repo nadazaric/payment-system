@@ -32,4 +32,16 @@ build/
 ### VS Code ###
 .vscode/
 
+### Certs ###
+*.p12
+*.jks
+*.keystore
+*.truststore
+*.pem
+*.key
+*.cer
+*.crt
+*.pfx
+
 *.env
+logs/

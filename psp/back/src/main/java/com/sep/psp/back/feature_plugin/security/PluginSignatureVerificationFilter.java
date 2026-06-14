@@ -21,11 +21,13 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Map;
 
 @Component
 public class PluginSignatureVerificationFilter extends OncePerRequestFilter {
 
     private static final String PLUGIN_SYNC_PATH = "/api/plugins/sync";
+    private static final String PLUGIN_PAYMENT_CALLBACK_SUFFIX = "/plugin-callback";
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -47,7 +49,7 @@ public class PluginSignatureVerificationFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         return !HttpMethod.POST.matches(request.getMethod())
-                || !PLUGIN_SYNC_PATH.equals(request.getServletPath());
+                || !isSignedPluginEndpoint(request.getServletPath());
     }
 
     @Override
@@ -71,10 +73,16 @@ public class PluginSignatureVerificationFilter extends OncePerRequestFilter {
                     response
             );
         } catch (Exception exception) {
-            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            response.setContentType("application/json");
-            response.getWriter()
-                    .write("{\"message\":\"" + exception.getMessage() + "\"}");
+            appLoggerService.warn(
+                    LogStrings.Feature.PAYMENT_PLUGIN,
+                    LogStrings.Action.PLUGIN_REQUEST_REJECTED,
+                    "path={} pluginCode={} reason={}",
+                    request.getServletPath(),
+                    request.getHeader(PluginSecurityHeaders.PLUGIN_CODE),
+                    exception.getMessage()
+            );
+
+            writeErrorResponse(response, exception.getMessage());
         }
     }
 
@@ -94,16 +102,14 @@ public class PluginSignatureVerificationFilter extends OncePerRequestFilter {
 
         validateTimestamp(timestamp);
 
-        PluginSyncRequest syncRequest = readSyncRequest(requestBody);
-
-        String normalizedPluginCodeHeader = normalizePluginCode(pluginCodeHeader);
-        String normalizedPluginCodeBody = normalizePluginCode(syncRequest.pluginCode());
-
-        if (!normalizedPluginCodeHeader.equals(normalizedPluginCodeBody)) {
-            throw new IllegalArgumentException("Plugin code header does not match request body.");
+        if (PLUGIN_SYNC_PATH.equals(request.getServletPath())) {
+            validateSyncRequestPluginCode(
+                    requestBody,
+                    pluginCodeHeader
+            );
         }
 
-        PaymentPlugin plugin = paymentPluginRepository.findById(normalizedPluginCodeHeader)
+        PaymentPlugin plugin = paymentPluginRepository.findById(pluginCodeHeader)
                 .orElseThrow(() -> new IllegalArgumentException("Payment plugin is not expected by PSP."));
 
         if (!plugin.isActiveByAdmin()) {
@@ -154,6 +160,17 @@ public class PluginSignatureVerificationFilter extends OncePerRequestFilter {
         }
     }
 
+    private void validateSyncRequestPluginCode(
+            String requestBody,
+            String pluginCodeHeader
+    ) {
+        PluginSyncRequest syncRequest = readSyncRequest(requestBody);
+
+        if (!pluginCodeHeader.equals(syncRequest.pluginCode())) {
+            throw new IllegalArgumentException("Plugin code header does not match request body.");
+        }
+    }
+
     private PluginSyncRequest readSyncRequest(String requestBody) {
         try {
             return objectMapper.readValue(
@@ -187,7 +204,27 @@ public class PluginSignatureVerificationFilter extends OncePerRequestFilter {
         }
     }
 
-    private String normalizePluginCode(String pluginCode) {
-        return pluginCode.trim().toUpperCase();
+    private boolean isSignedPluginEndpoint(String servletPath) {
+        return PLUGIN_SYNC_PATH.equals(servletPath)
+                || isPaymentPluginCallbackPath(servletPath);
     }
+
+    private boolean isPaymentPluginCallbackPath(String servletPath) {
+        return servletPath.startsWith("/api/payments/")
+                && servletPath.endsWith(PLUGIN_PAYMENT_CALLBACK_SUFFIX);
+    }
+
+    private void writeErrorResponse(
+            HttpServletResponse response,
+            String message
+    ) throws IOException {
+        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+        response.setContentType("application/json");
+
+        objectMapper.writeValue(
+                response.getWriter(),
+                Map.of("message", message)
+        );
+    }
+
 }

@@ -35,6 +35,7 @@ public interface ReservationMapper {
             target = "additionalServiceNames",
             expression = "java(reservation.getAdditionalServices().stream().map(service -> service.getName()).toList())"
     )
+    @Mapping(source = "paymentMethodCode", target = "paymentMethodCode")
     ReservationHistoryDTO toHistoryDTO(Reservation reservation);
 
     List<ReservationHistoryDTO> toHistoryDtoList(List<Reservation> reservations);
