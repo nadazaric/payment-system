@@ -80,7 +80,7 @@ VALUES (
            '55555555-5555-5555-5555-555555555555',
            'eAyaGdWVGUHNDI8ovRWAnDq1CkCnwYqdI9Fbh1IP9tg',
            '4242 **** **** 4242',
-           'Goga Gogic',
+           'Goga Mikic',
            12,
            2030,
            false,
